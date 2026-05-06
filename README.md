@@ -21,6 +21,12 @@ Sistema integral de ciberdefensa basado en:
 
 # Instalación
 
+Clone del repositorio dentro del directorio ```home```.
+```bash
+cd ~
+git clone <repo_url>
+```
+
 El proyecto incluye un script que instala **todo el entorno necesario**:
 
 ```bash
