@@ -24,7 +24,6 @@ Sistema integral de ciberdefensa basado en:
 El proyecto incluye un script que instala **todo el entorno necesario**:
 
 ```bash
-chmod +x install.sh
 ./install.sh
 ```
 
