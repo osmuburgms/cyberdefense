@@ -16,8 +16,9 @@ if [ ! -d "$PROJECT_DIR" ]; then
     exit 1
 fi
 
-if [ ! -f "$PROJECT_DIR/README.md" ]; then
-    echo "ADVERTENCIA: No se detecta README.md, verifica que estás en el proyecto correcto"
+if [ ! -f "$PROJECT_DIR/structure.sh" ]; then
+    echo "ERROR: No parece ser el repositorio correcto"
+    exit 1
 fi
 
 echo "Directorio del proyecto OK ✅"
