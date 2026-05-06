@@ -201,13 +201,13 @@ No necesitas hacerlo manualmente.
 
 Al finalizar la instalación tendrás:
 
-✔ Mininet funcionando
-✔ Ryu Controller operativo
-✔ Backend listo
-✔ IA preparada
-✔ Frontend React corriendo
-✔ Blockchain configurado
-✔ Herramientas de captura instaladas
+* Mininet funcionando
+* Ryu Controller operativo
+* Backend listo
+* IA preparada
+* Frontend React corriendo
+* Blockchain configurado
+* Herramientas de captura instaladas
 
 ---
 
