@@ -1,4 +1,4 @@
-# 🛡️ CyberDefense Adaptive
+# CyberDefense Adaptive
 
 Sistema integral de ciberdefensa basado en:
 
@@ -11,7 +11,7 @@ Sistema integral de ciberdefensa basado en:
 
 ---
 
-# ⚙️ Requisitos
+# Requisitos
 
 * Linux Mint 22.3 (recomendado) o Ubuntu 22.04+
 * Acceso a internet
@@ -19,7 +19,7 @@ Sistema integral de ciberdefensa basado en:
 
 ---
 
-# 🚀 Instalación automática
+# Instalación automática
 
 El proyecto incluye un script que instala **todo el entorno necesario**:
 
@@ -30,7 +30,7 @@ chmod +x install.sh
 
 ---
 
-# ⚠️ IMPORTANTE (Frontend React)
+# IMPORTANTE (Frontend React)
 
 Durante la instalación del frontend, el script ejecutará:
 
@@ -38,28 +38,28 @@ Durante la instalación del frontend, el script ejecutará:
 npx create-vite@latest . --template react
 ```
 
-### 🔹 Te aparecerá una pregunta en la terminal:
+### Te aparecerá una pregunta en la terminal:
 
 ```
 ◇  Install with npm and start now?
 │  ◇ Yes / ◇ No
 ```
 
-👉 Seleccione ```Yes``` y presione ```ENTER```
+Seleccione ```Yes``` y presione ```ENTER```
 
 ---
 
-### 🔹 Luego React se ejecutará automáticamente y verás algo como:
+### Luego React se ejecutará automáticamente y verás algo como:
 
 ```
 Local: http://localhost:5173/
 ```
 
-👉 Abre esa dirección en tu navegador para verificar que React funciona correctamente.
+Abre esa dirección en tu navegador para verificar que React funciona correctamente.
 
 ---
 
-### 🔹 Para continuar con la instalación:
+### Para continuar con la instalación:
 
 1. Regresa a la terminal
 2. Presiona:
@@ -72,7 +72,7 @@ Esto permitirá que el script continúe con el resto de la instalación.
 
 ---
 
-# 📁 Estructura del proyecto
+# Estructura del proyecto
 
 Puedes visualizar la estructura con:
 
@@ -92,7 +92,7 @@ cyberdefense/
 
 ---
 
-# 🔍 Verificar versiones instaladas
+# Verificar versiones instaladas
 
 Para comprobar que todo se instaló correctamente:
 
@@ -116,27 +116,27 @@ Esto mostrará versiones de:
 
 ---
 
-# 🧠 Componentes del sistema
+# Componentes del sistema
 
-### 🔹 Controller (SDN)
+### Controller (SDN)
 
 * Ryu Controller
 * OpenFlow 1.3
 * Integración con Mininet
 
-### 🔹 Backend
+### Backend
 
 * FastAPI
 * WebSockets
 * PostgreSQL
 
-### 🔹 IA
+### IA
 
 * Pandas
 * Scikit-learn
 * Procesamiento de tráfico de red
 
-### 🔹 Frontend
+### Frontend
 
 * React + Vite
 * Axios
@@ -144,9 +144,9 @@ Esto mostrará versiones de:
 
 ---
 
-# 🧩 Notas importantes
+# Notas importantes
 
-### 🔸 PostgreSQL (configuración manual)
+### PostgreSQL (configuración manual)
 
 Después de instalar, debes crear la base de datos:
 
@@ -163,7 +163,7 @@ GRANT ALL PRIVILEGES ON DATABASE cyberdefense TO 'tu_usuario';
 
 ---
 
-### 🔸 Parche de Ryu
+### Parche de Ryu
 
 El script de instalación aplica automáticamente un parche necesario en:
 
@@ -175,7 +175,7 @@ No necesitas hacerlo manualmente.
 
 ---
 
-# ✅ Resultado esperado
+# Resultado esperado
 
 Al finalizar la instalación tendrás:
 
