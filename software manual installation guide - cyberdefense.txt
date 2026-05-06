@@ -1,0 +1,280 @@
+Instalación de Softwares para ep proyecto cyberdefense
+
+1) Actualizar sistema & Instalar dependencias
+
+sudo apt update && sudo apt upgrade -y
+sudo apt install curl wget git unzip software-properties-common python3 python3-pip python3-venv build-essential net-tools openssh-server libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev libffi-dev liblzma-dev libncursesw5-dev xz-utils tk-dev -y
+
+2) Mininet + OpenVswitch
+
+# Instalar Mininet desde repositorio
+sudo apt install -y mininet openvswitch-switch
+
+# Verificar que OpernVswitch esta corriendo
+sudo systemctl status openvswitch-switch
+
+Si no sale "enable" & "active":
+    sudo systemctl enable openvswitch-switch
+    
+    sudo systemctl start openvswitch-switch
+
+# Verificar Mininet
+sudo mn --test pingall
+
+3) Ryu Controller
+
+# Instalar pyenv
+curl https://pyenv.run | bash
+
+# Configurar pyenv en bash
+echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc
+
+echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc
+
+echo 'eval "$(pyenv init --path)"' >> ~/.bashrc
+
+echo 'eval "$(pyenv init -)"' >> ~/.bashrc
+
+source ~/.bashrc
+
+# Instalar Python 3.10 con pyvenv
+pyenv install 3.10.14
+
+# Crear o Dirigirse a la carpeta del proyecto (reemplazar "<path_project>" por a dirección del directorio del proyecto)
+mkdir -p ~/<path_project>/controller
+
+cd ~/<path project>/controller
+
+# Activar Python 3.10 local
+pyenv local 3.10.14
+
+python --version
+
+# Crear entorno virtual
+python -m venv venv
+
+source venv/bin/activate
+
+# Instalar versiones compatibles de pip
+pip install pip==24.0 setuptools==65.5.0 wheel==0.41.2
+
+# Instalar Ryu
+pip install ryu --no-build-isolation
+
+# Corregir Eventlet
+pip uninstall eventlet dnspython -y
+
+pip install eventlet==0.33.3 dnspython==2.2.1
+
+# Parche final (MUY IMPORTANTE)
+sudo nano ~/<path_project>/controller/venv/lib/python3.10/site-packages/ryu/app/wsgi.py
+
+Buscar bloque:
+    class _AlreadyHandledResponse(Response):
+        # XXX: Eventlet API should not be used directly.
+        from eventlet.wsgi import ALREADY_HANDLED
+        _ALREADY_HANDLED = ALREADY_HANDLED
+
+Reemplazar por:
+    class _AlreadyHandledResponse(Response):
+        # XXX: Eventlet API should not be used directly.
+        try:
+            from eventlet.wsgi import ALREADY_HANDLED
+        except ImportError:
+            ALREADY_HANDLED = object()
+
+        _ALREADY_HANDLED = ALREADY_HANDLED
+
+        def __call__(self, environ, start_response):
+            return self._ALREADY_HANDLED
+
+Guardar:
+    Ctrl + O
+    Enter
+    Ctrl + X
+
+# Verificar instalación
+ryu-manager --version
+
+Debe salir:
+    ryu-manager 4.34
+
+# Crear alias (opcional)
+echo "alias ryuenv='cd ~/<path_project>/controller && source venv/bin/activate'" >> ~/.bashrc
+
+source ~/.bashrc
+
+Luego solo usar:
+    ryuenv
+
+# Prueba
+Terminal 1 (controlador)
+cd ~/<path_project>/controller
+source venv/bin/activate # o "ryuenv" si crea el alias
+ryu-manager ryu.app.simple_switch_13
+
+NOTA: Debe quedar esperando conexiones.
+
+Terminal 2 (Mininet)
+sudo mn --controller=remote,ip=127.0.0.1,port=6653 --switch ovs,protocols=OpenFlow13 --topo single,3
+
+Dentro de Mininet:
+    pingall
+
+NOTA: Debe aprender rutas y responder (0% dropped).
+
+4) Docker + Docker Compose
+
+# Add Docker's official GPG key:
+sudo apt update
+sudo apt install ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+# Add the repository to Apt sources:
+sudo tee /etc/apt/sources.list.d/docker.sources <<EOF
+Types: deb
+URIs: https://download.docker.com/linux/ubuntu
+Suites: $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")
+Components: stable
+Architectures: $(dpkg --print-architecture)
+Signed-By: /etc/apt/keyrings/docker.asc
+EOF
+
+NOTE: Follow the steps in the Docker Engine installation guide for Ubuntu at "https://docs.docker.com/engine/install/ubuntu/" & Copy all the commands until "EOF"
+
+sudo apt update
+
+# Install the latest version
+sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+# Verify that Docker is running
+sudo systemctl status docker
+
+# If Docker is not running, start it manually
+sudo systemctl start docker
+
+# Verify that the installation is successful by running the hello-world image
+sudo docker run hello-world
+
+5) PostgreSQL
+
+# Install PostgreSQL
+sudo apt install postgresql postgresql-contrib -y
+
+# Verify that PostgreSQL is running
+sudo systemctl enable PostgreSQL
+
+# If PostgreSQL is not running, start it manually
+sudo systemctl start PostgreSQL
+
+# Enter PostgreSQL Shell
+sudo -u postgres psql
+
+# Create DB
+CREATE DATABASE cyberdefense;
+CREATE USER oscar WITH PASSWORD '<password>';
+GRANT ALL PRIVILEGES ON DATABASE cyberdefense TO <user_name>;
+\q
+ NOTE: Replace the text enclosed between <..>
+
+# 6) Backend FastAPI
+
+mkdir -p ~/<path_project>/backend
+cd ~/<path_project>/backend
+python3 -m venv venv
+source venv/bin/activate
+
+# Instalar dependencias SOLO backend
+pip install --upgrade pip
+pip install fastapi uvicorn[standard]
+pip install sqlalchemy psycopg2-binary
+pip install python-multipart websockets
+pip install scapy
+
+# Verificar
+python -c "import fastapi, sqlalchemy"
+
+# Alias
+echo "alias backenv='cd ~/<path_project>/backend && source venv/bin/activate'" >> ~/.bashrc
+source ~/.bashrc
+
+7) IA (Machine Learning)
+
+cd ~/<path_project>
+mkdir -p ai
+cd ai
+python3 -m venv iaenv
+source iaenv/bin/activate
+
+# Librerías IA
+pip install --upgrade pip
+pip install pandas scikit-learn numpy matplotlib joblib
+
+# (Opcional pero recomendado)
+pip install seaborn jupyter
+
+# Verificar
+python -c "import pandas, sklearn, numpy"
+
+# Alias
+echo "alias aienv='cd ~/<path_project>/ai && source iaenv/bin/activate'" >> ~/.bashrc
+source ~/.bashrc
+
+8) Captura de tráfico
+
+# Instalar Softwares para captura de tráfico
+sudo apt install tcpdump tshark wireshark -y
+
+# Verificar
+sudo tcpdump -i any
+
+9) Frontend React
+
+# Descarga e instala nvm:
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+
+# en lugar de reiniciar la shell
+\. "$HOME/.nvm/nvm.sh"
+
+# Descarga e instala Node.js:
+nvm install 24
+
+# Verifica la versión de Node.js:
+node -v # Debería mostrar "v24.15.0".
+
+# Verifica versión de npm:
+npm -v # Debería mostrar "11.12.1".
+
+NOTE: Follow the steps in the Node.js installation guide at "https://nodejs.org/es/download"
+
+# Crear frontend
+mkdir -p ~/<path_project>/frontend
+cd ~/<path_project>/frontend
+npx create-vite@latest . --template react
+npm install
+npm install recharts axios react-router-dom recharts
+
+# Ejecutar & entrar a la dirección que salen en la terminal desde el navegador
+npm run dev
+
+10) Blockchain Solana + Rust + Anchor Framework
+
+# Update the package lists to ensure all the packages are up-to-date
+sudo apt-get update
+
+# Install the following dependencies
+sudo apt-get install -y \
+    build-essential \
+    pkg-config \
+    libudev-dev llvm libclang-dev \
+    protobuf-compiler libssl-dev
+
+# Install the latest version
+curl --proto '=https' --tlsv1.2 -sSfL https://solana-install.solana.workers.dev | bash
+
+# Verify a successful installation by checking the version of each installed dependency
+rustc --version && solana --version && anchor --version && surfpool --version && node --version && yarn --version
+
+NOTE: Follow the steps in the Solana installation guide at "https://chatgpt.com/c/69eff16c-4d80-83e9-b17a-a3d9bde26c35"
