@@ -19,7 +19,7 @@ Sistema integral de ciberdefensa basado en:
 
 ---
 
-# Instalación automática
+# Instalación
 
 El proyecto incluye un script que instala **todo el entorno necesario**:
 
@@ -27,6 +27,28 @@ El proyecto incluye un script que instala **todo el entorno necesario**:
 chmod +x install.sh
 ./install.sh
 ```
+
+También se incluye una guía de instalación manual dentro del repositorio, donde podrás instalar cada componente paso a paso.
+```bash
+software manual installation guide - cyberdefense.txt
+```
+
+Úsala si:
+
+* Prefieres tener control total del proceso
+* Quieres entender cada instalación en detalle
+* El script automático presenta algún problema en tu sistema
+
+Esta guía cubre:
+
+* Mininet + Open vSwitch
+* Ryu Controller
+* Backend (FastAPI)
+* IA (Scikit-learn, pandas)
+* Frontend (React)
+* Docker
+* PostgreSQL
+* Solana + Rust
 
 ---
 
