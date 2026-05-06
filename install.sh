@@ -4,6 +4,25 @@ set -e
 
 PROJECT_DIR="$HOME/cyberdefense"
 
+# =========================
+# VALIDACIÓN DEL PROYECTO
+# =========================
+echo "========== VALIDANDO PROYECTO =========="
+
+if [ ! -d "$PROJECT_DIR" ]; then
+    echo "ERROR: No existe el directorio $PROJECT_DIR"
+    echo "Clona el repositorio primero:"
+    echo "git clone <repo_url> $PROJECT_DIR"
+    exit 1
+fi
+
+if [ ! -f "$PROJECT_DIR/README.md" ]; then
+    echo "ADVERTENCIA: No se detecta README.md, verifica que estás en el proyecto correcto"
+fi
+
+echo "Directorio del proyecto OK ✅"
+echo
+
 echo "========== ACTUALIZANDO SISTEMA =========="
 sudo apt update && sudo apt upgrade -y
 
