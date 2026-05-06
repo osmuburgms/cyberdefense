@@ -164,8 +164,27 @@ fi
 # ESTRUCTURA
 # =========================
 echo "========== ESTRUCTURA =========="
-mkdir -p $PROJECT_DIR/{backend,ai,controller,frontend}
-echo "Estructura del proyecto creada ✅"
+
+DIRECTORIES=(
+    backend
+    ai
+    controller
+    frontend
+    contracts
+    docker
+    docs
+)
+
+for dir in "${DIRECTORIES[@]}"; do
+    if [ ! -d "$PROJECT_DIR/$dir" ]; then
+        echo "Creando carpeta: $dir"
+        mkdir -p "$PROJECT_DIR/$dir"
+    else
+        echo "La carpeta $dir ya existe"
+    fi
+done
+
+echo "Estructura del proyecto verificada ✅"
 
 # =========================
 # RYU
