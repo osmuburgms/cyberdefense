@@ -22,7 +22,6 @@ if [ ! -f "$PROJECT_DIR/structure.sh" ]; then
 fi
 
 echo "Directorio del proyecto OK ✅"
-echo
 
 echo "========== ACTUALIZANDO SISTEMA =========="
 sudo apt update && sudo apt upgrade -y
