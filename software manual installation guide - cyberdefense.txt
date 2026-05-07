@@ -3,7 +3,7 @@ Instalación de Softwares para ep proyecto cyberdefense
 1) Actualizar sistema & Instalar dependencias
 
 sudo apt update && sudo apt upgrade -y
-sudo apt install curl wget git unzip software-properties-common python3 python3-pip python3-venv build-essential net-tools openssh-server libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev libffi-dev liblzma-dev libncursesw5-dev xz-utils tk-dev -y
+sudo apt install curl wget git unzip software-properties-common python3 python3-pip python3-venv build-essential net-tools openssh-server libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev libffi-dev liblzma-dev libncursesw5-dev xz-utils tk-dev nginx -y
 
 2) Mininet + OpenVswitch
 
