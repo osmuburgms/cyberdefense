@@ -147,7 +147,7 @@ fi
 echo "========== SOLANA =========="
 
 if ! command_exists solana; then
-    sudo apt install -y pkg-config libudev-dev llvm libclang-dev protobuf-compiler libssl-dev
+    sudo apt-get install -y build-essential pkg-config libudev-dev llvm libclang-dev protobuf-compiler libssl-dev
     curl --proto '=https' --tlsv1.2 -sSfL https://solana-install.solana.workers.dev | bash
 else
     echo "Solana ya está instalado: $(solana --version)"
