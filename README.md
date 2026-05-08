@@ -36,7 +36,6 @@ El proyecto incluye un script que instala **todo el entorno necesario**:
 También se incluye una guía de instalación manual dentro del repositorio, donde podrás instalar cada componente paso a paso.
 ```bash
 software manual installation guide - cyberdefense.txt
-software manual installation guide - cyberdefense.pdf
 ```
 
 Úsala si:
