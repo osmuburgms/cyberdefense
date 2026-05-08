@@ -53,7 +53,7 @@ BASE_PACKAGES=(
     build-essential net-tools openssh-server
     libssl-dev zlib1g-dev libbz2-dev libreadline-dev
     libsqlite3-dev libffi-dev liblzma-dev libncursesw5-dev
-    xz-utils tk-dev nginx
+    xz-utils tk-dev nginx tree
 )
 
 for pkg in "${BASE_PACKAGES[@]}"; do
