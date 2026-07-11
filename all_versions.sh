@@ -19,6 +19,11 @@ echo "mn $(mn --version 2>&1 | head -n 1)" && \
 ovs-vsctl --version | head -n 1 && \
 tshark -v | head -n 1 && \
 echo && \
+echo "========== VNX =========="
+sudo vnx --version && \
+sudo virsh --version && \
+sudo virsh list && \
+sudo brctl show && \
 echo "========== RYU ==========" && \
 cd ~/cyberdefense/controller && \
 pyenv local 3.10.14 && \
