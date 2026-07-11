@@ -335,6 +335,7 @@ DIRECTORIES=(
     contracts
     docker
     docs
+    scenarios
 )
 
 for dir in "${DIRECTORIES[@]}"; do
