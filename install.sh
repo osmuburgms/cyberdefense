@@ -60,6 +60,61 @@ for pkg in "${BASE_PACKAGES[@]}"; do
     install_if_missing "$pkg"
 done
 
+VNX_PACKAGES=(
+    bash-completion
+    bridge-utils
+    expect
+    genisoimage
+    graphviz
+    libappconfig-perl
+    libdbi-perl
+    liberror-perl
+    libexception-class-perl
+    libfile-homedir-perl
+    libio-pty-perl
+    libmath-round-perl
+    libnetaddr-ip-perl
+    libnet-ip-perl
+    libnet-ipv6addr-perl
+    libnet-pcap-perl
+    libnet-telnet-perl
+    libreadonly-perl
+    libswitch-perl
+    libsys-virt-perl
+    libterm-readline-perl-perl
+    libxml-checker-perl
+    libxml-dom-perl
+    libxml-libxml-perl
+    libxml-parser-perl
+    libxml-tidy-perl
+    lxc
+    lxc-templates
+    openvswitch-switch
+    picocom
+    pv
+    qemu-kvm
+    screen
+    tree
+    uml-utilities
+    virt-manager
+    virt-viewer
+    vlan
+    w3m
+    wmctrl
+    xdotool
+    xfce4-terminal
+    xterm
+    lsof
+    libvirt-clients
+    libvirt-daemon-system
+)
+
+echo "========== VNX DEPENDENCIES =========="
+
+for pkg in "${VNX_PACKAGES[@]}"; do
+    install_if_missing "$pkg"
+done
+
 # =========================
 # MININET
 # =========================
@@ -69,6 +124,93 @@ install_if_missing openvswitch-switch
 
 sudo systemctl enable openvswitch-switch || true
 sudo systemctl start openvswitch-switch || true
+
+# =========================
+# VNX
+# =========================
+echo "========== VNX =========="
+
+if ! sudo vnx -V >/dev/null 2>&1; then
+    echo "Instalando VNX..."
+
+    mkdir -p /tmp/vnx-update
+    cd /tmp/vnx-update
+
+    rm -rf vnx-*
+
+    wget http://vnx.dit.upm.es/vnx/vnx-latest.tgz
+    tar xfvz vnx-latest.tgz
+
+    cd vnx-*-*
+
+    sudo ./install_vnx
+
+else
+    echo "VNX ya instalado"
+fi
+
+sudo sed -i \
+'s|^#\?security_driver.*|security_driver = "none"|' \
+/etc/libvirt/qemu.conf
+
+sudo sed -i \
+'s|^#\?user.*|user = "root"|' \
+/etc/libvirt/qemu.conf
+
+sudo sed -i \
+'s|^#\?group.*|group = "root"|' \
+/etc/libvirt/qemu.conf
+
+sudo systemctl restart libvirtd 2>/dev/null || \
+sudo systemctl restart libvirt-bin
+
+if [ ! -f /etc/vnx.conf ]; then
+    sudo cp /usr/share/vnx/etc/vnx.conf.sample /etc/vnx.conf
+fi
+
+sudo sed -i \
+"s/overlayfs_workdir_option = 'no'/overlayfs_workdir_option = 'yes'/" \
+/etc/vnx.conf
+
+sudo sed -i \
+"s/union_type='aufs'/union_type='overlayfs'/" \
+/etc/vnx.conf
+
+sudo sed -i \
+"s/lxc_console_cmd=.*/lxc_console_cmd=lxc-attach/" \
+/etc/vnx.conf
+
+if [ ! -L /etc/libvirt/qemu/networks/autostart/default.xml ]; then
+    sudo ln -s \
+    /etc/libvirt/qemu/networks/default.xml \
+    /etc/libvirt/qemu/networks/autostart/
+fi
+
+if [ ! -d /usr/share/vnx/filesystems/rootfs_lxc_ubuntu64 ]; then
+    cd /usr/share/vnx/filesystems
+    # sudo vnx_download_rootfs
+    sudo vnx_download_rootfs -r rootfs_lxc_ubuntu64
+
+    while [ ! -d /usr/share/vnx/filesystems/rootfs_lxc_ubuntu64 ]; do
+        sleep 2
+    done
+fi
+
+if [ -d /usr/share/vnx/filesystems/rootfs_lxc_ubuntu64 ]; then
+    sudo ln -snf \
+        /usr/share/vnx/filesystems/rootfs_lxc_ubuntu64 \
+        /usr/share/vnx/filesystems/rootfs_lxc
+else
+    echo "No se encontró rootfs_lxc_ubuntu64"
+    exit 1
+fi
+
+if sudo vnx -V >/dev/null 2>&1; then
+    echo "✓ VNX instalado correctamente."
+else
+    echo "✗ Error instalando VNX."
+    exit 1
+fi
 
 # =========================
 # DOCKER
