@@ -1,0 +1,14 @@
+cd ~/cyberdefense/
+./ips_manager.sh start
+./ips_manager.sh logs-ia
+./ips_manager.sh logs-backend
+./ips_manager.sh logs-ryu
+./ips_manager.sh clean-switch
+./ips_manager.sh restart-ia
+./ips_manager.sh restart-backend
+./ips_manager.sh stop
+
+npm run dev
+
+
+

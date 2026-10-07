@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<vnx xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="/usr/share/xml/vnx/vnx-2.00.xsd">
+  <global>
+    <version>2.0</version>
+    <scenario_name>datacenter_sdn</scenario_name>
+    <automac offset="0"/>
+    <vm_mgmt type="private" network="10.250.0.0" mask="24" offset="12">
+       <host_mapping />
+    </vm_mgmt>
+  </global>
+
+  <!-- Retis Interretis -->
+  <net name="virbr0" mode="virtual_bridge" managed="no"/>
+  
+  <!-- Retis SDN -->
+  <net name="SDN_Net" mode="openvswitch" controller="tcp:127.0.0.1:6653" of_version="OpenFlow13"/>
+
+  <!-- Servidor Web 1 -->
+  <vm name="server1" type="lxc" arch="x86_64">
+    <filesystem type="cow">/usr/share/vnx/filesystems/rootfs_lxc_ubuntu64</filesystem>
+    <if id="1" net="SDN_Net">
+      <ipv4>192.168.1.10/24</ipv4>
+    </if>
+    <if id="2" net="virbr0">
+      <ipv4>dhcp</ipv4>
+    </if>
+  </vm>
+
+  <!-- Servidor Base de Datos 2 -->
+  <vm name="server2" type="lxc" arch="x86_64">
+    <filesystem type="cow">/usr/share/vnx/filesystems/rootfs_lxc_ubuntu64</filesystem>
+    <if id="1" net="SDN_Net">
+      <ipv4>192.168.1.11/24</ipv4>
+    </if>
+    <if id="2" net="virbr0">
+      <ipv4>dhcp</ipv4>
+    </if>
+  </vm>
+
+  <!-- Machina Atacante -->
+  <vm name="attacker" type="lxc" arch="x86_64">
+    <filesystem type="cow">/usr/share/vnx/filesystems/rootfs_lxc_ubuntu64</filesystem>
+    <if id="1" net="SDN_Net">
+      <ipv4>192.168.1.50/24</ipv4>
+    </if>
+    <if id="2" net="virbr0">
+      <ipv4>dhcp</ipv4>
+    </if>
+  </vm>
+</vnx>

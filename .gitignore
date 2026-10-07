@@ -1,0 +1,19 @@
+# Ignorar datasets y archivos pesados
+ai/dataset/
+*.csv
+*.pcap
+venv/
+__pycache__/
+# Ignorar experimentos y pruebas
+experimentos/
+ai/scripts/experimentos/
+ai/models/experimentos/
+ai/models/isolation_forest.pkl
+*.ipynb
+test-ledger/
+backend/test-ledger/
+frontend-sdn/test-ledger/
+ai/models/lightgbm_1_2M_final.txt
+*.log
+*.sst
+ai/iaenv/
