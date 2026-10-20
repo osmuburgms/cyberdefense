@@ -159,8 +159,13 @@ sudo systemctl start docker || true
 echo "========== MONGODB =========="
 if ! sudo docker ps -a | grep -q mongodb-cyberdefense; then
     echo "Descargando e iniciando contenedor de MongoDB..."
-    sudo docker run -d --name mongodb-cyberdefense -p 27017:27017 -v mongo_data:/data/db mongo:latest
-    sudo docker update --restart unless-stopped mongodb-cyberdefense
+    if sudo docker compose version > /dev/null 2>&1 && [ -f "$PROJECT_DIR/docker/docker-compose.yml" ]; then
+        echo "Usando docker/docker-compose.yml"
+        sudo docker compose -f "$PROJECT_DIR/docker/docker-compose.yml" up -d
+    else
+        sudo docker run -d --name mongodb-cyberdefense -p 27017:27017 -v mongo_data:/data/db mongo:latest
+        sudo docker update --restart unless-stopped mongodb-cyberdefense
+    fi
 else
     echo "Contenedor de MongoDB ya existe. Asegurando que esté en ejecución..."
     sudo docker start mongodb-cyberdefense

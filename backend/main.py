@@ -412,7 +412,7 @@ def _to_object_id(value) -> ObjectId | None:
 # ---------------------------------------------------------------------------
 # Equivalente backend de lo que el usuario haría a mano en su distro:
 #   sudo lxc-attach -n attacker   (o server1 / server2)
-#   sudo vnx -f ~/cyberdefense/datacenter_sdn.xml -M attacker --exe-cli "<cmd>"
+#   sudo vnx -f ~/cyberdefense/scenarios/datacenter_sdn.xml -M attacker --exe-cli "<cmd>"
 # El frontend envía cada línea de la miniconsola a POST /api/hosts/exec y el
 # backend la ejecuta dentro del contenedor con lxc-attach, devolviendo stdout.
 ALLOWED_HOSTS = {
@@ -925,7 +925,7 @@ async def clean_switch(_user: dict = Depends(get_current_user)):
     steps = []
     home = os.path.expanduser("~")
     ryu_bin = os.path.join(home, "cyberdefense", "controller", "venv", "bin", "ryu-manager")
-    ryu_script = os.path.join(home, "cyberdefense", "sdn", "ryu_ips_controller.py")
+    ryu_script = os.path.join(home, "cyberdefense", "controller", "ryu_ips_controller.py")
     ryu_log = os.path.join(home, "cyberdefense", "logs", "ryu.log")
 
     # 1. Detener el controlador (pkill devuelve 1 si ya estaba parado: también vale)

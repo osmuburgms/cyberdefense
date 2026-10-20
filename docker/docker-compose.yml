@@ -1,0 +1,48 @@
+# Contenedor de MongoDB del proyecto CyberDefense
+#
+# Uso:
+#   sudo docker compose -f docker/docker-compose.yml up -d      # crear/levantar
+#   sudo docker compose -f docker/docker-compose.yml ps         # ver estado
+#   sudo docker compose -f docker/docker-compose.yml logs -f     # ver logs
+#   sudo docker compose -f docker/docker-compose.yml down        # detener (conserva datos)
+#   sudo docker compose -f docker/docker-compose.yml down -v     # detener y BORRAR los datos
+#
+# El backend se conecta a mongodb://127.0.0.1:27017 (base "cyberdefense").
+# El script install.sh usa este mismo compose cuando el contenedor no existe.
+#
+# ---------------------------------------------------------------------
+#  ATENCIÓN en equipos donde el contenedor ya existía creado con
+#  "docker run" (sin volumen nombrado): en ese caso Docker le asignó un
+#  volumen ANÓNIMO con los datos reales y el volumen "mongo_data" queda
+#  vacío. Si borras ese contenedor sin copiar antes los datos, la base
+#  arrancará vacía (usuarios y alertas). Para migrar sin perder nada:
+#
+#    VOLD=$(docker inspect mongodb-cyberdefense --format '{{range .Mounts}}{{if eq .Destination "/data/db"}}{{.Name}}{{end}}{{end}}')
+#    docker run --rm -v "$VOLD":/from -v mongo_data:/to mongo:6.0 sh -c "cp -a /from/. /to/"
+#    docker stop mongodb-cyberdefense && docker rm mongodb-cyberdefense
+#    sudo docker compose -f docker/docker-compose.yml up -d
+# ---------------------------------------------------------------------
+
+services:
+  mongodb:
+    image: mongo:6.0
+    container_name: mongodb-cyberdefense
+    restart: unless-stopped
+    ports:
+      # puerto del host -> puerto del contenedor
+      - "27017:27017"
+    volumes:
+      # volumen nombrado: conserva los datos entre reinicios y recreaciones
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+volumes:
+  mongo_data:
+    # nombre fijo (sin prefijo del proyecto) para reutilizar el volumen
+    # creado por "docker run -v mongo_data:/data/db"
+    name: mongo_data

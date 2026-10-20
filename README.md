@@ -41,7 +41,7 @@ Desarrollado como Proyecto Integrador de la Facultad de Ingeniería en Electrici
 |------|-----------|-----------|
 | Percepción | Scapy (sniffer en el borde) | `ai/scripts/realtime_detector.py` |
 | Análisis | LightGBM (gradient boosting) | `ai/scripts/`, `ai/models/` |
-| Control | Ryu + Open vSwitch + VNX | `controller/`, `sdn/`, `datacenter_sdn.xml` |
+| Control | Ryu + Open vSwitch + VNX | `controller/`, `scenarios/datacenter_sdn.xml` |
 | Backend | FastAPI + MongoDB + Solana | `backend/main.py` |
 | Presentación | React + Vite + Tailwind + xterm.js | `frontend/` |
 
@@ -75,7 +75,7 @@ cd cyberdefense
 El script instala todo el entorno. Si prefieres control paso a paso, usa la guía manual incluida:
 
 ```bash
-cat "software manual installation guide - cyberdefense.txt"
+cat "docs/software manual installation guide - cyberdefense.txt"
 ```
 
 ### Entornos Python (importante)
@@ -229,20 +229,41 @@ Desde VS Code, con la extensión *LaTeX Workshop*: `Ctrl+Alt+B` → **"latexmk (
 
 ---
 
+## Base de datos (MongoDB en Docker)
+
+El backend guarda alertas, usuarios y configuración en MongoDB (`base cyberdefense`, puerto `27017`).
+
+```bash
+# Crear y levantar el contenedor (primera vez, o en una PC nueva)
+sudo docker compose -f docker/docker-compose.yml up -d
+
+# Ver estado y logs
+sudo docker compose -f docker/docker-compose.yml ps
+sudo docker compose -f docker/docker-compose.yml logs -f
+
+# Detener (conserva los datos)
+sudo docker compose -f docker/docker-compose.yml down
+```
+
+`install.sh` usa este mismo compose automáticamente. Los datos persisten en el volumen `mongo_data`, así que el contenedor puede recrearse sin perder la información.
+
+> **Si el contenedor ya existía creado con `docker run`**, Docker le asignó un volumen anónimo con los datos reales y el volumen `mongo_data` quedaría vacío. Antes de borrar ese contenedor, copia los datos (el procedimiento está documentado al inicio de `docker/docker-compose.yml`) o la base arrancará sin usuarios ni alertas.
+
+---
+
 ## Estructura del proyecto
 
 ```
 cyberdefense/
 ├── ai/                    # Motor de IA: scripts, modelos y datasets
 ├── backend/               # FastAPI: auth, alertas, hosts, configuración
-├── controller/            # Ryu + parche wsgi
-├── frontend/             # Dashboard React (login + páginas por rol)
+├── controller/            # Ryu: ryu_ips_controller.py + venv del controlador
+├── frontend/              # Dashboard React (login + páginas por rol)
 ├── latex/                 # Reporte del PI en LaTeX
-├── sdn/                   # Módulos del controlador
-├── scenarios/             # Escenarios de red
+├── scenarios/             # Escenarios de red (datacenter_sdn.xml, datacenter.xml)
 ├── contracts/             # Documentación contractual (carta de compromiso)
-├── docker/                # MongoDB
-├── datacenter_sdn.xml     # Topología VNX (attacker, server1, server2)
+├── docker/                # docker-compose.yml de MongoDB
+├── docs/                  # Guías y manuales (instalación, pasos IPS, VNX host)
 ├── ips_manager.sh         # Orquestador del sistema
 ├── install.sh             # Instalador automático
 ├── all_versions.sh        # Verificación de versiones

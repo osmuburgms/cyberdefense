@@ -107,11 +107,11 @@ case "$1" in
         
         echo "   [3/6] Levantando Red SDN (VNX y Open vSwitch)..."
         ensure_lxc_compat
-        sudo vnx -f ~/cyberdefense/datacenter_sdn.xml -v -t > $LOG_DIR/vnx.log 2>&1
+        sudo vnx -f ~/cyberdefense/scenarios/datacenter_sdn.xml -v -t > $LOG_DIR/vnx.log 2>&1
         echo "   [3.1] Configurando herramientas en el nodo atacante (esto puede tardar unos segundos)..."
         sleep 20 
         
-        sudo vnx -f ~/cyberdefense/datacenter_sdn.xml -M attacker --exe-cli "echo 'nameserver 8.8.8.8' > /etc/resolv.conf && sleep 5 && apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y hydra hping3 nmap slowhttptest && echo -e 'admin\n12345\npassword\nroot\nqwerty' > /root/passwords.txt" > /dev/null 2>&1 &
+        sudo vnx -f ~/cyberdefense/scenarios/datacenter_sdn.xml -M attacker --exe-cli "echo 'nameserver 8.8.8.8' > /etc/resolv.conf && sleep 5 && apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y hydra hping3 nmap slowhttptest && echo -e 'admin\n12345\npassword\nroot\nqwerty' > /root/passwords.txt" > /dev/null 2>&1 &
 
         sudo ovs-vsctl set bridge SDN_Net protocols=OpenFlow13
         sudo ovs-vsctl set-controller SDN_Net tcp:127.0.0.1:6653
@@ -119,7 +119,7 @@ case "$1" in
         sudo ovs-ofctl -O OpenFlow13 del-flows SDN_Net
         
         echo "   [4/6] Levantando Controlador Ryu..."
-        nohup $RYU_BIN ~/cyberdefense/sdn/ryu_ips_controller.py > $LOG_DIR/ryu.log 2>&1 &
+        nohup $RYU_BIN ~/cyberdefense/controller/ryu_ips_controller.py > $LOG_DIR/ryu.log 2>&1 &
         
         echo "   [5/6] Levantando Backend FastAPI..."
         # NOTA: sin --ws none para no desactivar websockets; la miniconsola usa HTTP POST /api/hosts/exec
@@ -140,7 +140,7 @@ case "$1" in
         sudo pkill -f ryu-manager
         pkill -f solana-test-validator
         sudo docker stop mongodb-cyberdefense > /dev/null
-        sudo vnx -f ~/cyberdefense/datacenter_sdn.xml -v --destroy > /dev/null 2>&1
+        sudo vnx -f ~/cyberdefense/scenarios/datacenter_sdn.xml -v --destroy > /dev/null 2>&1
         echo "✅ Entorno apagado correctamente."
         ;;
         
@@ -148,7 +148,7 @@ case "$1" in
         echo "🧹 Limpiando bloqueos del switch y reiniciando Controlador..."
         sudo pkill -f ryu-manager
         sudo ovs-ofctl -O OpenFlow13 del-flows SDN_Net
-        nohup $RYU_BIN ~/cyberdefense/sdn/ryu_ips_controller.py > $LOG_DIR/ryu.log 2>&1 &
+        nohup $RYU_BIN ~/cyberdefense/controller/ryu_ips_controller.py > $LOG_DIR/ryu.log 2>&1 &
         curl_auth_args; curl -s "${CURL_AUTH[@]}" -X POST http://localhost:8001/api/switch-status/clear > /dev/null || true
         echo "✅ Switch limpio y Ryu monitoreando de nuevo."
         ;;
