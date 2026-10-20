@@ -251,7 +251,7 @@ fi
 # =========================
 echo "========== ESTRUCTURA =========="
 
-DIRECTORIES=(backend ai controller frontend-sdn contracts docker docs scenarios)
+DIRECTORIES=(backend ai controller frontend contracts docker docs scenarios)
 
 for dir in "${DIRECTORIES[@]}"; do
     if [ ! -d "$PROJECT_DIR/$dir" ]; then
@@ -339,7 +339,7 @@ fi
 # FRONTEND
 # =========================
 echo "========== FRONTEND =========="
-cd $PROJECT_DIR/frontend-sdn
+cd $PROJECT_DIR/frontend
 
 if [ ! -d "node_modules" ]; then
     npm install
@@ -353,7 +353,7 @@ fi
 # =========================
 echo "========== ACTUALIZACIONES Y LIMPIEZA =========="
 echo "Optimizando dependencias del Frontend..."
-cd $PROJECT_DIR/frontend-sdn
+cd $PROJECT_DIR/frontend
 npm audit fix --no-fund --no-audit > /dev/null 2>&1 || true
 
 echo "Limpiando paquetes innecesarios del sistema..."

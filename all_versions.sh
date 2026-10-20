@@ -70,6 +70,6 @@ deactivate
 echo
 
 echo "========== FRONTEND REACT =========="
-cd ~/cyberdefense/frontend-sdn
+cd ~/cyberdefense/frontend
 npm list react --depth=0
 npm list react-dom --depth=0

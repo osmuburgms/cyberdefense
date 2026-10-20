@@ -12,7 +12,7 @@ ai/models/isolation_forest.pkl
 *.ipynb
 test-ledger/
 backend/test-ledger/
-frontend-sdn/test-ledger/
+frontend/test-ledger/
 ai/models/lightgbm_1_2M_final.txt
 *.log
 *.sst

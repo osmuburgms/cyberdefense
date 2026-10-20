@@ -8,7 +8,7 @@ cd ~/cyberdefense/
 ./ips_manager.sh restart-backend
 ./ips_manager.sh stop
 
-cd ~/cyberdefense/frontend-sdn
+cd ~/cyberdefense/frontend
 npm run dev
 
 

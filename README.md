@@ -43,7 +43,7 @@ Desarrollado como Proyecto Integrador de la Facultad de Ingeniería en Electrici
 | Análisis | LightGBM (gradient boosting) | `ai/scripts/`, `ai/models/` |
 | Control | Ryu + Open vSwitch + VNX | `controller/`, `sdn/`, `datacenter_sdn.xml` |
 | Backend | FastAPI + MongoDB + Solana | `backend/main.py` |
-| Presentación | React + Vite + Tailwind + xterm.js | `frontend-sdn/` |
+| Presentación | React + Vite + Tailwind + xterm.js | `frontend/` |
 
 ---
 
@@ -109,7 +109,7 @@ cd backend && ./venv/bin/python crear_usuarios_iniciales.py
 **3. Levantar el frontend** (en otra terminal, queda en primer plano):
 
 ```bash
-cd frontend-sdn && npm install && npm run dev
+cd frontend && npm install && npm run dev
 ```
 
 Abre `http://localhost:5173` e inicia sesión.
@@ -175,7 +175,7 @@ Roles implementados:
 
 ## Frontend
 
-`frontend-sdn/` es una SPA de React (Vite + Tailwind) con navegación por estado (sin router), para no depender de reglas de reescritura en el servidor web.
+`frontend/` es una SPA de React (Vite + Tailwind) con navegación por estado (sin router), para no depender de reglas de reescritura en el servidor web.
 
 | Página | Contenido |
 |--------|-----------|
@@ -236,7 +236,7 @@ cyberdefense/
 ├── ai/                    # Motor de IA: scripts, modelos y datasets
 ├── backend/               # FastAPI: auth, alertas, hosts, configuración
 ├── controller/            # Ryu + parche wsgi
-├── frontend-sdn/          # Dashboard React (login + páginas por rol)
+├── frontend/             # Dashboard React (login + páginas por rol)
 ├── latex/                 # Reporte del PI en LaTeX
 ├── sdn/                   # Módulos del controlador
 ├── scenarios/             # Escenarios de red
