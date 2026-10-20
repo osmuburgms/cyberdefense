@@ -1,0 +1,46 @@
+\chapter{REFERENCIAS}
+\thispagestyle{empty}
+
+% =====================================================================
+%  PENDIENTE  --  Capitulo 3
+%  Este capitulo es un guia de la plantilla y contiene un ejemplo de
+%  como citar. Cuando el documento este completo:
+%    1) La bibliografia final se genera automaticamente al final del
+%       documento con \printbibliography{} (NO duplicarla aqui).
+%    2) Este capitulo puede conservarse como "Guia de citacion" o
+%       eliminarse comentando \include*{cap03} en ReportePI.tex.
+%
+%  Formato de referencia utilizado: APA (configurado en el preambulo
+%  con \usepackage[natbib=true,backend=biber,sorting=nyt,style=apa]{biblatex}).
+%  Para agregar una referencia nueva: editar referencias.bib y citarla
+%  con \cite{clave}.
+%
+%  Ejemplo de entrada BibTeX:
+%
+%  @article{velasquez2017relation,
+%    title={Relation between BMI and Exit Time of a Building in an Emergency Situation},
+%    author={Velásquez, Washington and Munoz-Arcentales, Andres and Salvachúa, Joaquín},
+%    journal={Engineering Letters},
+%    volume={25},
+%    number={4},
+%    year={2017}
+%  }
+%
+%  Cita en el texto: El articulo presentado por Velásquez, et al.
+%  \cite{velasquez2017relation}.
+% =====================================================================
+
+\section{C\'omo citar en este documento}
+
+Las referencias utilizadas en el texto se invocan con el comando \verb|\cite{clave}|,
+donde \emph{clave} corresponde al identificador de la entrada en el archivo
+\verb|referencias.bib|. La bibliograf\'ia final se genera autom\'aticamente al
+final del documento con el comando \verb|\printbibliography{}|, empleando el
+estilo APA definido en el pre\'ambulo.
+
+Las fuentes consultadas para la construcci\'on del marco te\'orico incluyen,
+entre otras, la especificaci\'on de las capas de las redes programables
+\cite{rfc7426}, los trabajos originales sobre el controlador de red empleado
+\cite{ryu2015onosr,openvswitch2014}, la literatura sobre aprendizaje autom\'atico
+aplicado a la detecci\'on de intrusiones \cite{lightgbm2017} y las gu\'ias
+institucionales de gesti\'on de incidentes de seguridad \cite{nist80061r2,nistcsf20}.

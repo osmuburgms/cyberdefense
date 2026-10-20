@@ -1,10 +1,10 @@
 import pandas as pd
 import numpy as np
-import os
+from pathlib import Path
 
-BASE_DIR = '/home/nfazu/cyberdefense/ai/data'
-os.makedirs(BASE_DIR, exist_ok=True)
-path = os.path.join(BASE_DIR, 'dataset_limpio.csv')
+BASE_DIR = Path(__file__).resolve().parent.parent / 'data'
+BASE_DIR.mkdir(parents=True, exist_ok=True)
+path = BASE_DIR / 'dataset_limpio.csv'
 
 def generate_class(name, n, ports, dur_range, pkts_range, syn, ack, rst, bytes_multiplier):
     df = pd.DataFrame()

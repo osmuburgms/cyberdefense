@@ -4,6 +4,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 import lightgbm as lgb
 import joblib
+from pathlib import Path
 from sklearn.metrics import classification_report
 import warnings
 warnings.filterwarnings('ignore')
@@ -12,7 +13,7 @@ print("🚀 Iniciando el entrenamiento del Modelo Ligero para RAM (SDN)...")
 
 # 1. Ruta de tu dataset (Asegúrate de que apunte a tu CSV procesado de CIC-IDS-2017)
 # Cambia esta ruta si tu archivo se llama diferente o está en otra ubicación
-DATASET_PATH = '/home/nfazu/cyberdefense/ai/data/dataset_limpio.csv'  # <--- AJUSTA ESTO SI ES NECESARIO
+DATASET_PATH = Path(__file__).resolve().parent.parent / 'data' / 'dataset_limpio.csv'
 
 # 2. Las 16 variables exactas que extrae tu script realtime_detector.py
 features_ram = [

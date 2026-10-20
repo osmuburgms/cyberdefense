@@ -1,0 +1,86 @@
+{
+    // ------------------------------------------------------------------
+    // Recetas de compilación equivalentes a Overleaf (XeLaTeX + Biber)
+    // ------------------------------------------------------------------
+    "latex-workshop.latex.tools": [
+        {
+            "name": "latexmk (xelatex + biber)",
+            "command": "latexmk",
+            "args": [
+                "-synctex=1",
+                "-interaction=nonstopmode",
+                "-file-line-error",
+                "-pdfxe",
+                "%DOC%"
+            ],
+            "env": {}
+        },
+        {
+            "name": "xelatex",
+            "command": "xelatex",
+            "args": [
+                "-synctex=1",
+                "-interaction=nonstopmode",
+                "-file-line-error",
+                "%DOC%"
+            ],
+            "env": {}
+        },
+        {
+            "name": "biber",
+            "command": "biber",
+            "args": [
+                "%DOC%"
+            ],
+            "env": {}
+        },
+        {
+            "name": "limpar auxiliares",
+            "command": "latexmk",
+            "args": [
+                "-c",
+                "%DOC%"
+            ],
+            "env": {}
+        }
+    ],
+    "latex-workshop.latex.recipes": [
+        {
+            "name": "latexmk (xelatex + biber)",
+            "tools": [
+                "latexmk (xelatex + biber)"
+            ]
+        },
+        {
+            "name": "xelatex",
+            "tools": [
+                "xelatex"
+            ]
+        },
+        {
+            "name": "biber",
+            "tools": [
+                "biber"
+            ]
+        },
+        {
+            "name": "limpiar auxiliares",
+            "tools": [
+                "limpar auxiliares"
+            ]
+        }
+    ],
+    // Compila automáticamente al guardar
+    "latex-workshop.latex.autoBuild.run": "onFileChange",
+    // El PDF se ve en una pestaña al lado del editor
+    "latex-workshop.view.pdf.viewer": "tab",
+    "latex-workshop.view.pdf.autoRefresh": true,
+    // Errores en el panel de problemas
+    "latex-workshop.latex.autoBuild.clean.fileTypes": [
+        "*.aux", "*.bbl", "*.bcf", "*.blg", "*.fdb_latexmk", "*.fls",
+        "*.log", "*.loa", "*.lof", "*.lol", "*.lot", "*.out", "*.run.xml",
+        "*.synctex.gz", "*.toc", "*.xdv", "*.synctex"
+    ],
+    // Respeta la tipografía del proyecto (Arial) al previsualizar
+    "latex-workshop.font.size": 12
+}

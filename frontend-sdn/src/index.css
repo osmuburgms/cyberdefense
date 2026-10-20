@@ -98,6 +98,13 @@ body {
   100% { transform: scale(1); }
 }
 
+/* Scrollbar fina para la miniconsola SDN */
+.terminal-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
+.terminal-scroll::-webkit-scrollbar-track { background: transparent; }
+.terminal-scroll::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
+.terminal-scroll::-webkit-scrollbar-thumb:hover { background: #4b5563; }
+.terminal-scroll { scrollbar-width: thin; scrollbar-color: #374151 transparent; }
+
 @media (prefers-reduced-motion: reduce) {
   .drawer-in, .backdrop-in, .pop-in, .toast-in, .modal-in, .count-bump,
   .flow-line-active, .pulse-ring {

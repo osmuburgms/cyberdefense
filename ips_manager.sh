@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# ==========================================
+# CARGAR RUTA DE SOLANA
+# ==========================================
+export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+
 LOG_DIR="$HOME/cyberdefense/logs"
 mkdir -p $LOG_DIR
 
@@ -8,30 +13,69 @@ RYU_VENV="$HOME/cyberdefense/controller/venv"
 RYU_BIN="$RYU_VENV/bin/ryu-manager"
 
 IA_VENV="$HOME/cyberdefense/ai/iaenv"           
-BACKEND_VENV="$HOME/cyberdefense/backend/venv"  
+BACKEND_VENV="$HOME/cyberdefense/backend/venv"
+
+# Clave compartida backend <-> motor IA (cabecera X-API-Key). Se genera una
+# vez y se reutiliza; el backend y la IA también la leen del fichero.
+ENGINE_KEY_FILE="$HOME/cyberdefense/.engine_key"
+ensure_engine_key() {
+    if [ ! -s "$ENGINE_KEY_FILE" ]; then
+        if command -v openssl > /dev/null 2>&1; then
+            openssl rand -hex 32 > "$ENGINE_KEY_FILE" 2>/dev/null
+        else
+            head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n' > "$ENGINE_KEY_FILE"
+        fi
+        chmod 600 "$ENGINE_KEY_FILE"
+    fi
+    ENGINE_API_KEY="$(cat "$ENGINE_KEY_FILE" 2>/dev/null)"
+    export IPS_API_KEY="$ENGINE_API_KEY"
+    export ENGINE_API_KEY
+}
+# Rellena el array CURL_AUTH con la cabecera de clave si existe el fichero.
+# Uso: curl_auth_args; curl -s "${CURL_AUTH[@]}" -X POST http://...
+curl_auth_args() {
+    CURL_AUTH=()
+    local key=""
+    [ -s "$ENGINE_KEY_FILE" ] && key="$(cat "$ENGINE_KEY_FILE")"
+    [ -n "$key" ] && CURL_AUTH=(-H "X-API-Key: $key")
+}  
+
+# LXC 6 (Ubuntu 26.04) eliminó /usr/share/lxc/config/ubuntu.common.conf, pero los
+# rootfs de VNX traen un config que lo incluye -> "Failed to load config" y los
+# contenedores nunca arrancan. Creamos un puente hacia el equivalente actual.
+ensure_lxc_compat() {
+    local compat="/usr/share/lxc/config/ubuntu.common.conf"
+    if [ ! -e "$compat" ] && [ -e /usr/share/lxc/config/common.conf ]; then
+        echo "lxc.include = /usr/share/lxc/config/common.conf" \
+            | sudo tee "$compat" > /dev/null 2>&1
+        echo "        Compat LXC6: puente ubuntu.common.conf -> common.conf creado."
+    fi
+}
 
 case "$1" in
     start)
         echo "🚀 Iniciando Arquitectura de Ciberdefensa SDN..."
         
+        # Asegurar directorio y permisos de logs antes de levantar servicios
+        mkdir -p ~/cyberdefense/logs
+        sudo chown -R $USER:$USER ~/cyberdefense/logs
+
+        # Clave compartida backend <-> motor IA (se genera una vez)
+        ensure_engine_key
+        
         echo "   [1/6] Iniciando MongoDB..."
-        sudo docker start mongodb-sdn > /dev/null
+        sudo docker start mongodb-cyberdefense > /dev/null
         
         echo "   [2/6] Iniciando Solana Test Validator..."
-        # Si ya hay un validador escuchando, no arrancamos otro (evita "address in use").
         if solana cluster-version -u http://localhost:8899 > /dev/null 2>&1; then
             echo "        Ya hay un validador escuchando en 8899, se reutiliza."
         else
-            # Matar restos de un validador anterior que quedara a medias
             pkill -f solana-test-validator 2>/dev/null
             sleep 2
 
-            # Detectar qué flags soporta esta versión de solana-test-validator.
-            # (Una versión anterior falló porque le pasamos un flag inexistente,
-            #  el validador no arrancó y el backend daba "Connection refused".)
             SV_HELP="$(solana-test-validator --help 2>&1)"
             SV_FLAGS="--ledger $HOME/cyberdefense/test-ledger"
-            echo "$SV_HELP" | grep -q -- "--reset" && SV_FLAGS="$SV_FLAGS --reset"
+            # ELIMINAMOS LA BANDERA --reset PARA QUE LA BLOCKCHAIN PERSISTA
             echo "$SV_HELP" | grep -q -- "--rpc-port" && SV_FLAGS="$SV_FLAGS --rpc-port 8899"
             echo "$SV_HELP" | grep -q -- "--limit-ledger-size" && SV_FLAGS="$SV_FLAGS --limit-ledger-size 100000000"
 
@@ -53,7 +97,6 @@ case "$1" in
             echo "   ⚠️  El validador Solana NO respondió. Revisa el error de arranque:"
             tail -15 $LOG_DIR/solana.log | sed 's/^/        /'
         else
-            # Asegurar que la cuenta pagadora tenga SOL para las transacciones de auditoría
             solana config set --url http://localhost:8899 > /dev/null 2>&1
             BAL=$(solana balance 2>/dev/null | awk '{print $1}')
             if [ -z "$BAL" ] || [ "${BAL%%.*}" -lt 10 ] 2>/dev/null; then
@@ -63,8 +106,8 @@ case "$1" in
         fi
         
         echo "   [3/6] Levantando Red SDN (VNX y Open vSwitch)..."
+        ensure_lxc_compat
         sudo vnx -f ~/cyberdefense/datacenter_sdn.xml -v -t > $LOG_DIR/vnx.log 2>&1
-        # Configurar y esperar a que el atacante tenga internet real antes de instalar
         echo "   [3.1] Configurando herramientas en el nodo atacante (esto puede tardar unos segundos)..."
         sleep 20 
         
@@ -79,9 +122,10 @@ case "$1" in
         nohup $RYU_BIN ~/cyberdefense/sdn/ryu_ips_controller.py > $LOG_DIR/ryu.log 2>&1 &
         
         echo "   [5/6] Levantando Backend FastAPI..."
-        ( cd $HOME/cyberdefense/backend && source $BACKEND_VENV/bin/activate && nohup uvicorn main:app --host 0.0.0.0 --port 8001 --ws none > $LOG_DIR/backend.log 2>&1 & )
+        # NOTA: sin --ws none para no desactivar websockets; la miniconsola usa HTTP POST /api/hosts/exec
+        ( cd $HOME/cyberdefense/backend && source $BACKEND_VENV/bin/activate && nohup uvicorn main:app --host 0.0.0.0 --port 8001 > $LOG_DIR/backend.log 2>&1 & )
         sleep 3
-        curl -s -X POST http://localhost:8001/api/switch-status/clear > /dev/null || true
+        curl_auth_args; curl -s "${CURL_AUTH[@]}" -X POST http://localhost:8001/api/switch-status/clear > /dev/null || true
         
         echo "   [6/6] Levantando Motor de IA IPS..."
         sudo nohup $IA_VENV/bin/python -u ~/cyberdefense/ai/scripts/realtime_detector.py > $LOG_DIR/ai.log 2>&1 &
@@ -95,7 +139,7 @@ case "$1" in
         sudo pkill -f uvicorn
         sudo pkill -f ryu-manager
         pkill -f solana-test-validator
-        sudo docker stop mongodb-sdn > /dev/null
+        sudo docker stop mongodb-cyberdefense > /dev/null
         sudo vnx -f ~/cyberdefense/datacenter_sdn.xml -v --destroy > /dev/null 2>&1
         echo "✅ Entorno apagado correctamente."
         ;;
@@ -105,7 +149,7 @@ case "$1" in
         sudo pkill -f ryu-manager
         sudo ovs-ofctl -O OpenFlow13 del-flows SDN_Net
         nohup $RYU_BIN ~/cyberdefense/sdn/ryu_ips_controller.py > $LOG_DIR/ryu.log 2>&1 &
-        curl -s -X POST http://localhost:8001/api/switch-status/clear > /dev/null || true
+        curl_auth_args; curl -s "${CURL_AUTH[@]}" -X POST http://localhost:8001/api/switch-status/clear > /dev/null || true
         echo "✅ Switch limpio y Ryu monitoreando de nuevo."
         ;;
         
@@ -119,7 +163,7 @@ case "$1" in
     restart-backend)
         echo "💾 Reiniciando Backend..."
         sudo pkill -f uvicorn
-        ( cd $HOME/cyberdefense/backend && source $BACKEND_VENV/bin/activate && nohup uvicorn main:app --host 0.0.0.0 --port 8001 --ws none > $LOG_DIR/backend.log 2>&1 & )
+        ( cd $HOME/cyberdefense/backend && source $BACKEND_VENV/bin/activate && nohup uvicorn main:app --host 0.0.0.0 --port 8001 > $LOG_DIR/backend.log 2>&1 & )
         echo "✅ Backend reiniciado."
         ;;
         

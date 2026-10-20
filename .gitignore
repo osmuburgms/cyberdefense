@@ -17,3 +17,25 @@ ai/models/lightgbm_1_2M_final.txt
 *.log
 *.sst
 ai/iaenv/
+# Respaldo de venvs antiguos (pre Python 3.14), se pueden borrar
+*.old-py312/
+# Secretos locales (nunca al repo): clave motor IA y secreto JWT
+.engine_key
+backend/.jwt_secret
+
+# LaTeX (reporte del PI): auxiliares de compilación, se regeneran con `make`
+latex/*.aux
+latex/*.bbl
+latex/*.bcf
+latex/*.blg
+latex/*.fdb_latexmk
+latex/*.fls
+latex/*.lof
+latex/*.lol
+latex/*.lot
+latex/*.loa
+latex/*.out
+latex/*.run.xml
+latex/*.synctex.gz
+latex/*.toc
+latex/*.xdv

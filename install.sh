@@ -61,52 +61,15 @@ for pkg in "${BASE_PACKAGES[@]}"; do
 done
 
 VNX_PACKAGES=(
-    bash-completion
-    bridge-utils
-    expect
-    genisoimage
-    graphviz
-    libappconfig-perl
-    libdbi-perl
-    liberror-perl
-    libexception-class-perl
-    libfile-homedir-perl
-    libio-pty-perl
-    libmath-round-perl
-    libnetaddr-ip-perl
-    libnet-ip-perl
-    libnet-ipv6addr-perl
-    libnet-pcap-perl
-    libnet-telnet-perl
-    libreadonly-perl
-    libswitch-perl
-    libsys-virt-perl
-    libterm-readline-perl-perl
-    libxml-checker-perl
-    libxml-dom-perl
-    libxml-libxml-perl
-    libxml-parser-perl
-    libxml-tidy-perl
-    lxc
-    lxc-templates
-    openvswitch-switch
-    picocom
-    pv
-    qemu-kvm
-    screen
-    tree
-    uml-utilities
-    virt-manager
-    virt-viewer
-    vlan
-    w3m
-    wmctrl
-    xdotool
-    xfce4-terminal
-    xterm
-    lsof
-    libvirt-clients
-    libvirt-daemon-system
+    bash-completion bridge-utils expect genisoimage graphviz
+    libappconfig-perl libdbi-perl liberror-perl libexception-class-perl
+    libfile-homedir-perl libio-pty-perl libmath-round-perl libnetaddr-ip-perl
+    libnet-ip-perl libnet-ipv6addr-perl libnet-pcap-perl libnet-telnet-perl
+    libreadonly-perl libswitch-perl libsys-virt-perl libterm-readline-perl-perl
+    libxml-checker-perl libxml-dom-perl libxml-libxml-perl libxml-parser-perl
+    libxml-tidy-perl lxc lxc-templates openvswitch-switch picocom pv qemu-kvm
+    screen tree uml-utilities virt-manager virt-viewer vlan w3m wmctrl xdotool
+    xfce4-terminal xterm lsof libvirt-clients libvirt-daemon-system
 )
 
 echo "========== VNX DEPENDENCIES =========="
@@ -116,12 +79,9 @@ for pkg in "${VNX_PACKAGES[@]}"; do
 done
 
 # =========================
-# MININET
+# OPEN VSWITCH (SDN)
 # =========================
-echo "========== MININET =========="
-install_if_missing mininet
-install_if_missing openvswitch-switch
-
+echo "========== OPEN VSWITCH =========="
 sudo systemctl enable openvswitch-switch || true
 sudo systemctl start openvswitch-switch || true
 
@@ -135,81 +95,33 @@ if ! sudo vnx -V >/dev/null 2>&1; then
 
     mkdir -p /tmp/vnx-update
     cd /tmp/vnx-update
-
     rm -rf vnx-*
 
     wget http://vnx.dit.upm.es/vnx/vnx-latest.tgz
     tar xfvz vnx-latest.tgz
-
     cd vnx-*-*
 
     sudo ./install_vnx
-
 else
     echo "VNX ya instalado"
 fi
 
-sudo sed -i \
-'s|^#\?security_driver.*|security_driver = "none"|' \
-/etc/libvirt/qemu.conf
+sudo sed -i 's|^#\?security_driver.*|security_driver = "none"|' /etc/libvirt/qemu.conf
+sudo sed -i 's|^#\?user.*|user = "root"|' /etc/libvirt/qemu.conf
+sudo sed -i 's|^#\?group.*|group = "root"|' /etc/libvirt/qemu.conf
 
-sudo sed -i \
-'s|^#\?user.*|user = "root"|' \
-/etc/libvirt/qemu.conf
-
-sudo sed -i \
-'s|^#\?group.*|group = "root"|' \
-/etc/libvirt/qemu.conf
-
-sudo systemctl restart libvirtd 2>/dev/null || \
-sudo systemctl restart libvirt-bin
+sudo systemctl restart libvirtd 2>/dev/null || sudo systemctl restart libvirt-bin
 
 if [ ! -f /etc/vnx.conf ]; then
     sudo cp /usr/share/vnx/etc/vnx.conf.sample /etc/vnx.conf
 fi
 
-sudo sed -i \
-"s/overlayfs_workdir_option = 'no'/overlayfs_workdir_option = 'yes'/" \
-/etc/vnx.conf
-
-sudo sed -i \
-"s/union_type='aufs'/union_type='overlayfs'/" \
-/etc/vnx.conf
-
-sudo sed -i \
-"s/lxc_console_cmd=.*/lxc_console_cmd=lxc-attach/" \
-/etc/vnx.conf
+sudo sed -i "s/overlayfs_workdir_option = 'no'/overlayfs_workdir_option = 'yes'/" /etc/vnx.conf
+sudo sed -i "s/union_type='aufs'/union_type='overlayfs'/" /etc/vnx.conf
+sudo sed -i "s/lxc_console_cmd=.*/lxc_console_cmd=lxc-attach/" /etc/vnx.conf
 
 if [ ! -L /etc/libvirt/qemu/networks/autostart/default.xml ]; then
-    sudo ln -s \
-    /etc/libvirt/qemu/networks/default.xml \
-    /etc/libvirt/qemu/networks/autostart/
-fi
-
-if [ ! -d /usr/share/vnx/filesystems/rootfs_lxc_ubuntu64 ]; then
-    cd /usr/share/vnx/filesystems
-    # sudo vnx_download_rootfs
-    sudo vnx_download_rootfs -r rootfs_lxc_ubuntu64
-
-    while [ ! -d /usr/share/vnx/filesystems/rootfs_lxc_ubuntu64 ]; do
-        sleep 2
-    done
-fi
-
-if [ -d /usr/share/vnx/filesystems/rootfs_lxc_ubuntu64 ]; then
-    sudo ln -snf \
-        /usr/share/vnx/filesystems/rootfs_lxc_ubuntu64 \
-        /usr/share/vnx/filesystems/rootfs_lxc
-else
-    echo "No se encontró rootfs_lxc_ubuntu64"
-    exit 1
-fi
-
-if sudo vnx -V >/dev/null 2>&1; then
-    echo "✓ VNX instalado correctamente."
-else
-    echo "✗ Error instalando VNX."
-    exit 1
+    sudo ln -s /etc/libvirt/qemu/networks/default.xml /etc/libvirt/qemu/networks/autostart/
 fi
 
 # =========================
@@ -219,12 +131,8 @@ echo "========== DOCKER =========="
 
 if ! command_exists docker; then
     echo "Instalando Docker..."
-
     sudo install -m 0755 -d /etc/apt/keyrings
-
-    sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
-        -o /etc/apt/keyrings/docker.asc
-
+    sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
     sudo chmod a+r /etc/apt/keyrings/docker.asc
 
     echo \
@@ -237,7 +145,6 @@ Signed-By: /etc/apt/keyrings/docker.asc" | \
     sudo tee /etc/apt/sources.list.d/docker.sources > /dev/null
 
     sudo apt update
-
     sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 else
     echo "Docker ya está instalado"
@@ -247,14 +154,17 @@ sudo systemctl enable docker || true
 sudo systemctl start docker || true
 
 # =========================
-# POSTGRESQL
+# MONGODB (VIA DOCKER)
 # =========================
-echo "========== POSTGRESQL =========="
-install_if_missing postgresql
-install_if_missing postgresql-contrib
-
-sudo systemctl enable postgresql || true
-sudo systemctl start postgresql || true
+echo "========== MONGODB =========="
+if ! sudo docker ps -a | grep -q mongodb-cyberdefense; then
+    echo "Descargando e iniciando contenedor de MongoDB..."
+    sudo docker run -d --name mongodb-cyberdefense -p 27017:27017 -v mongo_data:/data/db mongo:latest
+    sudo docker update --restart unless-stopped mongodb-cyberdefense
+else
+    echo "Contenedor de MongoDB ya existe. Asegurando que esté en ejecución..."
+    sudo docker start mongodb-cyberdefense
+fi
 
 # =========================
 # CAPTURA DE TRÁFICO
@@ -288,10 +198,24 @@ fi
 # =========================
 echo "========== SOLANA =========="
 
+# Forzar la inclusión de la ruta por si se instaló pero no se reconoció en la sesión actual
+export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+
 if ! command_exists solana; then
+    echo "Instalando dependencias base de Solana..."
     sudo apt-get update
     sudo apt-get install -y build-essential pkg-config libudev-dev llvm libclang-dev protobuf-compiler libssl-dev
-    curl --proto '=https' --tlsv1.2 -sSfL https://solana-install.solana.workers.dev | bash
+    
+    echo "Instalando Solana CLI Oficial..."
+    sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
+    
+    # Exportar inmediatamente al PATH
+    export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+    
+    # Asegurar que esté en el bashrc
+    if ! grep -q "solana/install/active_release/bin" ~/.bashrc; then
+        echo 'export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"' >> ~/.bashrc
+    fi
 else
     echo "Solana ya está instalado: $(solana --version)"
 fi
@@ -327,27 +251,14 @@ fi
 # =========================
 echo "========== ESTRUCTURA =========="
 
-DIRECTORIES=(
-    backend
-    ai
-    controller
-    frontend
-    contracts
-    docker
-    docs
-    scenarios
-)
+DIRECTORIES=(backend ai controller frontend-sdn contracts docker docs scenarios)
 
 for dir in "${DIRECTORIES[@]}"; do
     if [ ! -d "$PROJECT_DIR/$dir" ]; then
         echo "Creando carpeta: $dir"
         mkdir -p "$PROJECT_DIR/$dir"
-    else
-        echo "La carpeta $dir ya existe"
     fi
 done
-
-echo "Estructura del proyecto verificada ✅"
 
 # =========================
 # RYU
@@ -368,23 +279,16 @@ if [ ! -d "venv" ]; then
 
     echo "Aplicando parche a Ryu..."
 
-    # Detectar ruta real de site-packages (más robusto que hardcodear python3.10)
     SITE_PACKAGES=$(python -c "import site; print(site.getsitepackages()[0])")
-
     RYU_WSGI_PATH="$SITE_PACKAGES/ryu/app/wsgi.py"
     PATCH_FILE="$PROJECT_DIR/controller/patch/wsgi.py"
 
     if [ -f "$PATCH_FILE" ]; then
-        echo "Parche encontrado: $PATCH_FILE"
-
-        # Backup por si acaso (buena práctica)
         if [ -f "$RYU_WSGI_PATH" ]; then
             cp "$RYU_WSGI_PATH" "$RYU_WSGI_PATH.bak"
             rm "$RYU_WSGI_PATH"
         fi
-
         cp "$PATCH_FILE" "$RYU_WSGI_PATH"
-
         echo "Parche aplicado correctamente ✅"
     else
         echo "ERROR: No se encontró el parche en $PATCH_FILE"
@@ -407,9 +311,7 @@ if [ ! -d "venv" ]; then
     source venv/bin/activate
 
     pip install --upgrade pip
-    pip install fastapi uvicorn[standard]
-    pip install sqlalchemy psycopg2-binary
-    pip install python-multipart websockets scapy
+    pip install fastapi uvicorn[standard] motor solana solders pydantic python-multipart websockets scapy
 
     deactivate
 else
@@ -426,7 +328,7 @@ if [ ! -d "iaenv" ]; then
     python3 -m venv iaenv
     source iaenv/bin/activate
 
-    pip install pandas scikit-learn numpy matplotlib
+    pip install pandas scikit-learn numpy matplotlib lightgbm
 
     deactivate
 else
@@ -437,11 +339,43 @@ fi
 # FRONTEND
 # =========================
 echo "========== FRONTEND =========="
-cd $PROJECT_DIR/frontend
+cd $PROJECT_DIR/frontend-sdn
 
-npx create-vite@latest . --template react
-npm install
-npm install axios react-router-dom recharts
-echo "React instalado correctamente ✅"
+if [ ! -d "node_modules" ]; then
+    npm install
+    echo "Dependencias de React instaladas correctamente ✅"
+else
+    echo "El Frontend ya está inicializado."
+fi
 
-echo "========== INSTALACIÓN FINALIZADA =========="
+# =========================
+# ACTUALIZACIONES FINALES
+# =========================
+echo "========== ACTUALIZACIONES Y LIMPIEZA =========="
+echo "Optimizando dependencias del Frontend..."
+cd $PROJECT_DIR/frontend-sdn
+npm audit fix --no-fund --no-audit > /dev/null 2>&1 || true
+
+echo "Limpiando paquetes innecesarios del sistema..."
+sudo apt autoremove -y > /dev/null 2>&1
+
+# =========================
+# GUÍA POST-INSTALACIÓN (VNX)
+# =========================
+echo ""
+echo "=================================================================="
+echo "✅ INSTALACIÓN BASE FINALIZADA CORRECTAMENTE"
+echo "=================================================================="
+echo "⚠️  ACCIÓN REQUERIDA: INSTALACIÓN MANUAL DE ROOTFS PARA VNX"
+echo "Para evitar errores en Pop!_OS 24.04 u otras distribuciones, el "
+echo "sistema de archivos (RootFS) debe descargarse de forma manual."
+echo ""
+echo "Paso 1: Ejecuta la herramienta de descarga de VNX:"
+echo "   cd /usr/share/vnx/filesystems"
+echo "   sudo vnx_download_rootfs"
+echo ""
+echo "Paso 2: Selecciona el RootFS que necesites (ej. rootfs_lxc_ubuntu64)"
+echo ""
+echo "Paso 3: Crea el enlace simbólico para que tu red lo reconozca:"
+echo "   sudo ln -snf /usr/share/vnx/filesystems/rootfs_lxc_ubuntu64 /usr/share/vnx/filesystems/rootfs_lxc"
+echo "=================================================================="

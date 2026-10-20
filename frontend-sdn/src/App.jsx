@@ -1,9 +1,15 @@
-import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import HostTerminal from './components/HostTerminal.jsx';
+import Sidebar from './components/Sidebar.jsx';
+import Login from './pages/Login.jsx';
+import { AuthProvider, useAuth } from './auth.jsx';
+import { apiFetch, ApiError } from './api.js';
 import {
   ShieldAlert, Server, Database, Activity, Lock, Unlock, CheckCircle2,
-  Bell, BellOff, Settings, ZoomIn, ZoomOut, Network as NetworkIcon, Loader2,
-  Trash2, CheckCheck, X, RotateCcw, LayoutGrid, SlidersHorizontal,
+  Bell, BellOff, ZoomIn, ZoomOut, Network as NetworkIcon, Loader2,
+  Trash2, CheckCheck, X, RotateCcw, LayoutGrid,
   Sun, Moon, Search, ExternalLink, Copy, Check, RefreshCw, ChevronDown, ChevronUp,
+  Terminal, Eraser, Maximize2, LogOut, KeyRound,
 } from 'lucide-react';
 
 const DEFAULT_BACKEND_URL = 'http://localhost:8001';
@@ -28,7 +34,6 @@ const DEFAULT_SETTINGS = {
   backendUrl: DEFAULT_BACKEND_URL,
   pollInterval: 2000,      // ms entre consultas al backend
   attackWindow: 15,        // s en los que un evento se considera "activo" en el mapa
-  trendSize: 20,           // eventos en el gráfico del Panel de IA
   timelineSize: 8,         // eventos en la línea de tiempo
   logSize: 20,             // eventos iniciales en el registro en vivo
   widgets: {
@@ -61,7 +66,7 @@ const BASE_WIDGETS = [
   { key: 'topology', label: 'Topología', desc: 'Mapa de nodos de SDN_Net.' },
   { key: 'timeline', label: 'Línea de tiempo de integridad', desc: 'Secuencia de eventos recientes.' },
   { key: 'blockchain', label: 'Último hash blockchain', desc: 'Firma de la última transacción en Solana.' },
-  { key: 'aiPanel', label: 'Panel de IA', desc: 'Tendencia de confianza y total de eventos.' },
+  { key: 'aiPanel', label: 'Panel de IA', desc: 'Distribución % por tipo de ataque y totales.' },
   { key: 'eventLog', label: 'Registro de eventos en vivo', desc: 'Lista de alertas en tiempo real.' },
 ];
 
@@ -370,15 +375,69 @@ function SectionTitle({ children }) {
   return <h3 className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mt-5 mb-1 first:mt-0">{children}</h3>;
 }
 
-// Estado real de un servicio (MongoDB / Solana) según /api/health.
-// Si el backend no está conectado o el endpoint no existe todavía, muestra un
-// estado neutro en vez de un ONLINE falso.
-function ServiceStatus({ ok, connected }) {
-  if (!connected) return <span className="text-gray-500 text-xs font-bold">● —</span>;
-  if (ok === undefined || ok === null) return <span className="text-green-500 text-xs font-bold">● ONLINE</span>;
-  return ok
-    ? <span className="text-green-500 text-xs font-bold">● ONLINE</span>
-    : <span className="text-red-500 text-xs font-bold">● OFFLINE</span>;
+// Estado real de un servicio (MongoDB / Solana) según /api/health:
+// 'on' | 'off' | 'unknown'. Si el backend no está conectado o el endpoint no
+// existe todavía, se muestra neutro en vez de un ONLINE falso.
+function serviceState(ok, connected) {
+  if (!connected) return 'unknown';
+  if (ok === undefined || ok === null) return 'on';
+  return ok ? 'on' : 'off';
+}
+
+// Anillo de salud: fracción de servicios en línea (gráfico real del panel).
+function HealthRing({ states, isLight }) {
+  const total = states.length;
+  const known = states.filter((s) => s !== 'unknown');
+  const on = states.filter((s) => s === 'on').length;
+  const track = isLight ? '#e5e7eb' : '#111827';
+  const centerFill = isLight ? '#64748b' : '#9ca3af';
+
+  if (known.length === 0) {
+    return (
+      <svg viewBox="0 0 42 42" className="w-32 h-32 shrink-0">
+        <circle cx="21" cy="21" r="15.915" fill="transparent" stroke={track} strokeWidth="5" />
+        <text x="21" y="21" textAnchor="middle" dominantBaseline="central" fill={centerFill} fontSize="9" fontFamily="monospace">—</text>
+      </svg>
+    );
+  }
+
+  const onPct = (on / total) * 100;
+  const offPct = ((known.length - on) / total) * 100;
+  return (
+    <svg viewBox="0 0 42 42" className="w-32 h-32 shrink-0 -rotate-90">
+      <circle cx="21" cy="21" r="15.915" fill="transparent" stroke={track} strokeWidth="5" />
+      {offPct > 0 && (
+        <circle
+          cx="21" cy="21" r="15.915" fill="transparent" stroke="#ef4444" strokeWidth="5"
+          strokeDasharray={`${offPct} ${100 - offPct}`} strokeDashoffset={-onPct}
+        />
+      )}
+      {onPct > 0 && (
+        <circle
+          cx="21" cy="21" r="15.915" fill="transparent" stroke="#22c55e" strokeWidth="5"
+          strokeDasharray={`${onPct} ${100 - onPct}`} strokeDashoffset={0}
+        />
+      )}
+      <text x="21" y="21" textAnchor="middle" dominantBaseline="central" fill={isLight ? '#1e293b' : '#e5e7eb'} fontSize="8" fontFamily="monospace" transform="rotate(90 21 21)">
+        {on}/{total}
+      </text>
+    </svg>
+  );
+}
+
+function ServicePill({ state }) {
+  const style = state === 'on'
+    ? 'border-green-700 bg-green-900/30 text-green-400'
+    : state === 'off'
+      ? 'border-red-700 bg-red-900/30 text-red-400'
+      : 'border-gray-700 bg-gray-900/50 text-gray-500';
+  const dot = state === 'on' ? 'bg-green-500' : state === 'off' ? 'bg-red-500' : 'bg-gray-600';
+  const label = state === 'on' ? 'ONLINE' : state === 'off' ? 'OFFLINE' : '—';
+  return (
+    <span className={`flex items-center gap-1.5 text-xs font-bold font-mono px-2.5 py-1 rounded-full border ${style}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${dot}`} />{label}
+    </span>
+  );
 }
 
 function Modal({ onClose, children, className = '', z = 'z-[60]', label }) {
@@ -428,43 +487,59 @@ function Field({ label, value, mono = true, copy, className = '', valueClass = '
   );
 }
 
-// --- Gráfico: tasa de detección de anomalías (construido a mano, sin dependencias nuevas) ---
+// --- Gráfico: mezcla de ataques en vivo (% por tipo, se actualiza con cada evento) ---
 
-function AnomalySparkline({ values }) {
-  const width = 280;
-  const height = 84;
+const MIX_PALETTE = ['#f87171', '#fb923c', '#facc15', '#60a5fa', '#c084fc', '#22d3ee', '#4ade80', '#f472b6'];
 
-  if (!values || values.length < 2) {
-    return (
-      <div className="h-[84px] flex items-center justify-center text-gray-600 text-xs font-mono">
-        Esperando suficientes eventos...
-      </div>
-    );
+function mixColor(label) {
+  let h = 0;
+  for (let i = 0; i < label.length; i++) h = (h * 31 + label.charCodeAt(i)) >>> 0;
+  return MIX_PALETTE[h % MIX_PALETTE.length];
+}
+
+function AttackMixBars({ data }) {
+  const total = data.reduce((s, d) => s + d.value, 0);
+
+  if (!total) {
+    return <div className="text-xs text-gray-500 font-mono py-6 text-center">Sin ataques registrados todavía.</div>;
   }
 
-  const max = Math.max(...values, 100);
-  const stepX = width / (values.length - 1);
-  const points = values.map((v, i) => {
-    const x = i * stepX;
-    const y = height - (v / max) * (height - 8) - 4;
-    return [x, y];
-  });
-  const linePath = 'M' + points.map(([x, y]) => `${x},${y}`).join(' L');
-  const areaPath = `${linePath} L${width},${height} L0,${height} Z`;
-  const last = points[points.length - 1];
-
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-[84px]" preserveAspectRatio="none">
-      <defs>
-        <linearGradient id="sparkFill" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.35" />
-          <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <path d={areaPath} fill="url(#sparkFill)" stroke="none" />
-      <path d={linePath} fill="none" stroke="#60a5fa" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
-      <circle cx={last[0]} cy={last[1]} r="3" fill="#93c5fd" />
-    </svg>
+    <div>
+      {/* Franja 100% apilada: foto instantánea de la mezcla */}
+      <div className="flex h-2.5 rounded overflow-hidden bg-gray-900 mb-3" title="Mezcla total">
+        {data.map((d) => (
+          <div
+            key={d.label}
+            className="h-full transition-all duration-500"
+            style={{ width: `${(d.value / total) * 100}%`, backgroundColor: mixColor(d.label) }}
+            title={`${d.label}: ${((d.value / total) * 100).toFixed(1)}%`}
+          />
+        ))}
+      </div>
+      <div className="space-y-2.5">
+        {data.map((d) => {
+          const pct = (d.value / total) * 100;
+          return (
+            <div key={d.label}>
+              <div className="flex justify-between text-[11px] font-mono mb-1 gap-2">
+                <span className="flex items-center gap-1.5 text-gray-300 truncate">
+                  <span className="w-2 h-2 rounded-sm shrink-0" style={{ backgroundColor: mixColor(d.label) }} />
+                  <span className="truncate">{d.label}</span>
+                </span>
+                <span className="text-gray-400 shrink-0">{pct.toFixed(1)}% · {d.value}</span>
+              </div>
+              <div className="h-1.5 bg-gray-900 rounded overflow-hidden">
+                <div
+                  className="h-full rounded transition-all duration-500"
+                  style={{ width: `${pct}%`, backgroundColor: mixColor(d.label) }}
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -575,9 +650,9 @@ function KpiStrip({ stats, totalAlerts, totalBlocked }) {
 
 // --- Mapa de red interactivo (nodos arrastrables) ---
 
-function NetworkMap({ latestAlert, isActive, blocked, targetLabel, zoom, positions, onMoveNode, locked, isLight }) {
+function NetworkMap({ latestAlert, isActive, blocked, targetLabel, zoom, positions, onMoveNode, locked, isLight, onHostClick, onSwitchClick }) {
   const containerRef = useRef(null);
-  const dragRef = useRef(null); // { id, dx, dy }
+  const dragRef = useRef(null); // { id, dx, dy, startX, startY, moved }
   const [draggingId, setDraggingId] = useState(null);
 
   const P = positions;
@@ -597,23 +672,42 @@ function NetworkMap({ latestAlert, isActive, blocked, targetLabel, zoom, positio
   };
 
   const handlePointerDown = (id) => (e) => {
-    if (locked || e.button !== 0) return;
-    e.preventDefault();
-    const p = toPercent(e);
-    // Guardamos el desfase para que el nodo no "salte" al centro del cursor
-    dragRef.current = { id, dx: p.x - P[id].x, dy: p.y - P[id].y };
-    e.currentTarget.setPointerCapture(e.pointerId);
-    setDraggingId(id);
+    if (e.button !== 0) return;
+    // Guardamos el punto inicial para distinguir click (abrir consola) de drag (mover)
+    dragRef.current = { id, dx: 0, dy: 0, startX: e.clientX, startY: e.clientY, moved: false };
+    if (!locked) {
+      e.preventDefault();
+      const p = toPercent(e);
+      // Guardamos el desfase para que el nodo no "salte" al centro del cursor
+      dragRef.current.dx = p.x - P[id].x;
+      dragRef.current.dy = p.y - P[id].y;
+      e.currentTarget.setPointerCapture(e.pointerId);
+      setDraggingId(id);
+    }
   };
 
   const handlePointerMove = (e) => {
     const d = dragRef.current;
     if (!d) return;
+    // Si se movió más de 6px ya es un arrastre, no un click
+    if (Math.hypot(e.clientX - d.startX, e.clientY - d.startY) > 6) d.moved = true;
+    if (locked) return;
+    if (draggingId === null) return;
     const p = toPercent(e);
     onMoveNode(d.id, { x: clamp(p.x - d.dx, 4, 96), y: clamp(p.y - d.dy, 7, 84) });
   };
 
-  const handlePointerUp = (e) => {
+  const handlePointerUp = (id) => (e) => {
+    const d = dragRef.current;
+    if (d && !d.moved) {
+      if (onHostClick && (id === 'attacker' || id === 'server1' || id === 'server2')) {
+        // Click sin arrastre sobre un host: abrir la miniconsola de ese host
+        onHostClick(id);
+      } else if (id === 'switchNode' && onSwitchClick) {
+        // Click sin arrastre sobre el OVS: ofrecer limpieza del switch
+        onSwitchClick();
+      }
+    }
     if (!dragRef.current) return;
     dragRef.current = null;
     setDraggingId(null);
@@ -622,20 +716,29 @@ function NetworkMap({ latestAlert, isActive, blocked, targetLabel, zoom, positio
     }
   };
 
-  const nodeProps = (id) => ({
-    className: `absolute select-none ${locked ? '' : draggingId === id ? 'cursor-grabbing z-30' : 'cursor-grab z-10 hover:z-20'}`,
-    style: {
-      left: `${P[id].x}%`,
-      top: `${P[id].y}%`,
-      transform: 'translate(-50%, -50%)',
-      touchAction: locked ? 'auto' : 'none',
-    },
-    onPointerDown: handlePointerDown(id),
-    onPointerMove: handlePointerMove,
-    onPointerUp: handlePointerUp,
-    onPointerCancel: handlePointerUp,
-    title: locked ? undefined : 'Arrastra para mover',
-  });
+  const nodeProps = (id) => {
+    const clickable = id === 'attacker' || id === 'server1' || id === 'server2';
+    const isSwitch = id === 'switchNode';
+    const title = clickable
+      ? 'Click para abrir consola · Arrastra para mover'
+      : isSwitch
+        ? 'Click para limpiar el switch (clean-switch) · Arrastra para mover'
+        : (locked ? undefined : 'Arrastra para mover');
+    return {
+      className: `absolute select-none ${locked ? '' : draggingId === id ? 'cursor-grabbing z-30' : 'cursor-grab z-10 hover:z-20'} ${clickable ? 'cursor-pointer' : ''}`,
+      style: {
+        left: `${P[id].x}%`,
+        top: `${P[id].y}%`,
+        transform: 'translate(-50%, -50%)',
+        touchAction: locked ? 'auto' : 'none',
+      },
+      onPointerDown: handlePointerDown(id),
+      onPointerMove: handlePointerMove,
+      onPointerUp: handlePointerUp(id),
+      onPointerCancel: handlePointerUp(id),
+      title,
+    };
+  };
 
   const dragRing = (id) => (draggingId === id ? 'ring-2 ring-blue-400/70 ring-offset-2 ring-offset-gray-800' : '');
 
@@ -672,9 +775,12 @@ function NetworkMap({ latestAlert, isActive, blocked, targetLabel, zoom, positio
 
       {/* Attacker */}
       <div {...nodeProps('attacker')}>
-        <div className={`rounded-lg bg-gray-800 ${dragRing('attacker')}`}>
-          <div className={`w-14 h-14 rounded-lg flex items-center justify-center border-2 ${blocked ? 'bg-red-900/60 border-red-500' : 'bg-green-900/30 border-green-700'}`}>
+        <div className={`relative rounded-lg bg-gray-800 ${dragRing('attacker')}`}>
+          <div className={`w-14 h-14 rounded-lg flex items-center justify-center border-2 transition-colors hover:border-green-400 ${blocked ? 'bg-red-900/60 border-red-500' : 'bg-green-900/30 border-green-700'}`}>
             <ShieldAlert size={24} className={blocked ? 'text-red-400' : 'text-green-400'} />
+          </div>
+          <div className="absolute -bottom-2 -right-2 w-6 h-6 rounded-full bg-gray-900 border border-gray-600 flex items-center justify-center" title="Abrir consola">
+            <Terminal size={11} className="text-green-400" />
           </div>
         </div>
         <div className={labelClass}>
@@ -706,9 +812,12 @@ function NetworkMap({ latestAlert, isActive, blocked, targetLabel, zoom, positio
 
       {/* server1 */}
       <div {...nodeProps('server1')}>
-        <div className={`rounded-lg bg-gray-800 ${dragRing('server1')}`}>
-          <div className={`w-12 h-12 rounded-lg flex items-center justify-center border-2 ${server1Active ? 'bg-red-900/40 border-red-500' : 'bg-gray-800 border-green-700'}`}>
+        <div className={`relative rounded-lg bg-gray-800 ${dragRing('server1')}`}>
+          <div className={`w-12 h-12 rounded-lg flex items-center justify-center border-2 transition-colors hover:border-green-400 ${server1Active ? 'bg-red-900/40 border-red-500' : 'bg-gray-800 border-green-700'}`}>
             <Server size={19} className={server1Active ? 'text-red-400' : 'text-green-400'} />
+          </div>
+          <div className="absolute -bottom-2 -right-2 w-6 h-6 rounded-full bg-gray-900 border border-gray-600 flex items-center justify-center" title="Abrir consola">
+            <Terminal size={11} className="text-green-400" />
           </div>
         </div>
         <div className={labelClass}>
@@ -719,9 +828,12 @@ function NetworkMap({ latestAlert, isActive, blocked, targetLabel, zoom, positio
 
       {/* server2 */}
       <div {...nodeProps('server2')}>
-        <div className={`rounded-lg bg-gray-800 ${dragRing('server2')}`}>
-          <div className={`w-12 h-12 rounded-lg flex items-center justify-center border-2 ${server2Active ? 'bg-red-900/40 border-red-500' : 'bg-gray-800 border-green-700'}`}>
+        <div className={`relative rounded-lg bg-gray-800 ${dragRing('server2')}`}>
+          <div className={`w-12 h-12 rounded-lg flex items-center justify-center border-2 transition-colors hover:border-green-400 ${server2Active ? 'bg-red-900/40 border-red-500' : 'bg-gray-800 border-green-700'}`}>
             <Server size={19} className={server2Active ? 'text-red-400' : 'text-green-400'} />
+          </div>
+          <div className="absolute -bottom-2 -right-2 w-6 h-6 rounded-full bg-gray-900 border border-gray-600 flex items-center justify-center" title="Abrir consola">
+            <Terminal size={11} className="text-green-400" />
           </div>
         </div>
         <div className={labelClass}>
@@ -811,12 +923,229 @@ function EventRow({ alert, onClick }) {
   );
 }
 
+// --- Detalle inline de la amenaza del panel (MongoDB + Solana, compacto) ---
+// Misma información que el modal, pero viviendo dentro del panel: cuando el
+// panel se estira, aquí se ve más contenido en vez de letras separadas.
+
+function ThreatDetail({ alert, api, related }) {
+  const [chain, setChain] = useState({ status: 'idle' });
+  const [tries, setTries] = useState(0);
+  const [showJson, setShowJson] = useState(false);
+  const signature = alert.blockchain_signature;
+  const chainStatus = alert.blockchain_status; // pending | confirmed | unconfirmed | error | undefined
+
+  const load = useCallback(async () => {
+    if (!signature) return;
+    setChain({ status: 'loading' });
+    try {
+      const body = await api(`/api/blockchain/tx/${encodeURIComponent(signature)}`);
+      setChain({ status: 'ok', data: body });
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 404) {
+        setChain({ status: 'notyet', error: e.message });
+        return;
+      }
+      setChain({ status: 'error', error: e.message || 'Error desconocido' });
+    }
+  }, [api, signature]);
+
+  useEffect(() => {
+    setTries(0);
+    if (signature) load();
+    else setChain({ status: 'idle' });
+  }, [signature, load]);
+
+  // Reintentos cortos mientras la tx se sella (máx. 3; el modal reintenta más)
+  useEffect(() => {
+    if (chain.status !== 'notyet' || tries >= 3) return;
+    const t = setTimeout(() => {
+      setTries((n) => n + 1);
+      load();
+    }, 2500);
+    return () => clearTimeout(t);
+  }, [chain.status, tries, load]);
+
+  const tx = chain.data;
+
+  return (
+    <div className="mt-3 pt-3 border-t border-gray-700 space-y-3">
+      <section>
+        <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Registro en MongoDB</p>
+        <div className="grid grid-cols-1 gap-1.5 bg-gray-900/50 border border-gray-700 rounded-lg p-2.5 text-xs">
+          <div className="flex items-start gap-1 min-w-0">
+            <span className="text-gray-500 shrink-0">ID:</span>
+            <span className="font-mono text-gray-300 break-all">{alert._id}</span>
+            <CopyButton text={String(alert._id)} label="Copiar ID" />
+          </div>
+          <div className="flex justify-between gap-2">
+            <span className="text-gray-500">Fecha (local):</span>
+            <span className="font-mono text-gray-300 text-right">{formatDateTime(alert.timestamp)}</span>
+          </div>
+          <div className="flex justify-between gap-2">
+            <span className="text-gray-500">Puerto destino:</span>
+            <span className="font-mono text-gray-300">{alert.victim_port}</span>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div className="flex items-center justify-between mb-1.5 gap-2">
+          <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Registro en Solana</p>
+          {signature && (
+            <a
+              href={solanaExplorerUrl(signature)}
+              target="_blank"
+              rel="noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="flex items-center gap-1 text-[10px] text-blue-400 hover:text-blue-300 shrink-0"
+            >
+              Explorer <ExternalLink size={10} />
+            </a>
+          )}
+        </div>
+        <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-2.5 text-xs space-y-1.5">
+          {!signature ? (
+            <p className="text-gray-500 font-mono text-[11px]">
+              {chainStatus === 'error'
+                ? `No se pudo registrar${alert.blockchain_error ? `: ${alert.blockchain_error}` : '.'}`
+                : 'Registrando en la blockchain…'}
+            </p>
+          ) : (
+            <>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {chainStatus === 'confirmed' && <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border border-green-700 bg-green-900/30 text-green-400">CONFIRMADA</span>}
+                {chainStatus === 'pending' && <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border border-yellow-700 bg-yellow-900/30 text-yellow-400">PENDIENTE</span>}
+                {chainStatus === 'unconfirmed' && <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border border-orange-700 bg-orange-900/30 text-orange-400">SIN CONFIRMAR</span>}
+                <button
+                  onClick={(e) => { e.stopPropagation(); setTries(0); load(); }}
+                  className="p-0.5 rounded text-gray-500 hover:text-gray-200 hover:bg-gray-700"
+                  title="Volver a consultar"
+                  aria-label="Volver a consultar Solana"
+                >
+                  <RefreshCw size={11} className={chain.status === 'loading' ? 'animate-spin' : ''} />
+                </button>
+              </div>
+              <div className="flex items-start gap-1 min-w-0">
+                <span className="text-gray-500 shrink-0">Firma:</span>
+                <span className="font-mono text-yellow-400/90 break-all">{signature}</span>
+                <CopyButton text={signature} label="Copiar firma" />
+              </div>
+              {chain.status === 'loading' && (
+                <p className="flex items-center gap-1.5 text-gray-500 font-mono text-[11px]">
+                  <Loader2 size={12} className="animate-spin" /> Consultando el ledger…
+                </p>
+              )}
+              {chain.status === 'notyet' && (
+                <p className="text-gray-500 font-mono text-[11px]">
+                  Sellándose en el ledger… {tries >= 3 ? '(pulsa recargar)' : `(reintento ${tries + 1}/3)`}
+                </p>
+              )}
+              {chain.status === 'error' && (
+                <p className="text-red-400 font-mono text-[11px]">No se pudo obtener: {chain.error}</p>
+              )}
+              {chain.status === 'ok' && tx && (
+                <>
+                  <div className="flex justify-between gap-2 font-mono text-[11px]">
+                    <span className="text-gray-500">Slot:</span>
+                    <span className="text-gray-300">{tx.slot?.toLocaleString() ?? '—'}</span>
+                  </div>
+                  <div className="flex justify-between gap-2 font-mono text-[11px]">
+                    <span className="text-gray-500">Estado:</span>
+                    <span className={tx.status === 'confirmed' ? 'text-green-400' : 'text-red-400'}>
+                      {tx.status === 'confirmed' ? 'Confirmada' : 'Fallida'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between gap-2 font-mono text-[11px]">
+                    <span className="text-gray-500">Comisión:</span>
+                    <span className="text-gray-300 text-right">
+                      {tx.fee_lamports != null ? `${tx.fee_lamports.toLocaleString()} lamports` : '—'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between gap-2 font-mono text-[11px]">
+                    <span className="text-gray-500">Fecha del bloque:</span>
+                    <span className="text-gray-300 text-right">
+                      {tx.block_time ? new Date(tx.block_time * 1000).toLocaleString() : '—'}
+                    </span>
+                  </div>
+                  {tx.fee_payer && (
+                    <div className="flex items-start gap-1 min-w-0 font-mono text-[11px]">
+                      <span className="text-gray-500 shrink-0">Pagadora:</span>
+                      <span className="text-gray-300 break-all">{tx.fee_payer}</span>
+                      <CopyButton text={tx.fee_payer} label="Copiar pagadora" />
+                    </div>
+                  )}
+                  {tx.recent_blockhash && (
+                    <div className="flex items-start gap-1 min-w-0 font-mono text-[11px]">
+                      <span className="text-gray-500 shrink-0">Blockhash:</span>
+                      <span className="text-gray-300 break-all">{tx.recent_blockhash}</span>
+                      <CopyButton text={tx.recent_blockhash} label="Copiar blockhash" />
+                    </div>
+                  )}
+                  {tx.memo && (
+                    <pre className="font-mono text-[10px] text-gray-400 whitespace-pre-wrap break-all bg-gray-900 border border-gray-700 rounded p-1.5">
+                      {tx.memo}
+                    </pre>
+                  )}
+                </>
+              )}
+            </>
+          )}
+        </div>
+      </section>
+
+      {related && (
+        <section>
+          <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+            Actividad de {alert.attacker_ip} ({related.count} otro{related.count === 1 ? '' : 's'})
+          </p>
+          {related.count === 0 ? (
+            <p className="text-[11px] text-gray-500 font-mono">Único evento de este atacante en lo cargado.</p>
+          ) : (
+            <div className="space-y-1">
+              {related.items.map((a) => (
+                <div key={a._id} className="flex justify-between gap-2 font-mono text-[11px] bg-gray-900/50 border border-gray-700 rounded px-2 py-1">
+                  <span className="text-gray-300 truncate">{a.attack_type} :{a.victim_port}</span>
+                  <span className="text-gray-500 shrink-0">{parseTimestamp(a.timestamp).toLocaleTimeString()}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
+      <section>
+        <button
+          onClick={() => setShowJson((v) => !v)}
+          className="flex items-center gap-1.5 text-[11px] text-gray-400 hover:text-gray-200"
+          aria-expanded={showJson}
+        >
+          {showJson ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+          Documento JSON completo
+        </button>
+        {showJson && (
+          <div className="relative mt-1.5">
+            <div className="absolute top-1 right-1">
+              <CopyButton text={JSON.stringify(alert, null, 2)} label="Copiar JSON" />
+            </div>
+            <pre className="font-mono text-[10px] text-gray-300 whitespace-pre-wrap break-all bg-gray-900 border border-gray-700 rounded p-2">
+              {JSON.stringify(alert, null, 2)}
+            </pre>
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
+
 // --- Ventana de detalle de un ataque (MongoDB + Solana) ---
 
-function AlertDetailModal({ alert, backendUrl, onClose }) {
+function AlertDetailModal({ alert, api, onClose, onDeleted, canDelete }) {
   const [chain, setChain] = useState({ status: 'idle' });
   const [showJson, setShowJson] = useState(false);
   const [autoTries, setAutoTries] = useState(0);
+  const [confirmDel, setConfirmDel] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [delError, setDelError] = useState('');
   const signature = alert.blockchain_signature;
   const chainStatus = alert.blockchain_status; // pending | confirmed | unconfirmed | error | undefined
   const sev = getSeverity(alert.confidence);
@@ -826,22 +1155,17 @@ function AlertDetailModal({ alert, backendUrl, onClose }) {
     if (!signature) return;
     setChain({ status: 'loading' });
     try {
-      const r = await fetch(`${backendUrl}/api/blockchain/tx/${encodeURIComponent(signature)}`);
-      const body = await r.json().catch(() => ({}));
-      if (!r.ok) {
-        if (r.status === 404) {
-          // Aún no consultable en el ledger: no es un error definitivo, reintentamos
-          setChain({ status: 'notyet', error: body.detail || 'Aún no disponible en el ledger.' });
-          return;
-        }
-        const msg = typeof body.detail === 'string' ? body.detail : `HTTP ${r.status}`;
-        throw new Error(msg);
-      }
+      const body = await api(`/api/blockchain/tx/${encodeURIComponent(signature)}`);
       setChain({ status: 'ok', data: body });
     } catch (e) {
+      if (e instanceof ApiError && e.status === 404) {
+        // Aún no consultable en el ledger: no es un error definitivo, reintentamos
+        setChain({ status: 'notyet', error: e.message });
+        return;
+      }
       setChain({ status: 'error', error: e.message || 'Error desconocido' });
     }
-  }, [backendUrl, signature]);
+  }, [api, signature]);
 
   // Al abrir (o cuando llega la firma) se consulta el ledger.
   useEffect(() => {
@@ -862,6 +1186,26 @@ function AlertDetailModal({ alert, backendUrl, onClose }) {
   }, [chain.status, autoTries, loadChain]);
 
   const tx = chain.data;
+
+  // Borrado de este registro en MongoDB (no vuelve a aparecer al recargar).
+  // La transacción de Solana, si ya se selló, permanece en el ledger inmutable.
+  const handleDelete = async () => {
+    if (!confirmDel) {
+      setConfirmDel(true);
+      setTimeout(() => setConfirmDel(false), 5000);
+      return;
+    }
+    setDeleting(true);
+    setDelError('');
+    try {
+      await api(`/api/alerts/${encodeURIComponent(alert._id)}`, { method: 'DELETE' });
+      onDeleted?.(alert._id);
+    } catch (e) {
+      setDelError(e.message || 'No se pudo borrar');
+      setDeleting(false);
+      setConfirmDel(false);
+    }
+  };
 
   // Mensaje del estado de la firma (mientras el backend la confirma)
   const pendingLabel = chainStatus === 'unconfirmed'
@@ -887,6 +1231,26 @@ function AlertDetailModal({ alert, backendUrl, onClose }) {
         <button onClick={onClose} className="text-gray-400 hover:text-gray-100 p-1 rounded" aria-label="Cerrar detalle">
           <X size={18} />
         </button>
+      </div>
+
+      <div className="flex items-center justify-between gap-2 px-5 py-2 bg-gray-900/40 border-b border-gray-700">
+        <p className="text-[10px] text-gray-600 font-mono">
+          {canDelete ? 'Borrar quita el registro de MongoDB (no reaparece).' : 'Solo el administrador puede eliminar registros.'}
+        </p>
+        <div className="flex items-center gap-2">
+          {delError && <span className="text-[11px] text-red-400 font-mono">{delError}</span>}
+          {canDelete && (
+          <button
+            onClick={handleDelete}
+            disabled={deleting}
+            className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded border transition-colors disabled:opacity-40 ${confirmDel ? 'border-red-500 bg-red-600/20 text-red-300 font-bold' : 'border-gray-700 text-gray-400 hover:text-red-300 hover:border-red-600'}`}
+            title="Elimina este registro de MongoDB"
+          >
+            <Trash2 size={13} />
+            {deleting ? 'Borrando…' : confirmDel ? '¡Confirmar borrado!' : 'Eliminar registro'}
+          </button>
+          )}
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
@@ -1023,6 +1387,104 @@ function AlertDetailModal({ alert, backendUrl, onClose }) {
   );
 }
 
+// --- Confirmación de limpieza del switch (equivale a ./ips_manager.sh clean-switch) ---
+
+function CleanSwitchModal({ api, onClose }) {
+  const [phase, setPhase] = useState('confirm'); // confirm | running | done
+  const [result, setResult] = useState(null);
+
+  const run = async () => {
+    setPhase('running');
+    try {
+      const body = await api('/api/switch/clean', { method: 'POST' });
+      setResult({
+        ok: body && body.status === 'ok',
+        steps: Array.isArray(body && body.steps) ? body.steps : [],
+        rawError: null,
+      });
+    } catch (e) {
+      setResult({ ok: false, steps: [], rawError: e.message || 'Sin conexión con el backend' });
+    }
+    setPhase('done');
+  };
+
+  return (
+    <Modal onClose={onClose} className="max-w-lg" label="Limpiar switch">
+      <div className="flex items-start justify-between gap-4 px-5 pt-5 pb-4 border-b border-gray-700">
+        <div className="min-w-0">
+          <p className="text-[11px] text-gray-500">Mantenimiento de la SDN</p>
+          <h2 className="text-base font-bold text-gray-100 flex items-center gap-2">
+            <Eraser size={17} className="text-blue-400" /> Limpiar switch
+          </h2>
+          <p className="text-[11px] text-gray-500 font-mono mt-0.5">Equivale a <span className="text-gray-300">./ips_manager.sh clean-switch</span></p>
+        </div>
+        <button onClick={onClose} className="text-gray-400 hover:text-gray-100 p-1 rounded" aria-label="Cerrar">
+          <X size={18} />
+        </button>
+      </div>
+
+      <div className="px-5 py-4">
+        {phase === 'confirm' && (
+          <div className="space-y-3">
+            <p className="text-sm text-gray-300">Esto va a:</p>
+            <ol className="text-xs font-mono text-gray-400 space-y-1.5 list-decimal list-inside">
+              <li>Detener el controlador Ryu</li>
+              <li>Borrar todos los flujos del switch <span className="text-gray-200">SDN_Net</span> (incluidas las reglas DROP del IPS)</li>
+              <li>Reiniciar Ryu en modo monitoreo</li>
+              <li>Marcar el dashboard como no bloqueado</li>
+            </ol>
+            <p className="text-[11px] text-yellow-400/90 leading-snug">
+              Tras la limpieza el tráfico del atacante vuelve a pasar: un ataque en curso puede generar una alerta nueva.
+            </p>
+            <div className="flex justify-end gap-2 pt-1">
+              <button onClick={onClose} className="text-xs px-4 py-1.5 rounded bg-gray-700 hover:bg-gray-600 text-gray-100">Cancelar</button>
+              <button onClick={run} className="flex items-center gap-1.5 text-xs px-4 py-1.5 rounded bg-blue-600 hover:bg-blue-500 text-white font-semibold">
+                <Eraser size={13} /> Confirmar limpieza
+              </button>
+            </div>
+          </div>
+        )}
+
+        {phase === 'running' && (
+          <div className="flex items-center justify-center gap-2 py-8 text-sm text-gray-300 font-mono">
+            <Loader2 size={18} className="animate-spin text-blue-400" /> Limpiando switch y reiniciando Ryu…
+          </div>
+        )}
+
+        {phase === 'done' && result && (
+          <div className="space-y-3">
+            <div className={`flex items-center gap-2 text-sm font-mono font-bold px-3 py-2 rounded border ${result.ok ? 'border-green-700 bg-green-900/30 text-green-400' : 'border-orange-700 bg-orange-900/30 text-orange-400'}`}>
+              {result.ok ? <Check size={15} /> : <X size={15} />}
+              {result.ok ? 'Switch limpio y Ryu monitoreando de nuevo.' : 'Limpieza parcial: revisa los pasos.'}
+            </div>
+            {result.rawError && <p className="text-xs text-red-400 font-mono">{result.rawError}</p>}
+            {result.steps.length > 0 && (
+              <div className="space-y-2">
+                {result.steps.map((s, i) => (
+                  <div key={i} className="bg-gray-900/50 border border-gray-700 rounded-lg px-3 py-2">
+                    <p className={`flex items-center gap-1.5 text-xs font-mono font-bold ${s.ok ? 'text-green-400' : 'text-red-400'}`}>
+                      {s.ok ? <Check size={13} /> : <X size={13} />} {s.name}
+                    </p>
+                    {s.detail && <pre className="text-[11px] font-mono text-gray-400 whitespace-pre-wrap break-all mt-1">{s.detail}</pre>}
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="flex justify-end gap-2 pt-1">
+              {!result.ok && (
+                <button onClick={() => { setResult(null); setPhase('confirm'); }} className="text-xs px-4 py-1.5 rounded border border-gray-700 text-gray-300 hover:border-gray-500">
+                  Reintentar
+                </button>
+              )}
+              <button onClick={onClose} className="text-xs px-4 py-1.5 rounded bg-gray-700 hover:bg-gray-600 text-gray-100">Cerrar</button>
+            </div>
+          </div>
+        )}
+      </div>
+    </Modal>
+  );
+}
+
 // --- Buscador de eventos con filtros ---
 
 const inputClass = 'w-full bg-gray-900 border border-gray-700 rounded px-2 py-1.5 text-xs font-mono text-gray-200 focus:outline-none focus:border-blue-500';
@@ -1036,7 +1498,7 @@ function FilterField({ label, children }) {
   );
 }
 
-function SearchModal({ backendUrl, filters, setFilters, onClose, onSelect, fallbackAlerts }) {
+function SearchModal({ api, filters, setFilters, onClose, onSelect, fallbackAlerts }) {
   const [data, setData] = useState(null);
   const [status, setStatus] = useState('loading');
   const [shown, setShown] = useState(100);
@@ -1046,16 +1508,14 @@ function SearchModal({ backendUrl, filters, setFilters, onClose, onSelect, fallb
   const load = useCallback(async () => {
     setStatus('loading');
     try {
-      const r = await fetch(`${backendUrl}/api/alerts?limit=${SEARCH_FETCH_LIMIT}`);
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      const d = await r.json();
+      const d = await api(`/api/alerts?limit=${SEARCH_FETCH_LIMIT}`);
       setData(Array.isArray(d) ? d : []);
       setStatus('ok');
     } catch {
       setData(fallbackRef.current || []);
       setStatus('error');
     }
-  }, [backendUrl]);
+  }, [api]);
 
   useEffect(() => { load(); }, [load]);
   useEffect(() => { setShown(100); }, [filters]);
@@ -1259,24 +1719,349 @@ function Toast({ toast, onDismiss }) {
   );
 }
 
-// --- Panel de configuración ---
+function EventLogCard(props) {
+  const {
+    listHeight, selectMode, setSelectMode, setSelectedIds, setConfirmSelDel,
+    selectedIds, logItems, activeFilterCount, setSearchOpen, toggleSelectId,
+    selectAlert, loading, alerts, totalAlerts, logLimit, settings, setLogLimit,
+    canLoadMore, loadingMore, isAdmin, confirmSelDel, deleteSelected, deleting,
+    confirmWipe, setConfirmWipe, deleteAllRecords,
+  } = props;
+  return (
+    <div className="bg-gray-800 p-4 rounded-lg border border-gray-700 shadow-lg flex flex-col min-w-0">
+      <div className="flex items-center justify-between mb-2 gap-2">
+        <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Registro de Eventos en Vivo</h2>
+        <div className="flex items-center gap-1 shrink-0">
+          {isAdmin && (
+          <button
+            onClick={() => { setSelectMode((v) => !v); setSelectedIds(new Set()); setConfirmSelDel(false); }}
+            className={`text-xs px-2 py-1 rounded border transition-colors ${selectMode ? 'bg-blue-600/20 border-blue-500 text-blue-300' : 'bg-gray-900 border-gray-700 text-gray-400 hover:text-gray-200 hover:border-gray-500'}`}
+            title={selectMode ? 'Salir del modo selección' : 'Seleccionar registros para borrar (admin)'}
+          >
+            {selectMode ? 'Cancelar' : 'Seleccionar'}
+          </button>
+          )}
+          <button
+            onClick={() => setSearchOpen(true)}
+            className="relative flex items-center gap-1.5 text-xs px-2 py-1 rounded bg-gray-900 border border-gray-700 text-gray-400 hover:text-gray-200 hover:border-gray-500 shrink-0"
+            title="Buscar con filtros"
+          >
+            <Search size={13} /> Buscar
+            {activeFilterCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-blue-600 text-[10px] font-bold text-white flex items-center justify-center">
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
+        </div>
+      </div>
+      {selectMode && (
+        <div className="flex items-center justify-between gap-2 mb-3 px-2 py-1.5 rounded bg-gray-900/60 border border-gray-700 text-[11px] font-mono">
+          <button
+            onClick={() => {
+              if (selectedIds.size === logItems.length && logItems.length > 0) setSelectedIds(new Set());
+              else setSelectedIds(new Set(logItems.map((a) => a._id).filter(Boolean)));
+            }}
+            className="text-gray-400 hover:text-gray-100"
+          >
+            {selectedIds.size === logItems.length && logItems.length > 0 ? 'Desmarcar visibles' : `Marcar visibles (${logItems.length})`}
+          </button>
+          <span className="text-gray-500">{selectedIds.size} seleccionados</span>
+          <button
+            onClick={() => (confirmSelDel ? deleteSelected() : setConfirmSelDel(true))}
+            disabled={selectedIds.size === 0 || deleting}
+            className={`flex items-center gap-1 px-2 py-1 rounded border transition-colors disabled:opacity-40 ${confirmSelDel ? 'border-red-500 bg-red-600/20 text-red-300' : 'border-gray-700 text-gray-400 hover:text-red-300 hover:border-red-600'}`}
+            title="Borra de MongoDB los registros seleccionados (no volverán a aparecer)"
+          >
+            <Trash2 size={12} />
+            {deleting ? 'Borrando…' : confirmSelDel ? `¡Confirmar borrado (${selectedIds.size})!` : 'Borrar'}
+          </button>
+        </div>
+      )}
+      {/* Lista con altura fija y scroll interno; "Ver más" añade dentro del mismo scroll */}
+      <div className={`${listHeight} overflow-y-auto space-y-3 pr-1 text-xs font-mono`}>
+        {loading ? (
+          <p className="text-gray-500">Cargando eventos...</p>
+        ) : alerts.length === 0 ? (
+          <p className="text-gray-500">Sin ataques detectados. Ejecuta una prueba desde el atacante.</p>
+        ) : (
+          logItems.map((alert, index) => (
+            selectMode ? (
+              <div key={alert._id || index} className="flex items-start gap-2">
+                <input
+                  type="checkbox"
+                  checked={alert._id ? selectedIds.has(alert._id) : false}
+                  onChange={() => alert._id && toggleSelectId(alert._id)}
+                  className="mt-2 w-4 h-4 shrink-0 accent-blue-500 cursor-pointer"
+                  aria-label={`Seleccionar evento ${shortId(alert._id)}`}
+                />
+                <div className="flex-1 min-w-0">
+                  <EventRow alert={alert} onClick={selectAlert} />
+                </div>
+              </div>
+            ) : (
+              <EventRow key={alert._id || index} alert={alert} onClick={selectAlert} />
+            )
+          ))
+        )}
+      </div>
+      {!loading && alerts.length > 0 && (
+        <div className="pt-3 mt-3 border-t border-gray-700 flex items-center justify-between gap-2">
+          <span className="text-[10px] text-gray-500 font-mono">
+            Mostrando {logItems.length} de {totalAlerts.toLocaleString()}
+          </span>
+          <div className="flex items-center gap-1">
+            {isAdmin && (
+            <button
+              onClick={() => (confirmWipe ? deleteAllRecords() : setConfirmWipe(true))}
+              disabled={deleting}
+              className={`text-xs px-2 py-1 rounded transition-colors disabled:opacity-40 ${confirmWipe ? 'bg-red-600/20 text-red-300 font-bold' : 'text-gray-500 hover:text-red-300'}`}
+              title="Borra TODOS los registros de MongoDB (limpieza total de pruebas)"
+            >
+              {deleting ? 'Borrando…' : confirmWipe ? '¡Vaciar todo!' : 'Vaciar'}
+            </button>
+            )}
+            {logLimit > settings.logSize && (
+              <button
+                onClick={() => setLogLimit(settings.logSize)}
+                className="text-xs px-2 py-1 rounded text-gray-400 hover:text-gray-200"
+              >
+                Mostrar menos
+              </button>
+            )}
+            {canLoadMore && (
+              <button
+                onClick={() => setLogLimit((l) => Math.min(LIVE_MAX_LIMIT, l + LOG_PAGE_SIZE))}
+                disabled={loadingMore}
+                className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded border border-gray-700 text-gray-300 hover:border-gray-500 disabled:opacity-60"
+              >
+                {loadingMore ? <Loader2 size={12} className="animate-spin" /> : <ChevronDown size={13} />}
+                Ver más
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
-const SETTINGS_TABS = [
-  { key: 'panels', label: 'Paneles' },
-  { key: 'charts', label: 'Gráficos' },
-  { key: 'params', label: 'Parámetros' },
-  { key: 'alerts', label: 'Notificaciones' },
-];
+// --- Administración de usuarios (solo admin) ---
 
-function SettingsDrawer({ settings, setSettings, onClose, onResetPositions, onClearNotifications, notificationCount }) {
-  const [tab, setTab] = useState('panels');
-  const [urlDraft, setUrlDraft] = useState(settings.backendUrl);
+function UsersPage({ api }) {
+  const [users, setUsers] = useState(null);
+  const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
+  const [form, setForm] = useState({ username: '', password: '', role: 'operator' });
+  const [busy, setBusy] = useState(false);
+  const [editPw, setEditPw] = useState({}); // username -> draft de nueva clave
+
+  const load = useCallback(async () => {
+    try {
+      setUsers(await api('/api/users'));
+      setError('');
+    } catch (e) {
+      setError(e.message || 'No se pudo cargar');
+    }
+  }, [api]);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const u = await api('/api/users');
+        if (alive) {
+          setUsers(u);
+          setError('');
+        }
+      } catch (e) {
+        if (alive) setError(e.message || 'No se pudo cargar');
+      }
+    })();
+    return () => { alive = false; };
+  }, [api]);
+
+  const flash = (msg) => {
+    setNotice(msg);
+    setTimeout(() => setNotice(''), 4000);
+  };
+
+  const create = async (e) => {
+    e.preventDefault();
+    setBusy(true);
+    setError('');
+    try {
+      await api('/api/users', { method: 'POST', body: form });
+      setForm({ username: '', password: '', role: 'operator' });
+      await load();
+      flash(`Usuario '${form.username.trim()}' creado.`);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const patch = async (username, body, okMsg) => {
+    setError('');
+    try {
+      await api(`/api/users/${encodeURIComponent(username)}`, { method: 'PATCH', body });
+      await load();
+      if (okMsg) flash(okMsg);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const remove = async (username) => {
+    if (!window.confirm(`¿Eliminar al usuario '${username}'? Perderá el acceso de inmediato.`)) return;
+    setError('');
+    try {
+      await api(`/api/users/${encodeURIComponent(username)}`, { method: 'DELETE' });
+      await load();
+      flash(`Usuario '${username}' eliminado.`);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const inputClass = 'bg-gray-900 border border-gray-700 rounded px-2 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-blue-500';
+
+  return (
+    <div className="flex flex-col gap-4">
+      <Panel title="Usuarios del sistema" subtitle="roles y acceso">
+        {error && <p className="text-xs text-red-400 font-mono bg-red-900/20 border border-red-800 rounded px-2.5 py-2 mb-3">{error}</p>}
+        {notice && <p className="text-xs text-green-400 font-mono bg-green-900/20 border border-green-800 rounded px-2.5 py-2 mb-3">{notice}</p>}
+        {users === null ? (
+          <p className="text-xs text-gray-500 font-mono">Cargando usuarios…</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="text-left text-[10px] text-gray-500 uppercase tracking-wider border-b border-gray-700">
+                  <th className="py-2 pr-2 font-semibold">Usuario</th>
+                  <th className="py-2 pr-2 font-semibold">Rol</th>
+                  <th className="py-2 pr-2 font-semibold">Estado</th>
+                  <th className="py-2 pr-2 font-semibold">Creado por</th>
+                  <th className="py-2 font-semibold text-right">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.map((u) => (
+                  <tr key={u.username} className="border-b border-gray-700/60 last:border-0">
+                    <td className="py-2 pr-2 font-mono text-gray-100">{u.username}</td>
+                    <td className="py-2 pr-2">
+                      <select
+                        value={u.role}
+                        onChange={(e) => patch(u.username, { role: e.target.value }, `Rol de '${u.username}' actualizado.`)}
+                        className={`${inputClass} font-mono`}
+                        aria-label={`Rol de ${u.username}`}
+                      >
+                        <option value="operator">operator</option>
+                        <option value="admin">admin</option>
+                      </select>
+                    </td>
+                    <td className="py-2 pr-2">
+                      <button
+                        onClick={() => patch(u.username, { active: !u.active }, `'${u.username}' ${u.active ? 'desactivado' : 'activado'}.`)}
+                        className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${u.active ? 'border-green-700 bg-green-900/30 text-green-400' : 'border-gray-700 bg-gray-900/50 text-gray-500'}`}
+                        title="Activar / desactivar acceso"
+                      >
+                        {u.active ? 'ACTIVO' : 'INACTIVO'}
+                      </button>
+                    </td>
+                    <td className="py-2 pr-2 font-mono text-gray-500">{u.created_by || '—'}</td>
+                    <td className="py-2">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <input
+                          type="password"
+                          placeholder="Nueva clave"
+                          value={editPw[u.username] || ''}
+                          onChange={(e) => setEditPw((p) => ({ ...p, [u.username]: e.target.value }))}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && (editPw[u.username] || '').length >= 4) {
+                              patch(u.username, { password: editPw[u.username] }, `Clave de '${u.username}' actualizada.`);
+                              setEditPw((p) => ({ ...p, [u.username]: '' }));
+                            }
+                          }}
+                          className={`${inputClass} font-mono w-28`}
+                          title="Escribe y pulsa Enter para cambiarle la clave (mín. 4)"
+                        />
+                        <button
+                          onClick={() => remove(u.username)}
+                          className="p-1.5 rounded text-gray-500 hover:text-red-300 hover:bg-gray-700"
+                          title={`Eliminar a ${u.username}`}
+                          aria-label={`Eliminar a ${u.username}`}
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Panel>
+
+      <Panel title="Crear usuario" subtitle="operator u admin">
+        <form onSubmit={create} className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
+          <label className="block">
+            <span className="block text-[11px] text-gray-500 mb-1">Usuario</span>
+            <input className={`${inputClass} w-full font-mono`} value={form.username} onChange={(e) => setForm((f) => ({ ...f, username: e.target.value }))} placeholder="nombre" autoComplete="off" />
+          </label>
+          <label className="block">
+            <span className="block text-[11px] text-gray-500 mb-1">Contraseña (mín. 4)</span>
+            <input type="password" className={`${inputClass} w-full font-mono`} value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))} placeholder="••••" autoComplete="new-password" />
+          </label>
+          <label className="block">
+            <span className="block text-[11px] text-gray-500 mb-1">Rol</span>
+            <select className={`${inputClass} w-full font-mono`} value={form.role} onChange={(e) => setForm((f) => ({ ...f, role: e.target.value }))}>
+              <option value="operator">operator — monitorea</option>
+              <option value="admin">admin — todo</option>
+            </select>
+          </label>
+          <button
+            type="submit"
+            disabled={busy || form.username.trim().length < 3 || form.password.length < 4}
+            className="text-xs font-semibold px-4 py-2 rounded bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white"
+          >
+            {busy ? 'Creando…' : 'Crear'}
+          </button>
+        </form>
+        <p className="text-[10px] text-gray-600 mt-3 leading-snug">
+          Los operadores monitorean red y ataques (incluida la consola). Solo el admin gestiona usuarios,
+          parámetros globales y borrado de registros. El backend impide dejar el sistema sin administradores.
+        </p>
+      </Panel>
+    </div>
+  );
+}
+
+// --- Página de configuración: cuenta, preferencias y parámetros globales ---
+
+function ConfigPage(props) {
+  const {
+    settings, setSettings, api, isAdmin, globalConfig, onSaveGlobal, globalSaved,
+    user, onResetPositions, onClearNotifications, notificationCount,
+    backendUrl, onApplyBackendUrl,
+  } = props;
+  const [urlDraft, setUrlDraft] = useState(backendUrl);
   const [urlError, setUrlError] = useState('');
+  const [pw, setPw] = useState({ current: '', next: '', repeat: '' });
+  const [pwMsg, setPwMsg] = useState({ ok: '', error: '' });
+  const [pwBusy, setPwBusy] = useState(false);
+  const [draft, setDraft] = useState(null); // borrador de parámetros globales (admin)
+  const [prevGlobal, setPrevGlobal] = useState(globalConfig);
+  if (globalConfig !== prevGlobal) {
+    setPrevGlobal(globalConfig);
+    if (globalConfig) setDraft((d) => d || { ...globalConfig });
+  }
 
   const setWidget = (key, value) => setSettings((p) => ({ ...p, widgets: { ...p.widgets, [key]: value } }));
   const setNotif = (key, value) => setSettings((p) => ({ ...p, notifications: { ...p.notifications, [key]: value } }));
   const setTopo = (key, value) => setSettings((p) => ({ ...p, topology: { ...p.topology, [key]: value } }));
-  const setField = (key, value) => setSettings((p) => ({ ...p, [key]: value }));
 
   const applyUrl = () => {
     const v = urlDraft.trim().replace(/\/+$/, '');
@@ -1285,202 +2070,232 @@ function SettingsDrawer({ settings, setSettings, onClose, onResetPositions, onCl
       return;
     }
     setUrlError('');
-    setField('backendUrl', v);
+    onApplyBackendUrl(v);
   };
 
-  const visibleBase = BASE_WIDGETS.filter((w) => settings.widgets[w.key]).length;
+  const changePw = async (e) => {
+    e.preventDefault();
+    setPwMsg({ ok: '', error: '' });
+    if (pw.next.length < 4) {
+      setPwMsg({ ok: '', error: 'La nueva debe tener al menos 4 caracteres.' });
+      return;
+    }
+    if (pw.next !== pw.repeat) {
+      setPwMsg({ ok: '', error: 'La repetición no coincide.' });
+      return;
+    }
+    setPwBusy(true);
+    try {
+      await api('/api/auth/change-password', {
+        method: 'POST',
+        body: { current_password: pw.current, new_password: pw.next },
+      });
+      setPw({ current: '', next: '', repeat: '' });
+      setPwMsg({ ok: 'Contraseña actualizada.', error: '' });
+    } catch (err) {
+      setPwMsg({ ok: '', error: err.message || 'No se pudo cambiar' });
+    } finally {
+      setPwBusy(false);
+    }
+  };
+
+  const inputClass = 'w-full bg-gray-900 border border-gray-700 rounded px-2 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-blue-500';
+  const g = draft || {};
 
   return (
-    <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label="Configuración del dashboard">
-      <div className="absolute inset-0 bg-black/50 backdrop-in" onClick={onClose} />
-      <aside className="drawer-in absolute right-0 top-0 h-full w-full max-w-md bg-gray-800 border-l border-gray-700 shadow-2xl flex flex-col">
-        <div className="px-5 pt-5 pb-3 border-b border-gray-700">
-          <div className="flex items-center justify-between">
-            <h2 className="text-base font-semibold text-gray-100 flex items-center gap-2">
-              <SlidersHorizontal size={18} className="text-blue-400" />
-              Configuración
-            </h2>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-100 p-1 rounded" aria-label="Cerrar configuración">
-              <X size={18} />
-            </button>
+    <div className="flex flex-col gap-4">
+      <Panel title="Mi cuenta" subtitle={user?.username}>
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+          <span className="w-9 h-9 rounded-full bg-blue-600/20 border border-blue-700 flex items-center justify-center text-sm font-bold text-blue-300">
+            {(user?.username || '?').slice(0, 1).toUpperCase()}
+          </span>
+          <div>
+            <p className="text-sm font-mono text-gray-100">{user?.username}</p>
+            <p className="text-[10px] font-mono text-gray-500">
+              rol: <span className={isAdmin ? 'text-purple-400 font-bold' : 'text-blue-300 font-bold'}>{user?.role}</span>
+              {isAdmin ? ' — acceso total' : ' — monitoreo'}
+            </p>
           </div>
-          <div className="flex gap-1 mt-4 bg-gray-900 p-1 rounded-md">
-            {SETTINGS_TABS.map((t) => (
+        </div>
+        <form onSubmit={changePw} className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
+          <label className="block">
+            <span className="block text-[11px] text-gray-500 mb-1">Actual</span>
+            <input type="password" className={`${inputClass} font-mono`} value={pw.current} onChange={(e) => setPw((p) => ({ ...p, current: e.target.value }))} autoComplete="current-password" />
+          </label>
+          <label className="block">
+            <span className="block text-[11px] text-gray-500 mb-1">Nueva (mín. 4)</span>
+            <input type="password" className={`${inputClass} font-mono`} value={pw.next} onChange={(e) => setPw((p) => ({ ...p, next: e.target.value }))} autoComplete="new-password" />
+          </label>
+          <label className="block">
+            <span className="block text-[11px] text-gray-500 mb-1">Repetir nueva</span>
+            <input type="password" className={`${inputClass} font-mono`} value={pw.repeat} onChange={(e) => setPw((p) => ({ ...p, repeat: e.target.value }))} autoComplete="new-password" />
+          </label>
+          <button type="submit" disabled={pwBusy} className="text-xs font-semibold px-4 py-2 rounded bg-gray-700 hover:bg-gray-600 disabled:opacity-40 text-gray-100">
+            {pwBusy ? 'Guardando…' : 'Cambiar clave'}
+          </button>
+        </form>
+        {pwMsg.error && <p className="text-[11px] text-red-400 font-mono mt-2">{pwMsg.error}</p>}
+        {pwMsg.ok && <p className="text-[11px] text-green-400 font-mono mt-2">{pwMsg.ok}</p>}
+      </Panel>
+
+      <Panel
+        title="Parámetros de actualización"
+        subtitle={isAdmin ? 'globales: los verán todos' : 'los define el administrador'}
+      >
+        {!isAdmin && (
+          <p className="text-[11px] text-gray-500 mb-3 leading-snug">
+            Estos valores los fija el administrador para todo el equipo. Si necesitas otros, pídelos por el canal interno.
+          </p>
+        )}
+        <div className="py-2.5">
+          <span className="text-sm text-gray-200">Intervalo de actualización</span>
+          <p className="text-[11px] text-gray-500 mt-0.5">Cada cuánto se consulta el backend.</p>
+          <div className="flex gap-1 mt-2">
+            {[1000, 2000, 5000, 10000].map((ms) => (
               <button
-                key={t.key}
-                onClick={() => setTab(t.key)}
-                className={`flex-1 text-xs py-1.5 rounded transition-colors ${tab === t.key ? 'bg-gray-700 text-gray-100' : 'text-gray-400 hover:text-gray-200'}`}
+                key={ms}
+                disabled={!isAdmin}
+                onClick={() => (isAdmin ? setDraft((d) => ({ ...(d || {}), pollInterval: ms })) : undefined)}
+                className={`flex-1 text-xs font-mono py-1.5 rounded border transition-colors disabled:cursor-default ${g.pollInterval === ms ? 'bg-blue-600/20 border-blue-500 text-blue-300' : 'border-gray-700 text-gray-400 hover:border-gray-500'}`}
               >
-                {t.label}
+                {ms / 1000}s
               </button>
             ))}
           </div>
         </div>
+        <RangeSetting
+          label="Ventana de ataque activo"
+          desc="Tiempo que un evento se muestra como activo en la topología."
+          value={g.attackWindow ?? settings.attackWindow} min={5} max={60} step={5} unit="s"
+          onChange={(v) => isAdmin && setDraft((d) => ({ ...(d || {}), attackWindow: v }))}
+        />
+        <RangeSetting
+          label="Eventos en la línea de tiempo"
+          value={g.timelineSize ?? settings.timelineSize} min={4} max={20}
+          onChange={(v) => isAdmin && setDraft((d) => ({ ...(d || {}), timelineSize: v }))}
+        />
+        <RangeSetting
+          label="Eventos iniciales en el registro en vivo"
+          desc="Con “Ver más” se cargan de 20 en 20."
+          value={g.logSize ?? settings.logSize} min={5} max={50} step={5}
+          onChange={(v) => isAdmin && setDraft((d) => ({ ...(d || {}), logSize: v }))}
+        />
+        {isAdmin && (
+          <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-700">
+            <span className="text-[11px] text-gray-500">
+              Al guardar, todos los usuarios verán estos valores al entrar.
+              {globalSaved && <span className="text-green-400 font-mono"> ✓ guardado</span>}
+            </span>
+            <button
+              onClick={() => draft && onSaveGlobal(draft)}
+              className="text-xs font-semibold px-4 py-1.5 rounded bg-blue-600 hover:bg-blue-500 text-white"
+            >
+              Guardar globales
+            </button>
+          </div>
+        )}
+      </Panel>
 
-        <div className="flex-1 overflow-y-auto px-5 py-4">
-          {tab === 'panels' && (
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <p className="text-xs text-gray-500">{visibleBase} de {BASE_WIDGETS.length} paneles visibles</p>
-                <button
-                  onClick={() => setSettings((p) => ({
-                    ...p,
-                    widgets: { ...p.widgets, ...Object.fromEntries(BASE_WIDGETS.map((w) => [w.key, true])) },
-                  }))}
-                  className="text-xs text-blue-400 hover:text-blue-300"
-                >
-                  Mostrar todos
-                </button>
-              </div>
-              {BASE_WIDGETS.map((w) => (
-                <Toggle key={w.key} label={w.label} desc={w.desc} checked={settings.widgets[w.key]} onChange={(v) => setWidget(w.key, v)} />
-              ))}
-              <p className="text-[11px] text-gray-500 mt-3 leading-snug">
-                Si ocultas todos los paneles de una columna, las demás se ensanchan automáticamente para aprovechar el espacio.
-              </p>
-            </div>
-          )}
+      <Panel title="Paneles y gráficos" subtitle="visibilidad personal">
+        <SectionTitle>Paneles</SectionTitle>
+        {BASE_WIDGETS.map((wd) => (
+          <Toggle key={wd.key} label={wd.label} desc={wd.desc} checked={settings.widgets[wd.key]} onChange={(v) => setWidget(wd.key, v)} />
+        ))}
+        <SectionTitle>Gráficos de análisis</SectionTitle>
+        <p className="text-xs text-gray-500 mb-1">Se muestran en Eventos y análisis.</p>
+        {EXTRA_WIDGETS.map((wd) => (
+          <Toggle key={wd.key} label={wd.label} desc={wd.desc} checked={settings.widgets[wd.key]} onChange={(v) => setWidget(wd.key, v)} />
+        ))}
+        <div className="mt-2">
+          <button
+            onClick={() => setSettings((p) => ({
+              ...p,
+              widgets: { ...p.widgets, ...Object.fromEntries(BASE_WIDGETS.map((wd) => [wd.key, true])) },
+            }))}
+            className="text-xs text-blue-400 hover:text-blue-300"
+          >
+            Mostrar todos los paneles
+          </button>
+        </div>
+      </Panel>
 
-          {tab === 'charts' && (
-            <div>
-              <p className="text-xs text-gray-500 mb-1">
-                Gráficos calculados sobre los eventos cargados en vivo en el dashboard. Los totales de los KPIs usan el recuento real de MongoDB.
-              </p>
-              {EXTRA_WIDGETS.map((w) => (
-                <Toggle key={w.key} label={w.label} desc={w.desc} checked={settings.widgets[w.key]} onChange={(v) => setWidget(w.key, v)} />
-              ))}
-            </div>
-          )}
+      <Panel title="Preferencias personales" subtitle="solo este navegador">
+        <SectionTitle>Notificaciones</SectionTitle>
+        <Toggle
+          label="Registrar notificaciones"
+          desc="Añade a la campana cada nuevo ataque detectado."
+          checked={settings.notifications.enabled}
+          onChange={(v) => setNotif('enabled', v)}
+        />
+        <Toggle
+          label="Avisos emergentes"
+          desc="Muestra un aviso en la esquina inferior derecha al detectar un ataque."
+          checked={settings.notifications.toasts}
+          onChange={(v) => setNotif('toasts', v)}
+        />
+        <Toggle
+          label="Sonido de alerta"
+          desc="Emite un pitido corto con cada nuevo ataque."
+          checked={settings.notifications.sound}
+          onChange={(v) => { setNotif('sound', v); if (v) playAlertSound(); }}
+        />
+        <button
+          onClick={onClearNotifications}
+          disabled={notificationCount === 0}
+          className="mt-1 w-full flex items-center justify-center gap-2 text-xs py-2 rounded border border-gray-700 text-gray-300 hover:border-red-600 hover:text-red-300 disabled:opacity-40 disabled:pointer-events-none"
+        >
+          <Trash2 size={13} /> Limpiar notificaciones ({notificationCount})
+        </button>
 
-          {tab === 'params' && (
-            <div>
-              <SectionTitle>Datos en tiempo real</SectionTitle>
-              <div className="py-2.5">
-                <span className="text-sm text-gray-200">Intervalo de actualización</span>
-                <p className="text-[11px] text-gray-500 mt-0.5">Cada cuánto se consulta el backend.</p>
-                <div className="flex gap-1 mt-2">
-                  {[1000, 2000, 5000, 10000].map((ms) => (
-                    <button
-                      key={ms}
-                      onClick={() => setField('pollInterval', ms)}
-                      className={`flex-1 text-xs font-mono py-1.5 rounded border transition-colors ${settings.pollInterval === ms ? 'bg-blue-600/20 border-blue-500 text-blue-300' : 'border-gray-700 text-gray-400 hover:border-gray-500'}`}
-                    >
-                      {ms / 1000}s
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <RangeSetting
-                label="Ventana de ataque activo"
-                desc="Tiempo que un evento se muestra como activo en la topología."
-                value={settings.attackWindow} min={5} max={60} step={5} unit="s"
-                onChange={(v) => setField('attackWindow', v)}
-              />
-              <RangeSetting
-                label="Eventos en el gráfico del Panel de IA"
-                value={settings.trendSize} min={5} max={100} step={5}
-                onChange={(v) => setField('trendSize', v)}
-              />
-              <RangeSetting
-                label="Eventos en la línea de tiempo"
-                value={settings.timelineSize} min={4} max={20}
-                onChange={(v) => setField('timelineSize', v)}
-              />
-              <RangeSetting
-                label="Eventos iniciales en el registro en vivo"
-                desc="Con “Ver más” se cargan de 20 en 20."
-                value={settings.logSize} min={5} max={50} step={5}
-                onChange={(v) => setField('logSize', v)}
-              />
+        <SectionTitle>Topología</SectionTitle>
+        <Toggle
+          label="Bloquear posición de los nodos"
+          desc="Impide arrastrar los nodos por accidente durante una demostración."
+          checked={settings.topology.lockNodes}
+          onChange={(v) => setTopo('lockNodes', v)}
+        />
+        <button
+          onClick={onResetPositions}
+          className="mt-1 w-full flex items-center justify-center gap-2 text-xs py-2 rounded border border-gray-700 text-gray-300 hover:border-gray-500"
+        >
+          <RotateCcw size={13} /> Restablecer posiciones de los nodos
+        </button>
 
-              <SectionTitle>Topología</SectionTitle>
-              <Toggle
-                label="Bloquear posición de los nodos"
-                desc="Impide arrastrar los nodos por accidente durante una demostración."
-                checked={settings.topology.lockNodes}
-                onChange={(v) => setTopo('lockNodes', v)}
-              />
-              <button
-                onClick={onResetPositions}
-                className="mt-1 w-full flex items-center justify-center gap-2 text-xs py-2 rounded border border-gray-700 text-gray-300 hover:border-gray-500"
-              >
-                <RotateCcw size={13} /> Restablecer posiciones de los nodos
-              </button>
-
-              <SectionTitle>Conexión</SectionTitle>
-              <div className="py-2.5">
-                <label htmlFor="backend-url" className="text-sm text-gray-200">URL del backend</label>
-                <div className="flex gap-2 mt-2">
-                  <input
-                    id="backend-url"
-                    type="text"
-                    value={urlDraft}
-                    onChange={(e) => setUrlDraft(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && applyUrl()}
-                    className="flex-1 bg-gray-900 border border-gray-700 rounded px-2 py-1.5 text-xs font-mono text-gray-200 focus:outline-none focus:border-blue-500"
-                  />
-                  <button onClick={applyUrl} className="text-xs px-3 rounded bg-blue-600 hover:bg-blue-500 text-white">Aplicar</button>
-                </div>
-                {urlError && <p className="text-[11px] text-red-400 mt-1">{urlError}</p>}
-              </div>
-            </div>
-          )}
-
-          {tab === 'alerts' && (
-            <div>
-              <Toggle
-                label="Registrar notificaciones"
-                desc="Añade a la campana cada nuevo ataque detectado."
-                checked={settings.notifications.enabled}
-                onChange={(v) => setNotif('enabled', v)}
-              />
-              <Toggle
-                label="Avisos emergentes"
-                desc="Muestra un aviso en la esquina inferior derecha al detectar un ataque."
-                checked={settings.notifications.toasts}
-                onChange={(v) => setNotif('toasts', v)}
-              />
-              <Toggle
-                label="Sonido de alerta"
-                desc="Emite un pitido corto con cada nuevo ataque."
-                checked={settings.notifications.sound}
-                onChange={(v) => { setNotif('sound', v); if (v) playAlertSound(); }}
-              />
-              <button
-                onClick={onClearNotifications}
-                disabled={notificationCount === 0}
-                className="mt-3 w-full flex items-center justify-center gap-2 text-xs py-2 rounded border border-gray-700 text-gray-300 hover:border-red-600 hover:text-red-300 disabled:opacity-40 disabled:pointer-events-none"
-              >
-                <Trash2 size={13} /> Limpiar notificaciones ({notificationCount})
-              </button>
-            </div>
-          )}
+        <SectionTitle>Conexión</SectionTitle>
+        <div className="py-2.5">
+          <label htmlFor="backend-url" className="text-sm text-gray-200">URL del backend</label>
+          <div className="flex gap-2 mt-2">
+            <input
+              id="backend-url"
+              type="text"
+              value={urlDraft}
+              onChange={(e) => setUrlDraft(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && applyUrl()}
+              className="flex-1 bg-gray-900 border border-gray-700 rounded px-2 py-1.5 text-xs font-mono text-gray-200 focus:outline-none focus:border-blue-500"
+            />
+            <button onClick={applyUrl} className="text-xs px-3 rounded bg-blue-600 hover:bg-blue-500 text-white">Aplicar</button>
+          </div>
+          {urlError && <p className="text-[11px] text-red-400 mt-1">{urlError}</p>}
+          <p className="text-[10px] text-gray-600 mt-1">Al aplicar se recarga la aplicación.</p>
         </div>
 
-        <div className="px-5 py-3 border-t border-gray-700 flex items-center justify-between">
+        <div className="mt-2 pt-3 border-t border-gray-700">
           <button
             onClick={() => { setSettings(DEFAULT_SETTINGS); setUrlDraft(DEFAULT_SETTINGS.backendUrl); setUrlError(''); }}
             className="text-xs text-gray-400 hover:text-gray-200 flex items-center gap-1.5"
           >
-            <RotateCcw size={12} /> Restablecer configuración
+            <RotateCcw size={12} /> Restablecer configuración local
           </button>
-          <button onClick={onClose} className="text-xs px-4 py-1.5 rounded bg-gray-700 hover:bg-gray-600 text-gray-100">Listo</button>
         </div>
-      </aside>
+      </Panel>
     </div>
   );
 }
 
-// Mapa explícito de spans (Tailwind no compila clases construidas dinámicamente)
-const COL_SPAN = {
-  0: 'hidden', 3: 'lg:col-span-3', 4: 'lg:col-span-4', 6: 'lg:col-span-6',
-  8: 'lg:col-span-8', 9: 'lg:col-span-9', 12: 'lg:col-span-12',
-};
-
 // --- App ---
 
 
-export default function App() {
+export function MainApp() {
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [connected, setConnected] = useState(false);
@@ -1491,7 +2306,6 @@ export default function App() {
   const [health, setHealth] = useState(null);             // { mongodb, solana } | null = endpoint aún no disponible
 
   const [settings, setSettings] = useState(loadSettings);
-  const [settingsOpen, setSettingsOpen] = useState(false);
   const [nodePositions, setNodePositions] = useState(loadPositions);
   const [theme, setTheme] = useState(loadTheme);
   const isLight = theme === 'light';
@@ -1501,6 +2315,29 @@ export default function App() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [filters, setFilters] = useState(EMPTY_FILTERS);
 
+  // Panel "Contexto de Amenaza Crítica": por defecto muestra el último registro,
+  // pero al hacer clic en un evento se fija a ese (sigue fijo al cerrar el detalle).
+  const [pinnedId, setPinnedId] = useState(null);
+  const selectAlert = useCallback((alert) => {
+    setSelectedAlert(alert);
+    if (alert && alert._id) setPinnedId(alert._id);
+  }, []);
+
+  // Miniconsola SDN: qué host está abierto (attacker | server1 | server2) o null = cerrada
+  const [terminalHost, setTerminalHost] = useState(null);
+  const terminalOpen = terminalHost !== null;
+  const openTerminal = useCallback((host) => setTerminalHost(host), []);
+  const closeTerminal = useCallback(() => setTerminalHost(null), []);
+  // Modal de limpieza del switch (clean-switch)
+  const [cleanOpen, setCleanOpen] = useState(false);
+  // Navegación estilo Issabel (sin router: estado de vista)
+  const [view, setView] = useState('dashboard');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [userMenuOpen, setUserMenu] = useState(false);
+  // Parámetros globales del admin (los ven todos; se fusionan al entrar)
+  const [globalConfig, setGlobalConfig] = useState(null);
+  const userMenuRef = useRef(null);
+
   const [notifications, setNotifications] = useState(() => {
     const stored = loadJSON(STORAGE_KEYS.notifications, []);
     return Array.isArray(stored) ? stored : [];
@@ -1509,11 +2346,21 @@ export default function App() {
   const [toasts, setToasts] = useState([]);
   const notifRef = useRef(null);
 
-  // Registro de alertas ya vistas, para notificar solo las nuevas. Si no hay registro
-  // previo, la primera carga se toma como línea base (no inunda con el historial).
+  // Registro de alertas ya vistas, para notificar solo las NUEVAS.
+  // Si no hay registro previo, la primera carga se toma como línea base
+  // (no inunda con el historial). Se guarda también el timestamp más reciente
+  // procesado (newestTs): así ampliar con "Ver más" —que trae alertas viejas—
+  // nunca genera notificaciones; solo lo estrictamente más nuevo notifica.
   const [seenStore] = useState(() => {
     const stored = loadJSON(STORAGE_KEYS.seen, null);
-    return { set: new Set(Array.isArray(stored) ? stored : []), baseline: !Array.isArray(stored) };
+    if (stored && Array.isArray(stored.ids)) {
+      return { set: new Set(stored.ids), baseline: false, newestTs: Number(stored.newestTs) || 0 };
+    }
+    if (Array.isArray(stored)) {
+      // Formato anterior (solo IDs): se migra sin notificar lo viejo.
+      return { set: new Set(stored), baseline: false, newestTs: Date.now() };
+    }
+    return { set: new Set(), baseline: true, newestTs: 0 };
   });
 
   const settingsRef = useRef(settings);
@@ -1541,21 +2388,67 @@ export default function App() {
     saveJSON(STORAGE_KEYS.theme, theme);
   }, [theme, isLight]);
 
+  // Borrado de registros: selección múltiple en el registro en vivo.
+  // (Aquí porque usa setters declarados más arriba.)
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState(() => new Set());
+  const [confirmSelDel, setConfirmSelDel] = useState(false);
+  const [confirmWipe, setConfirmWipe] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  // Quita registros de la vista al instante (el backend ya los borró de Mongo)
+  const removeAlertsLocal = useCallback((ids) => {
+    const s = new Set(ids);
+    if (s.size === 0) return;
+    setAlerts((prev) => prev.filter((a) => !s.has(a._id)));
+    setNotifications((prev) => prev.filter((n) => !s.has(n.id)));
+    setToasts((prev) => prev.filter((t) => !s.has(t.id)));
+    setSelectedIds((prev) => {
+      if ([...prev].every((id) => !s.has(id))) return prev;
+      const next = new Set(prev);
+      ids.forEach((id) => next.delete(id));
+      return next;
+    });
+    setSelectedAlert((prev) => (prev && s.has(prev._id) ? null : prev));
+  }, []);
+
+  const toggleSelectId = useCallback((id) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
   const handleIncomingAlerts = useCallback((data) => {
-    if (!Array.isArray(data)) return;
-    const persistSeen = () => saveJSON(STORAGE_KEYS.seen, Array.from(seenStore.set).slice(-500));
+    if (!Array.isArray(data) || data.length === 0) return;
+    const persistSeen = () => saveJSON(
+      STORAGE_KEYS.seen,
+      { ids: Array.from(seenStore.set).slice(-500), newestTs: seenStore.newestTs },
+    );
+    const tsOf = (a) => {
+      const t = parseTimestamp(a.timestamp).getTime();
+      return Number.isFinite(t) ? t : 0;
+    };
+    const batchMax = data.reduce((m, a) => Math.max(m, tsOf(a)), 0);
 
     if (seenStore.baseline) {
       data.forEach((a) => a._id && seenStore.set.add(a._id));
+      seenStore.newestTs = Math.max(seenStore.newestTs, batchMax);
       seenStore.baseline = false;
       persistSeen();
       return;
     }
 
-    const fresh = data.filter((a) => a._id && !seenStore.set.has(a._id));
-    if (fresh.length === 0) return;
-    fresh.forEach((a) => seenStore.set.add(a._id));
+    const unseen = data.filter((a) => a._id && !seenStore.set.has(a._id));
+    // Se marca TODO lo cargado como visto (incluido lo viejo que trae "Ver más")
+    // pero solo notifica lo estrictamente más nuevo que lo ya procesado.
+    data.forEach((a) => a._id && seenStore.set.add(a._id));
+    const fresh = unseen.filter((a) => tsOf(a) > seenStore.newestTs);
+    seenStore.newestTs = Math.max(seenStore.newestTs, batchMax);
     persistSeen();
+    if (fresh.length === 0) return;
 
     const cfg = settingsRef.current.notifications;
     if (!cfg.enabled) return;
@@ -1573,26 +2466,114 @@ export default function App() {
     if (cfg.sound) playAlertSound();
   }, [seenStore]);
 
-  // Cuántos eventos se piden en cada consulta: los necesarios para el gráfico de IA
-  // y para lo que el usuario haya desplegado con "Ver más" en el registro.
-  const liveLimit = Math.min(LIVE_MAX_LIMIT, Math.max(20, settings.trendSize, logLimit));
+  // Cuántos eventos se piden en cada consulta: lo que el usuario haya desplegado
+  // con "Ver más" en el registro (mínimo 20 para que los gráficos tengan datos).
+  const liveLimit = Math.min(LIVE_MAX_LIMIT, Math.max(20, logLimit));
   const backendBase = settings.backendUrl.replace(/\/+$/, '');
+
+  // Sesión y rol (candidates: operator | admin)
+  const { user: sessionUser, logout, isAdmin } = useAuth();
+
+  // Llamadas autenticadas: el 401 cierra la sesión y vuelve al login.
+  const api = useCallback(async (path, opts) => {
+    try {
+      return await apiFetch(backendBase, path, opts);
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 401) logout();
+      throw e;
+    }
+  }, [backendBase, logout]);
+
+  // Parámetros globales del admin: mandan sobre los locales en esas claves.
+  // (Solo tiempos y tamaños; la visibilidad de paneles sigue siendo personal.)
+  const MANAGED_KEYS = useMemo(
+    () => ['pollInterval', 'attackWindow', 'timelineSize', 'logSize'],
+    []
+  );
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const g = await apiFetch(backendBase, '/api/config');
+        if (!alive || !g || typeof g !== 'object') return;
+        setGlobalConfig(g);
+        setSettings((prev) => {
+          const next = { ...prev };
+          for (const k of MANAGED_KEYS) {
+            if (g[k] !== undefined) next[k] = g[k];
+          }
+          return next;
+        });
+      } catch {
+        // sin globales (backend viejo o sin red): se usan los locales
+      }
+    })();
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [backendBase]);
+
+  // Borrado múltiple / total (usan backendBase; se definen aquí porque lo necesitan)
+  // Las confirmaciones de borrado se desarman solas a los 5s
+  useEffect(() => {
+    if (!confirmSelDel) return;
+    const t = setTimeout(() => setConfirmSelDel(false), 5000);
+    return () => clearTimeout(t);
+  }, [confirmSelDel]);
+  useEffect(() => {
+    if (!confirmWipe) return;
+    const t = setTimeout(() => setConfirmWipe(false), 5000);
+    return () => clearTimeout(t);
+  }, [confirmWipe]);
+  const deleteSelected = useCallback(async () => {
+    const ids = [...selectedIds];
+    if (ids.length === 0) return;
+    setDeleting(true);
+    try {
+      await api('/api/alerts/delete-many', { method: 'POST', body: { ids } });
+      removeAlertsLocal(ids);
+      setSelectMode(false);
+      setSelectedIds(new Set());
+    } catch (e) {
+      alert(`No se pudieron borrar los registros: ${e.message}`);
+    } finally {
+      setDeleting(false);
+      setConfirmSelDel(false);
+    }
+  }, [api, selectedIds, removeAlertsLocal]);
+
+  const deleteAllRecords = useCallback(async () => {
+    setDeleting(true);
+    try {
+      await api('/api/alerts', { method: 'DELETE' });
+      setAlerts([]);
+      setNotifications([]);
+      setToasts([]);
+      setSelectedIds(new Set());
+      setSelectMode(false);
+      setLogLimit(settingsRef.current.logSize);
+    } catch (e) {
+      alert(`No se pudo vaciar el registro: ${e.message}`);
+    } finally {
+      setDeleting(false);
+      setConfirmWipe(false);
+    }
+  }, [api]);
 
   useEffect(() => {
     let cancelled = false;
 
     const fetchAlerts = async () => {
       try {
-        const response = await fetch(`${backendBase}/api/alerts?limit=${liveLimit}`);
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const data = await response.json();
-        if (cancelled) return;
+        const data = await api(`/api/alerts?limit=${liveLimit}`);
+        if (cancelled || !Array.isArray(data)) return;
         setAlerts(data);
         setConnected(true);
         setLoading(false);
         handleIncomingAlerts(data);
       } catch (error) {
         if (cancelled) return;
+        if (error instanceof ApiError && error.status === 401) return; // logout ya hecho
         console.error('Error conectando con el Backend:', error);
         setConnected(false);
       }
@@ -1600,9 +2581,7 @@ export default function App() {
 
     const fetchSwitchStatus = async () => {
       try {
-        const response = await fetch(`${backendBase}/api/switch-status`);
-        if (!response.ok) return; // backend viejo sin este endpoint todavía: se usa el fallback
-        const data = await response.json();
+        const data = await api('/api/switch-status');
         if (!cancelled) setSwitchStatus(data);
       } catch (error) {
         // silencioso: si falla, el fallback por tiempo sigue funcionando
@@ -1611,9 +2590,7 @@ export default function App() {
 
     const fetchTotals = async () => {
       try {
-        const response = await fetch(`${backendBase}/api/alerts/count`);
-        if (!response.ok) return; // backend sin el endpoint: se usa el número de eventos cargados
-        const data = await response.json();
+        const data = await api('/api/alerts/count');
         if (!cancelled && typeof data.total === 'number') setTotals(data);
       } catch (error) {
         // silencioso
@@ -1622,9 +2599,7 @@ export default function App() {
 
     const fetchHealth = async () => {
       try {
-        const response = await fetch(`${backendBase}/api/health`);
-        if (!response.ok) return; // backend sin el endpoint: se asume online
-        const data = await response.json();
+        const data = await api('/api/health');
         if (!cancelled) setHealth(data);
       } catch (error) {
         // silencioso
@@ -1644,7 +2619,7 @@ export default function App() {
       cancelled = true;
       clearInterval(interval);
     };
-  }, [backendBase, settings.pollInterval, liveLimit, handleIncomingAlerts]);
+  }, [api, backendBase, settings.pollInterval, liveLimit, handleIncomingAlerts]);
 
   useEffect(() => {
     const clock = setInterval(() => setNow(Date.now()), 1000);
@@ -1694,14 +2669,15 @@ export default function App() {
   useEffect(() => {
     const onKey = (e) => {
       if (e.key !== 'Escape') return;
-      if (selectedAlert) setSelectedAlert(null);
+      if (cleanOpen) setCleanOpen(false);
+      else if (selectedAlert) setSelectedAlert(null);
       else if (searchOpen) setSearchOpen(false);
-      else if (settingsOpen) setSettingsOpen(false);
       else if (notifOpen) closeNotifications();
+      else if (terminalHost) setTerminalHost(null);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [selectedAlert, searchOpen, settingsOpen, notifOpen, closeNotifications]);
+  }, [cleanOpen, selectedAlert, searchOpen, notifOpen, closeNotifications, terminalHost]);
 
   // --- Topología ---
 
@@ -1716,7 +2692,20 @@ export default function App() {
   const latest = alerts[0];
   const elapsedSinceLatest = latest ? now - parseTimestamp(latest.timestamp).getTime() : Infinity;
   const isActive = latest ? elapsedSinceLatest >= 0 && elapsedSinceLatest < settings.attackWindow * 1000 : false;
-  const severity = getSeverity(latest?.confidence);
+
+  // Amenaza mostrada en el panel: el último evento clicado (fijado) si aún existe,
+  // si no el último registro. La topología y el estado del switch siguen en vivo.
+  const pinnedCurrent = pinnedId ? alerts.find((a) => a._id === pinnedId) || null : null;
+  const threat = pinnedCurrent || latest;
+  const threatSeverity = getSeverity(threat?.confidence);
+  const isPinned = !!pinnedCurrent;
+
+  // Otros eventos recientes del mismo atacante (relleno informativo del panel)
+  const threatRelated = useMemo(() => {
+    if (!threat?.attacker_ip) return { count: 0, items: [] };
+    const same = alerts.filter((a) => a.attacker_ip === threat.attacker_ip && a._id !== threat._id);
+    return { count: same.length, items: same.slice(0, 4) };
+  }, [alerts, threat]);
 
   // Fuente de verdad: el estado real que reporta el backend (persistente, no caduca solo).
   // Si el endpoint todavía no existe en el backend desplegado, cae de vuelta a la
@@ -1735,9 +2724,11 @@ export default function App() {
     return 'server1';
   }, [latest]);
 
-  const confidenceTrend = useMemo(
-    () => [...alerts].slice(0, settings.trendSize).reverse().map((a) => a.confidence),
-    [alerts, settings.trendSize]
+  // Mezcla viva por tipo de ataque (todos los tipos, sin recorte a 6):
+  // cuando aparece un tipo nuevo, nace su barra y los % se reequilibran solos.
+  const attackMix = useMemo(
+    () => countBy(alerts, (a) => a.attack_type || 'Desconocido', 50),
+    [alerts],
   );
 
   const stats = useMemo(() => {
@@ -1769,6 +2760,15 @@ export default function App() {
   const loadingMore = logLimit > alerts.length && alerts.length < totalAlerts;
   const activeFilterCount = countActiveFilters(filters);
 
+  // Props compartidas de la tarjeta de registro (se usa en Panel principal y en Eventos)
+  const logCardProps = {
+    selectMode, setSelectMode, setSelectedIds, setConfirmSelDel, selectedIds,
+    logItems, activeFilterCount, setSearchOpen, toggleSelectId, selectAlert,
+    loading, alerts, totalAlerts, logLimit, settings, setLogLimit,
+    canLoadMore, loadingMore, isAdmin, confirmSelDel, deleteSelected, deleting,
+    confirmWipe, setConfirmWipe, deleteAllRecords,
+  };
+
   // La ventana de detalle muestra siempre la versión más reciente del documento
   // (p. ej. cuando llega la firma de Solana mientras está abierta).
   const selectedCurrent = selectedAlert
@@ -1777,57 +2777,75 @@ export default function App() {
 
   const lastBlockchainAlert = alerts.find((a) => a.blockchain_signature);
 
-  // --- Layout dinámico según paneles visibles ---
+  // --- Visibilidad por página ---
 
   const w = settings.widgets;
-  const leftVisible = w.threat || w.services;
-  const centerVisible = w.topology || w.timeline || w.blockchain;
-  const rightVisible = w.aiPanel || w.eventLog;
-
-  // Reparto de las 12 columnas entre las 3 zonas visibles. Con las tres visibles
-  // se mantiene 3/6/3 (el diseño original); si se oculta una zona entera, las
-  // demás se ensanchan para ocupar su espacio y no dejar una columna vacía.
-  const { leftSpan, centerSpan, rightSpan } = useMemo(() => {
-    const weights = { left: leftVisible ? 1 : 0, center: centerVisible ? 2 : 0, right: rightVisible ? 1 : 0 };
-    const activeCount = [leftVisible, centerVisible, rightVisible].filter(Boolean).length;
-    if (activeCount === 0) return { leftSpan: 0, centerSpan: 0, rightSpan: 0 };
-    if (activeCount === 1) {
-      return {
-        leftSpan: leftVisible ? 12 : 0,
-        centerSpan: centerVisible ? 12 : 0,
-        rightSpan: rightVisible ? 12 : 0,
-      };
-    }
-    const totalW = weights.left + weights.center + weights.right;
-    const spans = {
-      left: Math.round((weights.left / totalW) * 12),
-      center: Math.round((weights.center / totalW) * 12),
-      right: Math.round((weights.right / totalW) * 12),
-    };
-    const visibleKeys = ['left', 'center', 'right'].filter((k) => weights[k] > 0);
-    let diff = 12 - visibleKeys.reduce((s, k) => s + spans[k], 0);
-    while (diff !== 0) {
-      const k = diff > 0 ? 'center' : visibleKeys.reduce((a, b) => (spans[a] >= spans[b] ? a : b));
-      spans[k] += diff > 0 ? 1 : -1;
-      diff += diff > 0 ? -1 : 1;
-    }
-    return { leftSpan: spans.left, centerSpan: spans.center, rightSpan: spans.right };
-  }, [leftVisible, centerVisible, rightVisible]);
-
   const extraCharts = ['attackTypes', 'severity', 'topAttackers', 'ports'].filter((k) => w[k]);
-  const nothingVisible = !leftVisible && !centerVisible && !rightVisible && extraCharts.length === 0 && !w.kpis;
 
   const headerIconBtn = 'p-1.5 rounded transition-colors text-gray-400 hover:text-gray-100 hover:bg-gray-800';
 
-  return (
-    <div className="min-h-screen bg-gray-900 text-gray-200 p-4 font-sans">
+  // Navegación Issabel: vista efectiva (usuarios es solo-admin) y etiquetas.
+  const safeView = view === 'usuarios' && !isAdmin ? 'dashboard' : view;
+  const VIEW_LABELS = {
+    dashboard: 'Panel principal',
+    eventos: 'Eventos y análisis',
+    sistema: 'Servicios y blockchain',
+    usuarios: 'Usuarios',
+    config: 'Configuración',
+  };
 
-      {/* Header */}
-      <header className="mb-4 pb-4 border-b border-gray-700 flex justify-between items-center gap-4">
-        <h1 className="text-xl font-bold text-gray-100 flex items-center gap-2">
-          <ShieldAlert className="text-red-500" />
-          SDN Cyberdefense Dashboard
-        </h1>
+  // Guardar parámetros globales (admin): backend + estado local.
+  const [globalSaved, setGlobalSaved] = useState(false);
+  const saveGlobal = useCallback(async (draft) => {
+    const body = {};
+    for (const k of MANAGED_KEYS) {
+      if (draft && draft[k] !== undefined) body[k] = draft[k];
+    }
+    const saved = await api('/api/config', { method: 'PUT', body });
+    const values = (saved && saved.values) || {};
+    setGlobalConfig(values);
+    setSettings((prev) => ({ ...prev, ...values }));
+    setGlobalSaved(true);
+    setTimeout(() => setGlobalSaved(false), 3000);
+  }, [api, MANAGED_KEYS]);
+
+  // Cambiar de backend implica recargar para revalidar la sesión.
+  const applyBackendUrl = useCallback((v) => {
+    const s = loadSettings();
+    s.backendUrl = v;
+    saveJSON(STORAGE_KEYS.settings, s);
+    window.location.reload();
+  }, []);
+
+  // Cerrar el menú de usuario al hacer clic fuera.
+  useEffect(() => {
+    if (!userMenuOpen) return;
+    const onDown = (e) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) setUserMenu(false);
+    };
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [userMenuOpen]);
+
+  return (
+    <div className="min-h-screen bg-gray-900 text-gray-200 font-sans flex">
+      <Sidebar
+        view={safeView}
+        setView={setView}
+        collapsed={sidebarCollapsed}
+        setCollapsed={setSidebarCollapsed}
+        isAdmin={isAdmin}
+      />
+      <div className="flex-1 min-w-0 flex flex-col min-h-screen">
+
+      {/* Barra superior */}
+      <header className="px-4 h-14 border-b border-gray-800 flex justify-between items-center gap-3 shrink-0 sticky top-0 z-40 bg-gray-900">
+        <nav className="flex items-center gap-2 min-w-0" aria-label="Ubicación actual">
+          <ShieldAlert size={16} className="text-red-500 shrink-0" />
+          <span className="text-xs text-gray-500 font-mono hidden sm:inline">SOC</span>
+          <span className="text-gray-700 hidden sm:inline">/</span>
+          <span className="text-sm text-gray-100 font-semibold truncate">{VIEW_LABELS[safeView]}</span>
+        </nav>
         <div className="flex items-center gap-3">
           <div className={`text-sm flex items-center gap-2 font-mono ${connected ? 'text-green-400' : 'text-red-400'}`}>
             <span className={`w-2.5 h-2.5 rounded-full animate-pulse ${connected ? 'bg-green-500' : 'bg-red-500'}`}></span>
@@ -1908,111 +2926,76 @@ export default function App() {
             )}
           </div>
 
-          {/* Configuración */}
-          <button
-            onClick={() => { closeNotifications(); setSettingsOpen(true); }}
-            className={`p-1.5 rounded transition-colors ${settingsOpen ? 'bg-gray-800 text-gray-100' : 'text-gray-400 hover:text-gray-100 hover:bg-gray-800'}`}
-            aria-label="Configuración"
-          >
-            <Settings size={18} />
-          </button>
+          {/* Usuario y sesión */}
+          <div ref={userMenuRef} className="relative">
+            <button
+              onClick={() => setUserMenu((v) => !v)}
+              className="flex items-center gap-2 p-1 pr-1.5 rounded hover:bg-gray-800"
+              aria-label="Menú de usuario"
+              aria-expanded={userMenuOpen}
+            >
+              <span className="w-7 h-7 rounded-full bg-blue-600/20 border border-blue-700 flex items-center justify-center text-xs font-bold text-blue-300 shrink-0">
+                {(sessionUser?.username || '?').slice(0, 1).toUpperCase()}
+              </span>
+              <span className="hidden md:block text-left">
+                <span className="block text-xs text-gray-100 font-mono leading-tight">{sessionUser?.username}</span>
+                <span className={`block text-[9px] font-mono leading-tight ${isAdmin ? 'text-purple-400' : 'text-blue-300'}`}>
+                  {isAdmin ? 'admin' : 'operator'}
+                </span>
+              </span>
+              <ChevronDown size={13} className="text-gray-500 shrink-0" />
+            </button>
+            {userMenuOpen && (
+              <div className="pop-in absolute right-0 mt-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-2xl z-50 overflow-hidden">
+                <button
+                  onClick={() => { setUserMenu(false); setView('config'); }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-300 hover:bg-gray-700"
+                >
+                  <KeyRound size={13} /> Mi cuenta
+                </button>
+                <button
+                  onClick={() => { setUserMenu(false); logout(); }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-xs text-red-300 hover:bg-gray-700 border-t border-gray-700"
+                >
+                  <LogOut size={13} /> Cerrar sesión
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
-      {w.kpis && <KpiStrip stats={stats} totalAlerts={totalAlerts} totalBlocked={totalBlocked} />}
+      <main className="flex-1 p-4 min-w-0">
 
-      {nothingVisible && (
-        <div className="py-24 flex flex-col items-center gap-3 text-gray-500">
-          <LayoutGrid size={28} />
-          <p className="text-sm font-mono">Todos los paneles están ocultos.</p>
-          <button onClick={() => setSettingsOpen(true)} className="text-xs text-blue-400 hover:text-blue-300">Abrir configuración</button>
-        </div>
-      )}
-
-      {/* Distribución en 3 columnas (izquierda / centro / derecha), como el diseño
-          original. Cada columna es un flex vertical: al ocultar un panel, los de
-          abajo suben sin dejar huecos. Cuando una columna entera queda vacía, las
-          demás se ensanchan para ocupar su espacio (reparto de las 12 columnas). */}
-      {(leftVisible || centerVisible || rightVisible) && (
-        <div className="grid grid-cols-12 gap-4 items-start">
-
-          {/* Columna Izquierda */}
-          {leftVisible && (
-            <div className={`col-span-12 ${COL_SPAN[leftSpan]} flex flex-col gap-4`}>
-
-              {w.threat && (
-                <div className="bg-gray-800 p-4 rounded-lg border border-gray-700 shadow-lg">
-                  <h2 className="text-sm font-semibold text-gray-400 mb-1 uppercase tracking-wider">Contexto de Amenaza Crítica</h2>
-                  <p className="text-[10px] text-gray-600 mb-3 min-h-[12px]">
-                    {latest && !blocked ? 'Última alerta registrada — la infraestructura ya no está bloqueando este flujo.' : ''}
-                  </p>
-                  {latest ? (
-                    <div className="space-y-3 text-sm">
-                      <div>
-                        <p className="text-xs text-gray-500">ID de Amenaza:</p>
-                        <p className="font-mono text-gray-200">{shortId(latest._id)}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-500">Tipo de Ataque:</p>
-                        <p className="font-mono text-gray-200">{latest.attack_type}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-500">Severidad:</p>
-                        <p className={`font-mono font-bold ${severity.text}`}>{severity.label}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-500">Confianza IA:</p>
-                        <p className="font-mono font-bold text-green-400">{Number(latest.confidence ?? 0).toFixed(1)}%</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-500">Origen → Destino:</p>
-                        <p className="font-mono text-gray-200 text-xs">{latest.attacker_ip} → {latest.victim_ip}:{latest.victim_port}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-500">Acción Tomada:</p>
-                        <p className={`font-mono font-bold ${isBlockAction(latest.action_taken) ? 'text-red-400' : 'text-yellow-400'}`}>{latest.action_taken}</p>
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="text-xs text-gray-500 font-mono">Sin amenazas activas.</p>
-                  )}
-                </div>
-              )}
-
-              {w.services && (
-                <div className="bg-gray-800 p-4 rounded-lg border border-gray-700 shadow-lg">
-                  <h2 className="text-sm font-semibold text-gray-400 mb-4 uppercase tracking-wider">Estado de Servicios</h2>
-                  <div className="space-y-3 text-sm">
-                    <div className="flex justify-between items-center">
-                      <span className="flex items-center gap-2"><Database size={16} className="text-blue-400" /> MongoDB</span>
-                      <ServiceStatus ok={health?.mongodb} connected={connected} />
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="flex items-center gap-2"><Server size={16} className="text-purple-400" /> Solana</span>
-                      <ServiceStatus ok={health?.solana} connected={connected} />
-                    </div>
-                  </div>
-                  {health && !health.solana && (
-                    <p className="text-[10px] text-orange-400 mt-3 leading-snug">
-                      Solana no responde en localhost:8899. Los ataques no se registrarán en la blockchain hasta que el validador esté activo.
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Columna Central */}
-          {centerVisible && (
-            <div className={`col-span-12 ${COL_SPAN[centerSpan]} flex flex-col gap-4`}>
+      {safeView === 'dashboard' && (
+        <>
+          {w.kpis && <KpiStrip stats={stats} totalAlerts={totalAlerts} totalBlocked={totalBlocked} />}
+          <div className="grid grid-cols-12 gap-4 items-stretch">
+            <div className="col-span-12 xl:col-span-8 flex flex-col gap-4 min-h-0">
               {w.topology && (
-                <div className="bg-gray-800 rounded-lg border border-gray-700 relative overflow-hidden shadow-lg p-4 h-[420px]">
+                <div className="bg-gray-800 rounded-lg border border-gray-700 relative overflow-hidden shadow-lg p-4 flex-1 min-h-[440px] flex flex-col">
                   <div className="flex items-center justify-between mb-2 relative z-10 gap-2">
                     <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Topología</h2>
                     <div className="flex items-center gap-1">
                       <span className="hidden xl:inline text-[10px] text-gray-600 font-mono mr-2">
-                        {settings.topology.lockNodes ? 'Nodos bloqueados' : 'Arrastra los nodos para moverlos'}
+                        {settings.topology.lockNodes ? 'Nodos bloqueados · click abre consola' : 'Click en un host abre su consola · Arrastra para mover'}
                       </span>
+                      <button
+                        onClick={() => openTerminal('attacker')}
+                        className={`w-7 h-7 rounded bg-gray-900 border flex items-center justify-center hover:text-gray-200 hover:border-gray-500 ${terminalOpen ? 'border-green-600 text-green-400' : 'border-gray-700 text-gray-400'}`}
+                        aria-label="Abrir consola SDN"
+                        title="Abrir consola SDN (attacker / server1 / server2)"
+                      >
+                        <Terminal size={13} />
+                      </button>
+                      <button
+                        onClick={() => setCleanOpen(true)}
+                        className="w-7 h-7 rounded bg-gray-900 border border-gray-700 flex items-center justify-center text-gray-400 hover:text-gray-200 hover:border-gray-500"
+                        aria-label="Limpiar switch (clean-switch)"
+                        title="Limpiar switch: borra bloqueos y reinicia Ryu (equivale a ./ips_manager.sh clean-switch)"
+                      >
+                        <Eraser size={13} />
+                      </button>
                       <button
                         onClick={() => setSettings((p) => ({ ...p, topology: { ...p.topology, lockNodes: !p.topology.lockNodes } }))}
                         className={`w-7 h-7 rounded bg-gray-900 border flex items-center justify-center hover:text-gray-200 hover:border-gray-500 ${settings.topology.lockNodes ? 'border-blue-600 text-blue-400' : 'border-gray-700 text-gray-400'}`}
@@ -2045,7 +3028,7 @@ export default function App() {
                       </button>
                     </div>
                   </div>
-                  <div className="relative w-full h-[calc(100%-28px)]">
+                  <div className="relative w-full flex-1 min-h-0">
                     <div className={connected ? '' : 'blur-sm opacity-40 pointer-events-none transition-all'} style={{ width: '100%', height: '100%' }}>
                       <NetworkMap
                         latestAlert={latest}
@@ -2057,6 +3040,8 @@ export default function App() {
                         onMoveNode={moveNode}
                         locked={settings.topology.lockNodes}
                         isLight={isLight}
+                        onHostClick={openTerminal}
+                        onSwitchClick={() => setCleanOpen(true)}
                       />
                     </div>
                     {!connected && (
@@ -2069,40 +3054,106 @@ export default function App() {
                   </div>
                 </div>
               )}
+            </div>
+            <div className="col-span-12 xl:col-span-4 flex flex-col gap-4 min-h-0">
+              {w.eventLog && <EventLogCard listHeight="h-[380px]" {...logCardProps} />}
+            </div>
+          </div>
+          {!w.topology && !w.eventLog && !w.kpis && (
+            <div className="py-24 flex flex-col items-center gap-3 text-gray-500">
+              <LayoutGrid size={28} />
+              <p className="text-sm font-mono">Panel principal vacío: activa paneles en Configuración.</p>
+              <button onClick={() => setView('config')} className="text-xs text-blue-400 hover:text-blue-300">Abrir configuración</button>
+            </div>
+          )}
+        </>
+      )}
 
-              {w.timeline && (
-                <div className="bg-gray-800 p-4 rounded-lg border border-gray-700 shadow-lg">
-                  <h2 className="text-sm font-semibold text-gray-400 mb-3 uppercase tracking-wider">Línea de Tiempo de Integridad de Activos</h2>
-                  <AssetTimeline alerts={alerts} limit={settings.timelineSize} />
-                </div>
-              )}
-
-              {w.blockchain && (
-                <div className="bg-gray-800 p-4 rounded-lg border border-gray-700 shadow-lg">
-                  <h2 className="text-sm font-semibold text-gray-400 mb-2 uppercase tracking-wider">Último Hash Blockchain (Solana)</h2>
-                  {lastBlockchainAlert ? (
-                    <p className="text-xs text-yellow-400 font-mono break-all bg-gray-900 p-2 rounded border border-gray-700">
-                      {lastBlockchainAlert.blockchain_signature}
-                    </p>
+      {safeView === 'eventos' && (
+        <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-12 gap-4 items-stretch">
+            <div className="col-span-12 xl:col-span-5 flex flex-col gap-4 min-h-0">
+              {w.threat && (
+                <div className="bg-gray-800 p-4 rounded-lg border border-gray-700 shadow-lg flex-1 flex flex-col min-h-0">
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Contexto de Amenaza Crítica</h2>
+                    <div className="flex items-center gap-1 shrink-0">
+                      {threat && (
+                        <button
+                          onClick={() => selectAlert(threat)}
+                          className="flex items-center gap-1 text-[10px] font-mono px-1.5 py-0.5 rounded border border-gray-700 text-gray-400 hover:text-gray-100 hover:border-gray-500"
+                          title="Abrir detalle completo"
+                        >
+                          <Maximize2 size={10} />
+                        </button>
+                      )}
+                      {isPinned && (
+                        <button
+                          onClick={() => setPinnedId(null)}
+                          className="flex items-center gap-1 text-[10px] font-mono px-1.5 py-0.5 rounded border border-blue-700 text-blue-300 hover:border-blue-500"
+                          title="Volver a mostrar el último registro"
+                        >
+                          <RotateCcw size={10} /> Último
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-gray-600 mb-3 min-h-[12px]">
+                    {isPinned
+                      ? `Fijado al evento #${shortId(threat._id)} — clic en otro registro para cambiarlo.`
+                      : (threat && !blocked ? 'Última alerta registrada — la infraestructura ya no está bloqueando este flujo.' : '')}
+                  </p>
+                  {threat ? (
+                    <>
+                      <div className="space-y-2.5 text-sm shrink-0">
+                        <div>
+                          <p className="text-xs text-gray-500">ID de Amenaza:</p>
+                          <p className="font-mono text-gray-200">{shortId(threat._id)}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500">Tipo de Ataque:</p>
+                          <p className="font-mono text-gray-200">{threat.attack_type}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500">Severidad:</p>
+                          <p className={`font-mono font-bold ${threatSeverity.text}`}>{threatSeverity.label}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500">Confianza IA:</p>
+                          <p className="font-mono font-bold text-green-400">{Number(threat.confidence ?? 0).toFixed(1)}%</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500">Origen → Destino:</p>
+                          <p className="font-mono text-gray-200 text-xs">{threat.attacker_ip} → {threat.victim_ip}:{threat.victim_port}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500">Acción Tomada:</p>
+                          <p className={`font-mono font-bold ${isBlockAction(threat.action_taken) ? 'text-red-400' : 'text-yellow-400'}`}>{threat.action_taken}</p>
+                        </div>
+                      </div>
+                      <div className="overflow-y-auto overflow-x-hidden pr-1 terminal-scroll min-h-0 max-h-[550px]">
+                        <ThreatDetail key={threat._id} alert={threat} api={api} related={threatRelated} />
+                      </div>
+                    </>
                   ) : (
-                    <p className="text-xs text-gray-500 font-mono">Esperando confirmación de transacción inmutable en bloque...</p>
+                    <p className="text-xs text-gray-500 font-mono">Sin amenazas activas.</p>
                   )}
                 </div>
               )}
             </div>
-          )}
-
-          {/* Columna Derecha */}
-          {rightVisible && (
-            <div className={`col-span-12 ${COL_SPAN[rightSpan]} flex flex-col gap-4`}>
+            <div className="col-span-12 xl:col-span-7 flex flex-col gap-4 min-h-0">
               {w.aiPanel && (
-                <div className="bg-gray-800 p-4 rounded-lg border border-gray-700 shadow-lg">
+                <div className="bg-gray-800 p-4 rounded-lg border border-gray-700 shadow-lg flex flex-col">
                   <div className="flex items-center justify-between mb-1">
                     <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Panel de IA</h2>
-                    <span className="text-[10px] text-gray-600 font-mono">gráfico: últimos {confidenceTrend.length || 0}</span>
+                    <span className="text-[10px] text-gray-600 font-mono">
+                      {attackMix.length === 0 ? 'sin datos' : `${attackMix.length} tipo${attackMix.length === 1 ? '' : 's'} · en vivo`}
+                    </span>
                   </div>
-                  <p className="text-xs text-gray-500 mb-2">Tasa de confianza de detección</p>
-                  <AnomalySparkline values={confidenceTrend} />
+                  <p className="text-xs text-gray-500 mb-2">Distribución por tipo de ataque (% del total cargado)</p>
+                  <div className="flex-1 flex flex-col justify-center min-h-0">
+                    <AttackMixBars data={attackMix} />
+                  </div>
                   <div className="mt-3 pt-3 border-t border-gray-700 space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="flex items-center gap-2 text-xs text-gray-400"><Activity size={14} className="text-green-400" /> Eventos totales registrados</span>
@@ -2118,94 +3169,158 @@ export default function App() {
                   </div>
                 </div>
               )}
-
-              {w.eventLog && (
-                <div className="bg-gray-800 p-4 rounded-lg border border-gray-700 shadow-lg flex flex-col max-h-[640px]">
-                  <div className="flex items-center justify-between mb-4 gap-2">
-                    <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Registro de Eventos en Vivo</h2>
-                    <button
-                      onClick={() => setSearchOpen(true)}
-                      className="relative flex items-center gap-1.5 text-xs px-2 py-1 rounded bg-gray-900 border border-gray-700 text-gray-400 hover:text-gray-200 hover:border-gray-500 shrink-0"
-                      title="Buscar con filtros"
-                    >
-                      <Search size={13} /> Buscar
-                      {activeFilterCount > 0 && (
-                        <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-blue-600 text-[10px] font-bold text-white flex items-center justify-center">
-                          {activeFilterCount}
-                        </span>
-                      )}
-                    </button>
-                  </div>
-                  <div className="flex-grow overflow-y-auto space-y-3 pr-1 text-xs font-mono min-h-[120px]">
-                    {loading ? (
-                      <p className="text-gray-500">Cargando eventos...</p>
-                    ) : alerts.length === 0 ? (
-                      <p className="text-gray-500">Sin ataques detectados. Ejecuta una prueba desde el atacante.</p>
-                    ) : (
-                      logItems.map((alert, index) => (
-                        <EventRow key={alert._id || index} alert={alert} onClick={setSelectedAlert} />
-                      ))
-                    )}
-                  </div>
-                  {!loading && alerts.length > 0 && (
-                    <div className="pt-3 mt-3 border-t border-gray-700 flex items-center justify-between gap-2">
-                      <span className="text-[10px] text-gray-500 font-mono">
-                        Mostrando {logItems.length} de {totalAlerts.toLocaleString()}
-                      </span>
-                      <div className="flex items-center gap-1">
-                        {logLimit > settings.logSize && (
-                          <button
-                            onClick={() => setLogLimit(settings.logSize)}
-                            className="text-xs px-2 py-1 rounded text-gray-400 hover:text-gray-200"
-                          >
-                            Mostrar menos
-                          </button>
-                        )}
-                        {canLoadMore && (
-                          <button
-                            onClick={() => setLogLimit((l) => Math.min(LIVE_MAX_LIMIT, l + LOG_PAGE_SIZE))}
-                            disabled={loadingMore}
-                            className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded border border-gray-700 text-gray-300 hover:border-gray-500 disabled:opacity-60"
-                          >
-                            {loadingMore ? <Loader2 size={12} className="animate-spin" /> : <ChevronDown size={13} />}
-                            Ver más
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
+            </div>
+          </div>
+          {w.timeline && (
+            <div className="bg-gray-800 p-4 rounded-lg border border-gray-700 shadow-lg flex flex-col">
+              <h2 className="text-sm font-semibold text-gray-400 mb-3 uppercase tracking-wider">Línea de Tiempo de Integridad de Activos</h2>
+              <div className="flex-1 flex flex-col justify-center min-h-0">
+                <AssetTimeline alerts={alerts} limit={settings.timelineSize} />
+              </div>
+            </div>
+          )}
+          {extraCharts.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+              {w.attackTypes && (
+                <Panel title="Tipos de ataque" subtitle={`últimos ${stats.total}`}>
+                  <HBarChart data={stats.byType} color="#f87171" emptyText="Sin ataques registrados." />
+                </Panel>
+              )}
+              {w.severity && (
+                <Panel title="Severidad" subtitle="según confianza IA">
+                  <SeverityDonut alerts={alerts} isLight={isLight} />
+                </Panel>
+              )}
+              {w.topAttackers && (
+                <Panel title="Top IPs atacantes" subtitle={`${stats.uniqueAttackers} únicas`}>
+                  <HBarChart data={stats.byAttacker} color="#fb923c" emptyText="Sin IPs de origen registradas." />
+                </Panel>
+              )}
+              {w.ports && (
+                <Panel title="Puertos más atacados">
+                  <HBarChart data={stats.byPort} color="#60a5fa" emptyText="Sin puertos registrados." />
+                </Panel>
               )}
             </div>
           )}
-
+          {w.eventLog && <EventLogCard listHeight="h-[520px]" {...logCardProps} />}
+          {!w.threat && !w.aiPanel && !w.timeline && extraCharts.length === 0 && !w.eventLog && (
+            <div className="py-24 flex flex-col items-center gap-3 text-gray-500">
+              <LayoutGrid size={28} />
+              <p className="text-sm font-mono">Sin paneles en esta vista: actívalos en Configuración.</p>
+              <button onClick={() => setView('config')} className="text-xs text-blue-400 hover:text-blue-300">Abrir configuración</button>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Gráficos adicionales */}
-      {extraCharts.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mt-4">
-          {w.attackTypes && (
-            <Panel title="Tipos de ataque" subtitle={`últimos ${stats.total}`}>
-              <HBarChart data={stats.byType} color="#f87171" emptyText="Sin ataques registrados." />
-            </Panel>
-          )}
-          {w.severity && (
-            <Panel title="Severidad" subtitle="según confianza IA">
-              <SeverityDonut alerts={alerts} isLight={isLight} />
-            </Panel>
-          )}
-          {w.topAttackers && (
-            <Panel title="Top IPs atacantes" subtitle={`${stats.uniqueAttackers} únicas`}>
-              <HBarChart data={stats.byAttacker} color="#fb923c" emptyText="Sin IPs de origen registradas." />
-            </Panel>
-          )}
-          {w.ports && (
-            <Panel title="Puertos más atacados">
-              <HBarChart data={stats.byPort} color="#60a5fa" emptyText="Sin puertos registrados." />
-            </Panel>
+      {safeView === 'sistema' && (
+        <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 items-start">
+            {w.services && (
+              <div className="bg-gray-800 p-4 rounded-lg border border-gray-700 shadow-lg flex-1 flex flex-col">
+                <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Estado de Servicios</h2>
+                <div className="flex-1 flex flex-col items-center justify-center gap-4 py-3 min-h-0">
+                  <HealthRing
+                    states={[serviceState(health?.mongodb, connected), serviceState(health?.solana, connected)]}
+                    isLight={isLight}
+                  />
+                  <div className="w-full space-y-3">
+                    {[
+                      { label: 'MongoDB', sub: 'Alertas y estado', Icon: Database, tile: 'bg-blue-900/30 border-blue-700 text-blue-400', ok: health?.mongodb },
+                      { label: 'Solana', sub: 'Auditoría blockchain', Icon: Server, tile: 'bg-purple-900/30 border-purple-700 text-purple-400', ok: health?.solana },
+                    ].map(({ label, sub, Icon, tile, ok }) => (
+                      <div key={label} className="flex items-center gap-3">
+                        <span className={`w-11 h-11 rounded-lg border flex items-center justify-center shrink-0 ${tile}`}>
+                          <Icon size={20} />
+                        </span>
+                        <span className="flex-1 min-w-0">
+                          <span className="block text-sm font-semibold text-gray-200">{label}</span>
+                          <span className="block text-[10px] text-gray-500">{sub}</span>
+                        </span>
+                        <ServicePill state={serviceState(ok, connected)} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                {health && !health.solana && (
+                  <p className="text-[10px] text-orange-400 mt-3 leading-snug">
+                    Solana no responde en localhost:8899. Los ataques no se registrarán en la blockchain hasta que el validador esté activo.
+                  </p>
+                )}
+              </div>
+            )}
+            <div className="flex flex-col gap-4 min-h-0">
+              {w.blockchain && (
+                <div className="bg-gray-800 p-4 rounded-lg border border-gray-700 shadow-lg flex flex-col">
+                  <h2 className="text-sm font-semibold text-gray-400 mb-2 uppercase tracking-wider">Último Hash Blockchain (Solana)</h2>
+                  <div className="flex-1 flex flex-col justify-center min-h-0">
+                  {lastBlockchainAlert ? (
+                    <p className="text-xs text-yellow-400 font-mono break-all bg-gray-900 p-2 rounded border border-gray-700">
+                      {lastBlockchainAlert.blockchain_signature}
+                    </p>
+                  ) : (
+                    <p className="text-xs text-gray-500 font-mono">Esperando confirmación de transacción inmutable en bloque...</p>
+                  )}
+                  </div>
+                </div>
+              )}
+              <div className="bg-gray-800 p-4 rounded-lg border border-gray-700 shadow-lg">
+                <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-2">Mantenimiento del switch</h2>
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                  <div className="flex items-center gap-2 text-xs font-mono">
+                    {switchStatus && switchStatus.blocked ? (
+                      <span className="flex items-center gap-1.5 px-2 py-1 rounded border border-red-700 bg-red-900/30 text-red-400 font-bold">
+                        <Lock size={12} /> BLOQUEANDO{switchStatus.reason ? ` · ${switchStatus.reason}` : ''}
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1.5 px-2 py-1 rounded border border-green-700 bg-green-900/30 text-green-400 font-bold">
+                        <CheckCircle2 size={12} /> SIN BLOQUEOS
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => setCleanOpen(true)}
+                    className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded bg-blue-600 hover:bg-blue-500 text-white"
+                    title="Borra bloqueos y reinicia Ryu (equivale a ./ips_manager.sh clean-switch)"
+                  >
+                    <Eraser size={13} /> Limpiar switch
+                  </button>
+                </div>
+                <p className="text-[10px] text-gray-600 mt-2 leading-snug">
+                  Detiene Ryu, borra los flujos de SDN_Net (incluidas las reglas DROP) y lo reinicia en monitoreo. También desde el nodo OVS de la topología.
+                </p>
+              </div>
+            </div>
+          </div>
+          {!w.services && !w.blockchain && (
+            <div className="py-24 flex flex-col items-center gap-3 text-gray-500">
+              <LayoutGrid size={28} />
+              <p className="text-sm font-mono">Sin paneles en esta vista: actívalos en Configuración.</p>
+              <button onClick={() => setView('config')} className="text-xs text-blue-400 hover:text-blue-300">Abrir configuración</button>
+            </div>
           )}
         </div>
+      )}
+
+      {safeView === 'usuarios' && isAdmin && <UsersPage api={api} />}
+
+      {safeView === 'config' && (
+        <ConfigPage
+          settings={settings}
+          setSettings={setSettings}
+          api={api}
+          isAdmin={isAdmin}
+          globalConfig={globalConfig}
+          onSaveGlobal={saveGlobal}
+          globalSaved={globalSaved}
+          user={sessionUser}
+          onResetPositions={resetPositions}
+          onClearNotifications={clearNotifications}
+          notificationCount={notifications.length}
+          backendUrl={backendBase}
+          onApplyBackendUrl={applyBackendUrl}
+        />
       )}
 
       {/* Avisos emergentes */}
@@ -2217,24 +3332,13 @@ export default function App() {
         </div>
       )}
 
-      {settingsOpen && (
-        <SettingsDrawer
-          settings={settings}
-          setSettings={setSettings}
-          onClose={() => setSettingsOpen(false)}
-          onResetPositions={resetPositions}
-          onClearNotifications={clearNotifications}
-          notificationCount={notifications.length}
-        />
-      )}
-
       {searchOpen && (
         <SearchModal
-          backendUrl={backendBase}
+          api={api}
           filters={filters}
           setFilters={setFilters}
           onClose={() => setSearchOpen(false)}
-          onSelect={setSelectedAlert}
+          onSelect={selectAlert}
           fallbackAlerts={alerts}
         />
       )}
@@ -2243,10 +3347,75 @@ export default function App() {
         <AlertDetailModal
           key={selectedCurrent._id}
           alert={selectedCurrent}
-          backendUrl={backendBase}
+          api={api}
           onClose={() => setSelectedAlert(null)}
+          onDeleted={(id) => removeAlertsLocal([id])}
+          canDelete={isAdmin}
         />
       )}
+
+      {/* Miniconsola SDN: click en attacker / server1 / server2 de la topología */}
+      {terminalOpen && (
+        <HostTerminal
+          initialHost={terminalHost}
+          backendUrl={backendBase}
+          onClose={closeTerminal}
+        />
+      )}
+
+      {/* Limpieza del switch: click en el OVS o botón Eraser de la topología */}
+      {cleanOpen && (
+        <CleanSwitchModal
+          api={api}
+          onClose={() => setCleanOpen(false)}
+        />
+      )}
+      </main>
     </div>
+    </div>
+  );
+}
+
+// --- Puerta de acceso: login o aplicación según la sesión ---
+
+function Gate({ backendUrl, onBackendUrl }) {
+  const { user, checking } = useAuth();
+  if (checking) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <Loader2 size={26} className="text-blue-400 animate-spin" />
+      </div>
+    );
+  }
+  if (!user) return <Login backendUrl={backendUrl} onBackendUrl={onBackendUrl} />;
+  return <MainApp />;
+}
+
+export default function App() {
+  const [backendUrl, setBackendUrl] = useState(() => {
+    try {
+      return loadSettings().backendUrl;
+    } catch {
+      return 'http://localhost:8001';
+    }
+  });
+
+  // Cambiar de backend implica recargar para revalidar la sesión allí.
+  const applyBackendUrl = useCallback((v) => {
+    try {
+      const s = loadSettings();
+      s.backendUrl = v;
+      saveJSON(STORAGE_KEYS.settings, s);
+    } catch {
+      // seguimos con la recarga aunque no se pueda persistir
+    }
+    setBackendUrl(v);
+    window.location.reload();
+  }, []);
+
+  return (
+    <AuthProvider backendUrl={backendUrl}>
+      <Gate backendUrl={backendUrl} onBackendUrl={applyBackendUrl} />
+    </AuthProvider>
   );
 }
