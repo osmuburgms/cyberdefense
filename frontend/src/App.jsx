@@ -1725,10 +1725,10 @@ function EventLogCard(props) {
     selectedIds, logItems, activeFilterCount, setSearchOpen, toggleSelectId,
     selectAlert, loading, alerts, totalAlerts, logLimit, settings, setLogLimit,
     canLoadMore, loadingMore, isAdmin, confirmSelDel, deleteSelected, deleting,
-    confirmWipe, setConfirmWipe, deleteAllRecords,
+    confirmWipe, setConfirmWipe, deleteAllRecords, className,
   } = props;
   return (
-    <div className="bg-gray-800 p-4 rounded-lg border border-gray-700 shadow-lg flex flex-col min-w-0">
+    <div className={`bg-gray-800 p-4 rounded-lg border border-gray-700 shadow-lg flex flex-col min-w-0 ${className || ''}`}>
       <div className="flex items-center justify-between mb-2 gap-2">
         <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Registro de Eventos en Vivo</h2>
         <div className="flex items-center gap-1 shrink-0">
@@ -2965,15 +2965,15 @@ export function MainApp() {
         </div>
       </header>
 
-      <main className="flex-1 p-4 min-w-0">
+      <main className="flex-1 p-4 min-w-0 flex flex-col">
 
       {safeView === 'dashboard' && (
-        <>
+        <div className="flex-1 min-h-0 flex flex-col gap-4">
           {w.kpis && <KpiStrip stats={stats} totalAlerts={totalAlerts} totalBlocked={totalBlocked} />}
-          <div className="grid grid-cols-12 gap-4 items-stretch">
-            <div className="col-span-12 xl:col-span-8 flex flex-col gap-4 min-h-0">
+          <div className="grid grid-cols-12 gap-4 items-stretch flex-1 min-h-0">
+            <div className="col-span-12 xl:col-span-8 flex flex-col gap-4 min-h-[520px]">
               {w.topology && (
-                <div className="bg-gray-800 rounded-lg border border-gray-700 relative overflow-hidden shadow-lg p-4 flex-1 min-h-[440px] flex flex-col">
+                <div className="bg-gray-800 rounded-lg border border-gray-700 relative overflow-hidden shadow-lg p-4 flex-1 min-h-[480px] flex flex-col">
                   <div className="flex items-center justify-between mb-2 relative z-10 gap-2">
                     <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Topología</h2>
                     <div className="flex items-center gap-1">
@@ -3055,8 +3055,8 @@ export function MainApp() {
                 </div>
               )}
             </div>
-            <div className="col-span-12 xl:col-span-4 flex flex-col gap-4 min-h-0">
-              {w.eventLog && <EventLogCard listHeight="h-[380px]" {...logCardProps} />}
+            <div className="col-span-12 xl:col-span-4 flex flex-col gap-4 min-h-[520px]">
+              {w.eventLog && <EventLogCard className="flex-1" listHeight="flex-1 min-h-0" {...logCardProps} />}
             </div>
           </div>
           {!w.topology && !w.eventLog && !w.kpis && (
@@ -3066,7 +3066,7 @@ export function MainApp() {
               <button onClick={() => setView('config')} className="text-xs text-blue-400 hover:text-blue-300">Abrir configuración</button>
             </div>
           )}
-        </>
+        </div>
       )}
 
       {safeView === 'eventos' && (

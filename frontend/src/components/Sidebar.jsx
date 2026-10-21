@@ -1,4 +1,4 @@
-import { LayoutDashboard, Activity, Server, Users, Settings, Menu, ShieldAlert } from 'lucide-react';
+import { LayoutDashboard, Activity, Server, Users, Settings, Menu } from 'lucide-react';
 
 // Barra lateral estilo Issabel: oscura, con grupos, colapsable a iconos.
 const NAV_ITEMS = [
@@ -19,9 +19,11 @@ export default function Sidebar({ view, setView, collapsed, setCollapsed, isAdmi
       aria-label="Navegación principal"
     >
       <div className="flex items-center gap-2 px-3 h-14 border-b border-gray-800 shrink-0">
-        <span className="w-8 h-8 rounded-lg bg-red-600/15 border border-red-800 flex items-center justify-center shrink-0">
-          <ShieldAlert size={17} className="text-red-500" />
-        </span>
+        <img
+          src="/logo-escudo.png"
+          alt="CyberDefense SDN"
+          className="w-8 h-8 object-contain shrink-0"
+        />
         {!collapsed && (
           <span className="flex-1 min-w-0">
             <span className="block text-[13px] font-bold text-gray-100 leading-tight truncate">SDN Cyberdefense</span>

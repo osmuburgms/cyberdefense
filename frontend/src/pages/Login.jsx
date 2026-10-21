@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ShieldAlert, Loader2, Server } from 'lucide-react';
+import { Loader2, Server } from 'lucide-react';
 import { useAuth } from '../auth';
 
 // Pantalla de acceso: operador o administrador según el rol de la cuenta.
@@ -40,9 +40,11 @@ export default function Login({ backendUrl, onBackendUrl }) {
     <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
       <div className="modal-in w-full max-w-sm">
         <div className="flex flex-col items-center mb-6">
-          <div className="w-14 h-14 rounded-2xl bg-red-600/15 border border-red-700 flex items-center justify-center mb-3">
-            <ShieldAlert size={28} className="text-red-500" />
-          </div>
+          <img
+            src="/logo-escudo.png"
+            alt="CyberDefense SDN"
+            className="h-20 w-auto mb-3 drop-shadow-[0_0_18px_rgba(56,189,248,0.35)]"
+          />
           <h1 className="text-xl font-bold text-gray-100">SDN Cyberdefense</h1>
           <p className="text-xs text-gray-500 font-mono mt-1">Acceso de operadores y administradores</p>
         </div>
