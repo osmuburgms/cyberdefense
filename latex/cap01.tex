@@ -2,29 +2,50 @@
 \thispagestyle{empty}
 \label{chapter:introduction}
 
-\section{Contexto y motivaci\'on}
-
+% ---------------------------------------------------------------------------
+%  INTRODUCCIÓN (texto sin numerar: contexto y motivación)
+% ---------------------------------------------------------------------------
 La digitalizaci\'on de los servicios acad\'emicos y administrativos ha convertido a los centros de datos institucionales en la infraestructura cr\'itica sobre la que operan las plataformas de ense\~nanza, investigaci\'on y gesti\'on administrativa. En este escenario, el Centro de Datos de la Facultad de Ingenier\'ia en Electricidad y Computaci\'on (FIEC) de la Escuela Superior Polit\'ecnica del Litoral (ESPOL) concentra un volumen creciente de servicios digitales, lo que lo convierte en un objetivo recurrente para los actores maliciosos.
 
 El impacto de las amenazas inform\'aticas sobre este tipo de infraestructura no se limita a las p\'erdidas econ\'omicas. Una interrupci\'on prolongada de los servicios afecta la continuidad acad\'emica, la disponibilidad de la informaci\'on administrativa y la reputaci\'on institucional. Las t\'ecnicas de mayor incidencia en entornos educativos son la denegaci\'on de servicio distribuida (CDoS), el ransomware, el movimiento lateral y el abuso de credenciales \cite{nist80061r2}.
 
-Ante este panorama, los sistemas de detecci\'on de intrusiones basados en firmas, heredados de los sistemas IDS clásicos, resultan insuficientes: dependen de reglas est\'aticas que deben actualizarse manualmente, no escalan con la diversidad de amenazas contempor\'aneas y, al operar sobre tr\'afico cifrado, pierden visibilidad. Paralelamente, la monitorizaci\'on aislada --donde el operador detecta la amenaza pero no puede actuar sobre ella-- introduce un desfase que las brechas de seguridad explotan \cite{nistcsf20}.
+Ante este panorama, los sistemas de detecci\'on de intrusiones basados en firmas, heredados de los sistemas IDS cl\'asicos, resultan insuficientes: dependen de reglas est\'aticas que deben actualizarse manualmente, no escalan con la diversidad de amenazas contempor\'aneas y, al operar sobre tr\'afico cifrado, pierden visibilidad. Paralelamente, la monitorizaci\'on aislada --donde el operador detecta la amenaza pero no puede actuar sobre ella-- introduce un desfase que las brechas de seguridad explotan \cite{nistcsf20}.
 
 Las redes programables (Software-Defined Networking, SDN) aparecen como una alternativa que rompe esa separaci\'on entre detecci\'on y acci\'on. Al separar el plano de control del plano de datos \cite{rfc7426}, la l\'ogica de la red se vuelve programable y centralizada, de modo que un evento de seguridad puede ser analizado por un modelo de aprendizaje autom\'atico y traducir su respuesta en una actualizaci\'on de flujos sobre el switch, de forma autom\'atica y en tiempo real \cite{ryu2015onosr}. Esta capacidad de cerrar el ciclo detecci\'on--mitigaci\'on es el eje del presente proyecto.
 
+% ---------------------------------------------------------------------------
 \section{Problematica}
 
-El Centro de Datos de la FIEC requiere una soluci\'on que sea capaz de visualizar, analizar y proteger la red en tiempo real. Sin embargo, las herramientas de seguridad actualmente disponibles en la instituci\'on presentan limitaciones que dificultan satisfacer este requerimiento:
+El Centro de Datos de la FIEC requiere una soluci\'on que sea capaz de visualizar, analizar y proteger la red en tiempo real. Sin embargo, las herramientas de seguridad actualmente disponibles en la instituci\'on presentan limitaciones que dificultan satisfacer este requerimiento. El an\'alisis de la situaci\'on actual puede agruparse en tres \'ambitos: la visibilidad sobre la red, la respuesta ante las amenazas y la gesti\'on operativa de los activos y de las pol\'iticas.
+
+\subsection{Visibilidad de la red}
+
+En la actualidad, la observaci\'on del tr\'afico del Centro de Datos se apoya en herramientas generalizadas que no est\'an integradas en una vista \'unica. Los equipos de red gestionan sus propias tablas de reenv\'io, los servidores exponen sus registros de forma independiente y los cortafuegos reportan sus propios eventos; como consecuencia, el operador carece de una representaci\'on consolidada del estado de la red y de los eventos de seguridad que en \'el se producen. A ello se suma que el inventario de equipos no se encuentra centralizado en una herramienta de seguridad, de modo que la relaci\'on entre un evento de red y el activo afectado --con su \'area o departamento responsable, su segmento de red y su criticidad-- debe resolverse de manera manual.
+
+\subsection{Detecci\'on y respuesta ante las amenazas}
+
+Los mecanismos de protecci\'on empleados hasta el momento se apoyan en reglas est\'aticas que no escalan con la diversidad de las amenazas contempor\'aneas y en procesos de mitigaci\'on que dependen de la disponibilidad del operador. En la pr\'actica, esto implica que la mitigaci\'on de una conexi\'on maliciosa se produce en el orden de los minutos, mientras que los tiempos de propagaci\'on de un ataque automatizado son del orden de los segundos. Adem\'as, no existe un canal formal de notificaci\'on hacia el equipo de soporte de TI, por lo que la detecci\'on de un evento no genera de manera autom\'atica un aviso al personal responsable, ni una recomendaci\'on sobre las acciones de prevenci\'on que deber\'ian adoptarse para evitar la reaparici\'on del ataque. El reporte de incidentes se realiza manualmente, con lo que se pierde trazabilidad y se dificulta el an\'alisis posterior.
+
+\subsection{Gesti\'on de activos y pol\'iticas de seguridad}
+
+El Centro de Datos no dispone de un m\'odulo que permita registrar de forma estructurada los equipos nuevos que se instalan, ni de un mecanismo que permita incorporarlos masivamente a partir de los archivos de configuraci\'on que el Centro de Datos ya produce. Asimismo, las pol\'iticas de filtrado vigentes --las listas de servicios, dominios y puertos restringidos, y la segmentaci\'on por \'areas-- se aplican directamente sobre los equipos de red, sin una capa que las exprese como pol\'iticas de tr\'afico expl\'icitas, auditables y gestionables desde la plataforma, lo que dificulta tanto su revisi\'on como su actualizaci\'on cuando la topolog\'ia de la red cambia.
+
+En conjunto, estas limitaciones se traducen en los siguientes vac\'ios operativos:
 
 \begin{itemize}
     \item La monitorizaci\'on se realiza de forma fragmentada, sin una vista unificada del estado de la red ni de los eventos de seguridad.
     \item Los controles de mitigaci\'on existentes son manuales, lo que implica tiempos de respuesta directamente proporcionales a la disponibilidad del operador.
     \item No existe una capacidad de an\'alisis automatizado que correlacione el tr\'afico observado con patrones de ataque conocidos o emergentes.
     \item No se dispone de un registro auditable e inalterable de los incidentes de seguridad atendidos.
+    \item No existe un inventario estructurado de los equipos, por lo que el \'area o el departamento responsable de un activo no puede consultarse de forma inmediata.
+    \item No existe un mecanismo que permita dar de alta nuevos equipos, ni importarlos masivamente desde los archivos de configuraci\'on del Centro de Datos.
+    \item No existe un m\'odulo de reglas de tr\'afico que permita expresar las pol\'iticas de filtrado por \'area, por equipo o por segmento, ni aplicar y auditar su estado.
+    \item No existe un canal de notificaci\'on al equipo de soporte de TI, ni un mecanismo que recomiende acciones de prevenci\'on tras cada incidente.
 \end{itemize}
 
-El problema de investigaci\'on que aborda este proyecto es, en consecuencia, el siguiente: \emph{dise\~nar e implementar una plataforma de ciberseguridad que integre la detecci\'on automatizada de intrusiones con la mitigaci\'on automatizada sobre redes programables, y que brinde una interfaz \'unica de monitorizaci\'on y gesti\'on que permita al Centro de Datos de la FIEC visualizar, analizar y proteger su red en tiempo real.}
+El problema de investigaci\'on que aborda este proyecto es, en consecuencia, el siguiente: \emph{dise\~nar e implementar una plataforma de ciberseguridad que integre la detecci\'on automatizada de intrusiones con la mitigaci\'on automatizada sobre redes programables, y que brinde una interfaz \'unica de monitorizaci\'on y gesti\'on que permita al Centro de Datos de la FIEC visualizar, analizar y proteger su red en tiempo real, que incorpore la gesti\'on estructurada de los activos del centro de datos --con su \'area o departamento responsable y su segmentaci\'on--, la expresi\'on y aplicaci\'on de reglas de tr\'afico, la notificaci\'on automatizada al equipo de soporte de TI y la generaci\'on de recomendaciones de prevenci\'on tras cada incidente.}
 
+% ---------------------------------------------------------------------------
 \section{Objetivos}
 
 \subsection{Objetivo general}
@@ -35,21 +56,88 @@ Desarrollar e implementar una plataforma de ciberseguridad que integre la detecc
 
 \begin{enumerate}
     \item Implementar un m\'odulo de percepci\'on que capture el tr\'afico de la red en el punto de observaci\'on y lo disponibilice para su an\'alisis en tiempo real.
-    \item Entrenar y validar un modelo de aprendizaje autom\'atico basado en \'arboles de gradiente boosting \cite{lightgbm2017} para la clasificaci\'on de tr\'afico como benigno o malicioso.
-    \item Implementar un controlador de red programable \cite{ryu2015onosr} sobre Open vSwitch \cite{openvswitch2014} que permita la inserci\'on y eliminaci\'on din\'amica de reglas de flujo como respuesta a los eventos detectados.
-    \item Desarrollar una interfaz web de monitorizaci\'on que centralice la visualizaci\'on del estado de la red, los eventos de seguridad y las acciones de mitigaci\'on ejecutadas.
-    \item Validar el sistema en un entorno de pruebas controlado que reproduzca las caracter\'isticas del escenario del cliente, y definir el procedimiento de despliegue en el servidor del Centro de Datos.
+    \item Entrenar y validar un modelo de aprendizaje autom\'atico basado en \'arboles de gradiente boosting \cite{lightgbm2017} para la clasificaci\'on del tr\'afico como benigno o malicioso, evaluando su precisi\'on, exhaustividad y tasa de falsos positivos.
+    \item Implementar un controlador de red programable \cite{ryu2015onosr} sobre Open vSwitch \cite{openvswitch2014} que permita la inserci\'on y eliminaci\'on din\'amica de reglas de flujo como respuesta a los eventos detectados, e incorporar un gestor de reglas de tr\'afico que permita definir pol\'iticas de filtrado por equipo individual, por \'area o departamento y por segmento de red.
+    \item Desarrollar una interfaz web de operaci\'on que centralice el estado de la red y de los eventos de seguridad, el inventario de activos con su \'area o departamento responsable y su segmento de red --con alta individual y carga masiva de equipos--, las reglas de tr\'afico y las acciones de mitigaci\'on ejecutadas, e integre la notificaci\'on automatizada al equipo de soporte de TI con las recomendaciones de prevenci\'on derivadas de cada incidente.
+    \item Validar el sistema en un entorno de pruebas controlado que reproduzca las caracter\'isticas del escenario del cliente, y definir y ejecutar el procedimiento de despliegue en el servidor del Centro de Datos de la FIEC, junto con la documentaci\'on t\'ecnica y de usuario correspondiente.
 \end{enumerate}
 
+% ---------------------------------------------------------------------------
 \section{Alcance}
 
 El alcance del proyecto comprende el desarrollo de la plataforma de ciberseguridad y su validaci\'on experimental en un entorno virtual de pruebas, construido sobre un laboratorio de redes programables. Se incluye la implementaci\'on del sistema de percepci\'on y detecci\'on, la integraci\'on con el plano de control, el desarrollo de la interfaz de administraci\'on y el despliegue del conjunto en un servidor del Centro de Datos de la FIEC, conforme a los compromisos adquiridos con el cliente en la carta de compromiso.
 
-Quedan fuera del alcance inicial la optimizaci\'on del modelo de detecci\'on para tr\'afico cifrado, la integraci\'on con sistemas de gesti\'on de eventos de seguridad corporativos de terceros y la certificaci\'on formal del sistema conforme a marcos normativos externos.
+En el \'ambito funcional, el alcance comprende igualmente los m\'odulos de operaci\'on acordados con el cliente: el inventario de activos con su configuraci\'on por \'area, departamento y segmento de red, la carga masiva de datos de equipos, el gestor de reglas de tr\'afico, el m\'odulo de notificaci\'on al equipo de soporte de TI y el motor de recomendaciones post-incidente. La aplicaci\'on de reglas de filtrado sobre tr\'afico productive queda condicionada a la autorizaci\'on previa y por escrito del cliente, conforme a los t\'erminos de la carta de compromiso.
 
+Quedan fuera del alcance inicial la optimizaci\'on del modelo de detecci\'on para tr\'afico cifrado, la integraci\'on con sistemas de gesti\'on de eventos de seguridad corporativos de terceros, la administraci\'on de las pol\'iticas de filtrado ya instaladas en los equipos de red del Centro de Datos y la certificaci\'on formal del sistema conforme a marcos normativos externos.
+
+% ---------------------------------------------------------------------------
+\section{Marco te\'orico}
+
+Esta secci\'on tiene por prop\'osito introducir los t\'erminos, los conceptos y las tecnolog\'ias que sustentan el desarrollo del proyecto, de manera que el lector disponga de las bases te\'oricas necesarias para comprender las decisiones de dise\~no adoptadas en los cap\'itulos siguientes. Se abordan la arquitectura de las redes programables, los fundamentos de la detecci\'on de intrusiones y su evoluci\'on hacia los m\'etodos basados en aprendizaje autom\'atico, las t\'ecnicas de aprendizaje autom\'atico aplicadas a la seguridad de las redes, y los mecanismos de registro auditable de los eventos de seguridad.
+
+\subsection{Redes programables}
+
+La arquitectura tradicional de las redes conmutadas se articula en dos planos claramente diferenciados: el plano de control, donde reside la l\'ogica que decide el reenv\'io, y el plano de datos, donde se ejecutan las reglas de reenv\'io en cada dispositivo. Esta separaci\'on implica que cada protocolo, cada funci\'on y cada pol\'itica de seguridad deba configurarse dispositivo por dispositivo, lo que produce tiempos de implementaci\'on altos, configuraciones heterog\'eneas y una visibilidad limitada sobre el estado global de la red.
+
+La arquitectura de las redes programables propone invertir esta relaci\'on: el plano de control se centraliza en un componente software denominado controlador, y el plano de datos se limita a la ejecuci\'on de las reglas de flujo instaladas por este \cite{rfc7426}. La comunicaci\'on entre ambos planos se establece mediante un protocolo estandarizado como OpenFlow, que define un conjunto com\'un de primitivas \cite{ryu2015onosr}. En el presente proyecto el papel de controlador lo desempeña Ryu, y el de conmutador programable, Open vSwitch \cite{openvswitch2014}, desplegado sobre m\'aquinas virtuales de contenedor.
+
+Para la seguridad de la red, la programabilidad aporta tres ventajas decisivas: la aplicaci\'on inmediata y centralizada de reglas de mitigaci\'on sin intervenci\'on manual por dispositivo; la observabilidad global de la topolog\'ia y del estado de los flujos; y la trazabilidad de las decisiones, dado que toda acci\'on ejecutada queda registrada en el controlador. Como contrapunto, el modelo introduce superficies de ataque adicionales: el controlador se convierte en un punto cr\'itico cuya disponibilidad condiciona la de toda la red, la consistencia del estado entre control y datos debe garantizarse, y las capacidades de la interfaz de programaci\'on deben limitarse conforme al principio de menor privilegio.
+
+\subsection{Detecci\'on de intrusiones}
+
+Un sistema de detecci\'on de intrusiones (IDS) analiza el tr\'afico con el prop\'osito de identificar actividad maliciosa, mientras que un sistema de prevenci\'on de intrusiones (IPS) va m\'as all\' y act\'ua bloqueando la conexi\'on detectada \cite{nist80061r2}. Ambos se apoyan en dos familias de t\'ecnicas: la detecci\'on por firmas, que compara el tr\'afico contra patrones de ataques conocidos, y la detecci\'on por anomal\'ias, que construye un modelo del comportamiento normal y se\~ala como an\'omalo aquello que se aparta de \'el.
+
+La detecci\'on por firmas ofrece baja tasa de falsos positivos y alta interpretabilidad, pero depende de la disponibilidad de la firma, lo que la vuelve inefectiva frente a ataques nuevos o polim\'orficos. La detecci\'on por anomal\'ias, en cambio, permite identificar amenazas desconocidas, aunque trabaja sobre la asunci\'on de que el comportamiento malicioso se aparta de la norma, por lo que puede ser desvirtuada por cambios legítimos en el tr\'afico y tiende a producir un mayor volumen de falsos positivos.
+
+La evaluaci\'on de ambos enfoques se realiza mediante m\'etricas de clasificaci\'on: precisi\'on, exhaustividad (recall), valor F1 y \'area bajo la curva ROC. En el contexto de un centro de datos, la exhaustividad resulta cr\'itica, pues un ataque no detectado se traduce en un incidente real, mientras que un falso positivo consume tiempo del equipo de soporte sinributing a la mitigaci\'on efectiva.
+
+\subsection{Aprendizaje autom\'atico aplicado a la seguridad de las redes}
+
+El aprendizaje autom\'atico permite derivar reglas de decisi\'on a partir de ejemplos, en lugar de programarlas de forma explícita. En el contexto de la detecci\'on de intrusiones se emplea principalmente el aprendizaje supervisado, en el que cada flujo de red se etiqueta como benigno o malicioso y el modelo aprende la relaci\'on entre sus caracter\'isticas y la etiqueta correspondiente.
+
+Las t\'ecnicas de \'arboles de decisi\'on son habituales en este \'ambito por su interpretabilidad y su capacidad de modelar interacciones no lineales entre variables. El m\'etodo de gradient boosting, que construye un conjunto de \'arboles de decisi\'on ajustados secuencialmente para corregir los errores de los anteriores, ha demostrado un rendimiento superior en problemas de detecci\'on de intrusiones con variables heterog\'eneas \cite{lightgbm2017}. Esta familia de modelos es la que se emplea en la capa de an\'alisis de la plataforma propuesta.
+
+Dos caracter\'isticas propias de este dominio condicionan el dise\~no del proceso de entrenamiento. La primera es el desbalance entre clases: en tr\'afico real, los ejemplos benignos son dos 'ordenes de magnitud m\'abundantes que los maliciosos, por lo que un modelo entrenado sin tratamiento espec\'ifico tender\'a a predecir siempre la clase mayoritaria. La segunda es el desajuste entre el entorno de entrenamiento y el de operaci\'on, conocido como deriva del concepto, que obliga a reentrenar o recalibrar el modelo conforme evoluciona el tr\'afico real del centro de datos.
+
+\subsection{Registro auditable de eventos de seguridad}
+
+El tratamiento de incidentes de seguridad exige, adem\'as de la detecci\'on y la mitigaci\'on, la posibilidad de reconstruir la secuencia de hechos posterior a un evento \cite{nist80061r2}. Un registro de eventos debe ser \'util, completo e inalterable: debe identificar el equipo afectado, la acci\'on ejecutada y el responsable de la decisi\'on, y debe resistir la manipulaci\'n deliberada de quien pudiera tener interés en ocultar la actividad.
+
+Una soluci\'on com\'un consiste en encadenar los registros mediante funciones hash, de modo que cada entrada incorporates el resumen de la anterior y cualquier alteraci\'n de una entrada previa invalidate las siguientes. Con la misma finalidade, las cadenas de bloques (\emph{blockchain}) ofrecen un libro mayor distribuido y append-only, donde cada bloque incluye el hash del anterior y la escritura de un registro requiere la validaci\'on de los participantes \cite{nakamoto2008}. En el presente proyecto se emplea el registro auditable como mecanismo de respaldo de la informaci\'on de eventos, de modo que la evidencia de lo ocurrido permanezca disponible para auditor\'ias posteriores.
+
+% ---------------------------------------------------------------------------
+\section{Estado del arte}
+
+El estado del arte agrupa los trabajos que han abordando la intersecci\'on entre la detecci\'on de intrusiones, la automatizaci\'on de la respuesta y la programabilidad de la red. La Tabla \ref{tbl:estadoArte} resume las familias de enfoques identificadas y sus principales limitaci\'ones.
+
+\begin{table}[!htbp]
+\centering
+\small
+\caption{{\fontsize{11pt}{13}\selectfont Comparaci\'on de los enfoques revisados en el estado del arte}}
+\label{tbl:estadoArte}
+\begin{tabular}{@{}p{3.6cm}p{2.8cm}p{2.8cm}p{3.4cm}@{}}
+\toprule
+\textbf{Enfoque} & \textbf{Detecci\'on} & \textbf{Respuesta} & \textbf{Limitaci\'on principal} \\
+\midrule
+IDS/IPS por firmas &Firmas conocidas &Manual o por reglas &Cobertura limitada a ataques conocidos y actualizaci\'on manual de reglas \\
+Detecci\'on por anomal\'ias con AA &Modelos de comportamiento &Alertas al operador &Elevada tasa de falsos positivos y ausencia de acci\'on autom\'atica \\
+Redes programables para la gesti\'on &No aplica &Automatizada y centralizada &No aborda por s\'i solo la detecci\'on de amenazas \\
+Integraci\'on IDS--SDN &Firmas y/o anomal\'ias &Reglas de flujo sobre OpenFlow &Rara vez se valida en un despliegue real de centro de datos y no considera el inventario de activos \\
+Registro auditable con blockchain &No aplica &No aplica &Costo computacional y de almacenamiento, y difusi\'on lenta de la informaci\'on \\
+\textbf{Trabajo propuesto} &Aprendizaje autom\'atico &Reglas de flujo y notificaci\'n al equipo de soporte &Pendiente de validaci\'on en el entorno del cliente \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Del an\'alisis de la Tabla \ref{tbl:estadoArte} se desprenden dos observaciones. La primera es que las t\'ecnicas que mejor resuelven la detecci\'on (aprendizaje autom\'atico) y las que mejor resuelven la respuesta (programabilidad de la red) han sido desarrolladas de forma pr\'acticamente independiente, de modo que son escasas las soluciones integradas que permitan clasificar un evento y traducirlo a una acci\'on concreta sobre la red dentro de una misma plataforma. La segunda es que la literatura revisada rara vez considera el ciclo operativo completo: el inventario de los activos del centro de datos, la gesti\'on de pol\'iticas de filtrado por \'area o por equipo, la notificaci\'n al equipo de soporte y la entrega de recomendaciones de mitigaci\'on tras el incidente.
+
+El presente proyecto se sit\'ua en esa intersecci\'on. Su aportaci\'on consiste en integrar en una \'unica plataforma la detecci\'on automatizada mediante aprendizaje autom\'atico, la mitigaci\'on automatizada mediante reglas de flujo sobre la red programable, el registro auditable de los eventos y un conjunto de funciones operativas orientadas al cliente --inventario de equipos, gesti\'on de pol\'iticas de filtrado, notificaci\'on al equipo de soporte de TI y recomendaciones post-incidente-- validadas sobre un escenario de pruebas controlado y destinadas a su despliegue en el Centro de Datos de la FIEC.
+
+% ---------------------------------------------------------------------------
 \section{Metodolog\'ia}
 
-El proyecto aplica una investigaci\'on aplicada de car\'acter tecnol\'ogico, orientada a resolver un problema concreto del cliente mediante el desarrollo de un prototipo funcional. El proceso se estructura en cinco fases: (i) an\'alisis del contexto y definici\'on de requisitos funcionales y no funcionales; (ii) dise\~no de la arquitectura del sistema; (iii) implementaci\'on de cada m\'odulo; (iv) validaci\'n experimental; y (v) despliegue y documentaci\'on.
+El proyecto aplica una investigaci\'on aplicada de car\'acter tecnol\'ogico, orientada a resolver un problema concreto del cliente mediante el desarrollo de un prototipo funcional. El proceso se estructura en cinco fases: (i) an\'alisis del contexto y definici\'on de requisitos funcionales y no funcionales; (ii) dise\~no de la arquitectura del sistema; (iii) implementaci\'on de cada m\'odulo; (iv) validaci\'on experimental; y (v) despliegue y documentaci\'on.
 
 La arquitectura propuesta es modular y se articula en cuatro capas, tal como se ilustra en la Figura \ref{fig:arquitectura}.
 
@@ -63,16 +151,19 @@ La arquitectura propuesta es modular y se articula en cuatro capas, tal como se 
 \begin{description}
     \item[Capa de percepci\'on.] Captura el tr\'afico en el punto de observaci\'on de la red y lo retransmite hacia la capa de an\'alisis.
     \item[Capa de an\'alisis.] Extrae caracter\'isticas del tr\'afico, aplica el modelo de clasificaci\'on y emite los eventos de seguridad con su nivel de severidad.
-    \item[Capa de control.] Traduce los eventos de seguridad en acciones de mitigaci\'on sobre el switch programable, mediante reglas de flujo din\'amicas.
-    \item[Capa de presentaci\'on.] Consolida la informaci\'on en un tablero web que permite la visualizaci\'on, el an\'alisis y la gesti\'on de los incidentes.
+    \item[Capa de control.] Traduce los eventos de seguridad en acciones de mitigaci\'on sobre el switch programable, mediante reglas de flujo din\'amicas, e incorpora el m\'odulo de reglas de tr\'afico que permite al operador definir pol\'iticas de filtrado por \'area, equipo o segmento.
+    \item[Capa de presentaci\'on.] Consolida la informaci\'on en un tablero web que permite la visualizaci\'on, el an\'alisis y la gesti\'on de los incidentes, e incorpora el inventario de activos --con su \'area o departamento responsable y su segmentaci\'on--, la carga masiva de equipos y las recomendaciones post-incidente.
+    \item[Capa de comunicaci\'on.] Enruta los eventos relevantes hacia el equipo de soporte de TI a trav\'es del canal de notificaci\'on acordado, adjuntando el resumen del incidente y las recomendaciones de prevenci\'on asociadas.
 \end{description}
 
 La validaci\'on se realiza en un entorno virtual que reproduce la topolog\'ia del escenario del cliente: tres m\'aquinas virtuales con roles diferenciados (atacante, servidor de aplicaci\'on y servidor de datos) conectadas a un switch virtual programable, gobernado por un controlador de red. Sobre este escenario se reproducen t\'ecnicas de ataque de reconocimiento, fuerza bruta y denegaci\'on de servicio, midiendo la capacidad de detecci\'on, el tiempo de respuesta y la efectividad de la mitigaci\'on.
 
+% ---------------------------------------------------------------------------
 \section{Contribuciones}
 
-La principal contribuci\'on del proyecto es la integraci\'on efectiva de la detecci\'on con aprendizaje autom\'atico y la mitigaci\'on sobre redes programables en una \'unica plataforma operativa, cerrando el ciclo detecci\'on--respuesta con intervenci\'n humana m\'inima. Se suman como contribuciones adicionales la validaci\'on experimental reproducible sobre un entorno virtual, la definici\'on de un modelo de despliegue aplicable a la infraestructura real del cliente y el registro auditable de los eventos de seguridad atendidos.
+La principal contribuci\'on del proyecto es la integraci\'on efectiva de la detecci\'on con aprendizaje autom\'atico y la mitigaci\'on sobre redes programables en una \'unica plataforma operativa, cerrando el ciclo detecci\'on--respuesta con intervenci\'on humana m\'inima. Se suman como contribuciones adicionales la gesti\'on estructurada de los activos del centro de datos y su representaci\'on segmentada por \'area, la expresi\'on de pol\'iticas de filtrado como reglas de tr\'afico auditables, la automatizaci\'on de la notificaci\'on al equipo de soporte de TI con recomendaciones de prevenci\'on asociadas, la validaci\'on experimental reproducible sobre un entorno virtual, la definici\'on de un modelo de despliegue aplicable a la infraestructura real del cliente y el registro auditable de los eventos de seguridad atendidos.
 
+% ---------------------------------------------------------------------------
 \section{Estructura del documento}
 
-El presente documento se organiza en los siguientes cap\'itulos: el Cap\'itulo 1 introduce el contexto, la problem\'atica, los objetivos, el alcance y la metodolog\'ia aplicada. Los cap\'itulos siguientes desarrollan el marco te\'orico, la evaluaci\'on de riesgos y alternativas tecnol\'ogicas consideradas, los resultados experimentales obtenidos y las conclusiones y l\'ineas futuras de trabajo. Finalmente, se incluyen las referencias bibliogr\'aficas y los ap\'endices con el material complementario del proyecto.
+El presente documento se organiza en los siguientes cap\'itulos: el Cap\'itulo 1 presenta la introducci\'on, la problem\'atica, los objetivos, el alcance, el marco te\'orico, el estado del arte, la metodolog\'ia aplicada y las contribuciones del proyecto. El Cap\'itulo 2 desarrolla la evaluaci\'on de riesgos y las alternativas tecnol\'ogicas consideradas. El Cap\'itulo 3 presenta los resultados experimentales obtenidos en el escenario de pruebas. El Cap\'itulo 4 expone las conclusiones y las l\'ineas futuras de trabajo. Finalmente, se incluyen las referencias bibliogr\'aficas y los ap\'endices con el material complementario del proyecto.
