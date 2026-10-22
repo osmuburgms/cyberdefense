@@ -48,19 +48,23 @@ El problema de investigaci\'on que aborda este proyecto es, en consecuencia, el 
 % ---------------------------------------------------------------------------
 \section{Objetivos}
 
+En esta secci\'on se plantean los siguientes objetivos para guiar el desarrollo del proyecto.
+
 \subsection{Objetivo general}
 
 Desarrollar e implementar una plataforma de ciberseguridad que integre la detecci\'on de intrusiones basada en aprendizaje autom\'atico con la mitigaci\'on automatizada de amenazas sobre redes programables, desplegada y validada en el Centro de Datos de la FIEC, que brinde visibilidad en tiempo real sobre el tr\'afico y los eventos de seguridad de la red.
 
 \subsection{Objetivos espec\'ificos}
 
-\begin{enumerate}
+Estos son los objetivos espec\'ificos que gu\'ian el desarrollo del proyecto:
+
+\begin{itemize}
     \item Implementar un m\'odulo de percepci\'on que capture el tr\'afico de la red en el punto de observaci\'on y lo disponibilice para su an\'alisis en tiempo real.
     \item Entrenar y validar un modelo de aprendizaje autom\'atico basado en \'arboles de gradiente boosting \cite{lightgbm2017} para la clasificaci\'on del tr\'afico como benigno o malicioso, evaluando su precisi\'on, exhaustividad y tasa de falsos positivos.
     \item Implementar un controlador de red programable \cite{ryu2015onosr} sobre Open vSwitch \cite{openvswitch2014} que permita la inserci\'on y eliminaci\'on din\'amica de reglas de flujo como respuesta a los eventos detectados, e incorporar un gestor de reglas de tr\'afico que permita definir pol\'iticas de filtrado por equipo individual, por \'area o departamento y por segmento de red.
     \item Desarrollar una interfaz web de operaci\'on que centralice el estado de la red y de los eventos de seguridad, el inventario de activos con su \'area o departamento responsable y su segmento de red --con alta individual y carga masiva de equipos--, las reglas de tr\'afico y las acciones de mitigaci\'on ejecutadas, e integre la notificaci\'on automatizada al equipo de soporte de TI con las recomendaciones de prevenci\'on derivadas de cada incidente.
     \item Validar el sistema en un entorno de pruebas controlado que reproduzca las caracter\'isticas del escenario del cliente, y definir y ejecutar el procedimiento de despliegue en el servidor del Centro de Datos de la FIEC, junto con la documentaci\'on t\'ecnica y de usuario correspondiente.
-\end{enumerate}
+\end{itemize}
 
 % ---------------------------------------------------------------------------
 \section{Alcance}
