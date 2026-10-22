@@ -1,5 +1,7 @@
 # CyberDefense SDN
 
+**Ciberdefensa inteligente y adaptativa para la detección de amenazas y mitigación automática en redes programables mediante IA y SDN**
+
 Plataforma de ciberseguridad para centros de datos que integra **detección de intrusiones con aprendizaje automático** y **mitigación automatizada sobre redes programables**, con visualización en tiempo real desde una interfaz web.
 
 Desarrollado como Proyecto Integrador de la Facultad de Ingeniería en Electricidad y Computación (FIEC) — ESPOL.
