@@ -84,6 +84,8 @@ BoldItalicFont=arialbi.ttf,
 %Renombrar los epigrafos
 \renewcommand{\tablename}{Tabla}
 \renewcommand{\figurename}{Figura}
+\renewcommand{\thefigure}{\arabic{figure}}
+\renewcommand{\thetable}{\arabic{table}}
 
 %--- AJUSTES MANUALES PARA CODIGOS ---%
 
@@ -178,7 +180,7 @@ BoldItalicFont=arialbi.ttf,
 % TABLAS, FIGURAS, EXPRESIONES MATEMÁTICAS Y ALGORITMOS
 \include*{cap01}
 % CONTENIDOS DEL TFG
-%\include*{cap02}
+\include*{cap02}
 % REFERENCES
 %\include*{cap03}
 % CONCLUSIONES Y LÍNEAS FUTURAS DE TRABAJO
