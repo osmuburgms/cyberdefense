@@ -45,7 +45,7 @@ BoldItalicFont=arialbi.ttf,
 \usepackage{csquotes} % Paquete recomendado por biblatex cuando se usa babel
 
 \usepackage{graphicx} % Gráficos y colores
-\usepackage{amsmath,amssymb}
+\usepackage{amsmath,amssymb,chngcntr}
 \usepackage{float}
 \usepackage{changepage}
 \usepackage{subcaption}
@@ -84,6 +84,10 @@ BoldItalicFont=arialbi.ttf,
 %Renombrar los epigrafos
 \renewcommand{\tablename}{Tabla}
 \renewcommand{\figurename}{Figura}
+
+% Configurar numeración de figuras por capítulo: 1.1, 1.2, 2.1, etc.
+\AtBeginDocument{\renewcommand{\thefigure}{\thechapter.\arabic{figure}}}
+\AtBeginDocument{\renewcommand{\thetable}{\thechapter.\arabic{table}}}
 \renewcommand{\thefigure}{\arabic{figure}}
 \renewcommand{\thetable}{\arabic{table}}
 
