@@ -17,11 +17,11 @@ La arquitectura propuesta es modular y se articula en cuatro capas, tal como se 
 \end{figure}
 
 \begin{description}
-    \item[Capa de percepci\'on.] Captura el tr\'afico en el punto de observaci\'on de la red y lo retransmite hacia la capa de an\'alisis.
-    \item[Capa de an\'alisis.] Extrae caracter\'isticas del tr\'afico, aplica el modelo de clasificaci\'on y emite los eventos de seguridad con su nivel de severidad.
-    \item[Capa de control.] Traduce los eventos de seguridad en acciones de mitigaci\'on sobre el switch programable, mediante reglas de flujo din\'amicas, e incorpora el m\'odulo de reglas de tr\'afico que permite al operador definir pol\'iticas de filtrado por \'area, equipo o segmento.
-    \item[Capa de presentaci\'on.] Consolida la informaci\'on en un tablero web que permite la visualizaci\'on, el an\'alisis y la gesti\'on de los incidentes, e incorpora el inventario de activos --con su \'area o departamento responsable y su segmentaci\'on--, la carga masiva de equipos y las recomendaciones post-incidente.
-    \item[Capa de comunicaci\'on.] Enruta los eventos relevantes hacia el equipo de soporte de TI a trav\'es del canal de notificaci\'on acordado, adjuntando el resumen del incidente y las recomendaciones de prevenci\'on asociadas.
+    \item[Capa de percepci\'on.] Captura el tr\'afico de red mediante un puerto espejo (port mirroring) en el switch del Centro de Datos. El tr\'afico es analizado por herramientas de detecci\'on (Zeek y Suricata) que identifican actividades sospechosas y las envían al modelo de inteligencia artificial para su clasificaci\'on.
+    \item[Capa de an\'alisis.] Procesa las caracter\'isticas extraídas del tr\'afico mediante el modelo LightGBM para detectar anomalías y amenazas. Los eventos detectados se envían al backend (FastAPI) que los almacena en MongoDB junto con sus alertas y logs asociados.
+    \item[Capa de control.] El controlador Ryu, ejecutando OpenFlow 1.3, gestiona el switch virtual (Open vSwitch) del segmento SDN. Recibe instrucciones del backend para insertar, modificar o eliminar reglas de flujo dinámicamente, permitiendo la mitigaci\'on automática de amenazas detectadas.
+    \item[Capa de presentaci\'on.] Interfaz web desarrollada en React que centraliza la visualizaci\'on del estado de la red, los eventos de seguridad y las acciones de mitigaci\'on ejecutadas. Incluye el tablero de monitoreo, el panel de administración y el acceso a los registros de eventos.
+    \item[Capa de comunicaci\'on.] Conecta los diferentes componentes mediante APIs REST y WebSockets. El backend expone endpoints para el frontend, el motor de IA y el controlador, permitiendo el intercambio de eventos de seguridad y comandos de mitigaci\'on en tiempo real.
 \end{description}
 
 La validaci\'on se realiza en un entorno virtual que reproduce la topolog\'ia del escenario del cliente: tres m\'aquinas virtuales con roles diferenciados (atacante, servidor de aplicaci\'on y servidor de datos) conectadas a un switch virtual programable, gobernado por un controlador de red. Sobre este escenario se reproducen t\'ecnicas de ataque de reconocimiento, fuerza bruta y denegaci\'on de servicio, midiendo la capacidad de detecci\'on, el tiempo de respuesta y la efectividad de la mitigaci\'on.
