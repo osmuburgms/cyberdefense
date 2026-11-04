@@ -1,46 +1,36 @@
-\chapter{CONTENIDOS DEL TFG}
+\chapter{Metodolog\'ia}
 \thispagestyle{empty}
 
 % =====================================================================
-%  PENDIENTE DE REDACCION  --  Capitulo 2
-%  Este capitulo contendra, en su version final, los siguientes
-%  apartados (segun los indicativos de la plantilla de la Facultad):
-%
-%    \section{Marco Teorico}
-%      - Redes Programables (SDN): arquitectura, plano de control y plano
-%        de datos, controladores OpenFlow, Open vSwitch.
-%      - Deteccion de intrusiones: firmas vs. anomaly detection.
-%      - Machine Learning aplicado a seguridad de redes: LightGBM,
-%        extraccion de caracteristicas, desbalance de clases, metricas.
-%      - Plataformas de visualizaci\u00f3n y auditoria de eventos.
-%
-%    \section{Evaluacion de Riesgos}
-%      - Alternativas consideradas (IDS con firmas, IPS comercial,
-%        plataforma propia) y matriz de riesgos / ventajas.
-%
-%    \section{Resultados}
-%      - Escenario de pruebas, metricas (detecci\u00f3n, falsos positivos,
-%        tiempo de mitigaci\u00f3n) y an\u00e1lisis de resultados.
-%
-%    \section{Conclusiones y Lineas Futuras}
-%      - Ver cap04.tex.
-%
-%  NOTA: el Marco Te\u00f3rico y el Estado del Arte ya se redactaron en el
-%  Cap\u00edtulo 1 (cap01.tex, secciones "Marco te\u00f3rico" y "Estado del
-%  arte"), por lo que no se repiten aqu\u00ed.
-%
-%  While  se escribe este capitulo, puede comentarse la inclusion desde
-%  ReportePI.tex con \includeonly{cap01} para acelerar la compilacion.
+%  Capitulo 2 -- Metodología (habilitado para compilación)
 % =====================================================================
 
+El proyecto aplica una investigaci\'on aplicada de car\'acter tecnol\'ogico, orientada a resolver un problema concreto del cliente mediante el desarrollo de un prototipo funcional. El proceso se estructura en cinco fases: (i) an\'alisis del contexto y definici\'on de requisitos funcionales y no funcionales; (ii) dise\~no de la arquitectura del sistema; (iii) implementaci\'on de cada m\'odulo; (iv) validaci\'on experimental; y (v) despliegue y documentaci\'on.
+
+La arquitectura propuesta es modular y se articula en cuatro capas, tal como se ilustra en la Figura \ref{fig:arquitectura}.
+
+\begin{figure}[!htbp]
+    \centering
+    \includegraphics[width=0.95\linewidth]{recursos/Ciberdefense_despues_diagrama.pdf}
+    \caption{Arquitectura general de la plataforma de ciberseguridad propuesta.}
+    \label{fig:arquitectura}
+\end{figure}
+
+\begin{description}
+    \item[Capa de percepci\'on.] Captura el tr\'afico de red mediante un puerto espejo (port mirroring) en el switch del Centro de Datos. El tr\'afico es analizado por herramientas de detecci\'on (Zeek y Suricata) que identifican actividades sospechosas y las envían al modelo de inteligencia artificial para su clasificaci\'on.
+    \item[Capa de an\'alisis.] Procesa las caracter\'isticas extraídas del tr\'afico mediante el modelo LightGBM para detectar anomalías y amenazas. Los eventos detectados se envían al backend (FastAPI) que los almacena en MongoDB junto con sus alertas y logs asociados.
+    \item[Capa de control.] El controlador Ryu, ejecutando OpenFlow 1.3, gestiona el switch virtual (Open vSwitch) del segmento SDN. Recibe instrucciones del backend para insertar, modificar o eliminar reglas de flujo dinámicamente, permitiendo la mitigaci\'on automática de amenazas detectadas.
+    \item[Capa de presentaci\'on.] Interfaz web desarrollada en React que centraliza la visualizaci\'on del estado de la red, los eventos de seguridad y las acciones de mitigaci\'on ejecutadas. Incluye el tablero de monitoreo, el panel de administración y el acceso a los registros de eventos.
+    \item[Capa de comunicaci\'on.] Conecta los diferentes componentes mediante APIs REST y WebSockets. El backend expone endpoints para el frontend, el motor de IA y el controlador, permitiendo el intercambio de eventos de seguridad y comandos de mitigaci\'on en tiempo real.
+\end{description}
+
+La validaci\'on se realiza en un entorno virtual que reproduce la topolog\'ia del escenario del cliente: tres m\'aquinas virtuales con roles diferenciados (atacante, servidor de aplicaci\'on y servidor de datos) conectadas a un switch virtual programable, gobernado por un controlador de red. Sobre este escenario se reproducen t\'ecnicas de ataque de reconocimiento, fuerza bruta y denegaci\'on de servicio, midiendo la capacidad de detecci\'on, el tiempo de respuesta y la efectividad de la mitigaci\'on.
+
 \section{Evaluaci\'on de Riesgos}
-% --- PENDIENTE: comparar alternativas tecnologicas y evaluar riesgos ---
+% --- PENDIENTE: comparar alternativas tecnológicas y evaluar riesgos ---
 
 \section{Resultados}
 % --- PENDIENTE: presentar los resultados experimentales obtenidos ---
 
-\section{Conclusiones}
-% --- PENDIENTE: ver cap04.tex (CONCLUSIONES Y LINEAS FUTURAS) ---
-
-\section{L\'ineas Futuras}
-% --- PENDIENTE: plantear las lineas futuras de trabajo ---
+\section{Conclusiones y Líneas Futuras}
+% --- PENDIENTE: ver cap04.tex (CONCLUSIONES Y LÍNEAS FUTURAS) ---
