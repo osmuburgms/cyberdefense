@@ -7,7 +7,7 @@
    version="1.1"
    id="svg60"
    sodipodi:docname="CyberDefense_despues_diagrama.svg"
-   inkscape:version="1.4.3 (0d15f75042, 2025-12-25)"
+   inkscape:version="1.4.4 (dcaf3e7d9e, 2026-05-05)"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -564,7 +564,7 @@
        id="swatch72"
        inkscape:swatch="solid">
       <stop
-         style="stop-color:#9fb0c8;stop-opacity:1;"
+         style="stop-color:#7d98b5;stop-opacity:1;"
          offset="0"
          id="stop72" />
     </linearGradient>
@@ -1635,10 +1635,10 @@
      inkscape:pagecheckerboard="1"
      inkscape:deskcolor="#505050"
      inkscape:zoom="1.2862936"
-     inkscape:cx="538.75725"
-     inkscape:cy="437.30296"
+     inkscape:cx="378.60719"
+     inkscape:cy="437.69167"
      inkscape:window-width="1920"
-     inkscape:window-height="1011"
+     inkscape:window-height="1003"
      inkscape:window-x="0"
      inkscape:window-y="0"
      inkscape:window-maximized="1"
@@ -2557,7 +2557,7 @@
      font-weight="400"
      fill="#9fb0c8"
      font-family="Inter, Arial, sans-serif"
-     id="text58">auditoría</text>
+     id="text58">Blockchain</text>
   <text
      x="1600"
      y="568"
