@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<vnx xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="/usr/share/xml/vnx/vnx-2.00.xsd">
+  <global>
+    <version>2.0</version>
+    <scenario_name>datacenter_sdn</scenario_name>
+    <automac offset="0"/>
+    <vm_mgmt type="private" network="10.250.0.0" mask="24" offset="12">
+       <host_mapping />
+    </vm_mgmt>
+  </global>
+
+  <!-- Red Interna (Virtual Bridge para salida a internet/DHCP) -->
+  <net name="virbr0" mode="virtual_bridge" managed="no"/>
+  
+  <!-- Red SDN Principal -->
+  <net name="SDN_Net" mode="openvswitch" controller="tcp:127.0.0.1:6653" of_version="OpenFlow13"/>
+
+  <!-- Servidor Web 1 -->
+  <vm name="server1" type="lxc" arch="x86_64">
+    <filesystem type="cow">/usr/share/vnx/filesystems/rootfs_lxc_ubuntu64</filesystem>
+    <if id="1" net="SDN_Net">
+      <ipv4>192.168.1.10/24</ipv4>
+    </if>
+    <if id="2" net="virbr0">
+      <ipv4>dhcp</ipv4>
+    </if>
+    <!-- Configurar contraseña de root a 'root' -->
+    <exec seq="on_boot" type="verbatim">echo "root:root" | chpasswd</exec>
+  </vm>
+
+  <!-- Servidor Base de Datos 2 -->
+  <vm name="server2" type="lxc" arch="x86_64">
+    <filesystem type="cow">/usr/share/vnx/filesystems/rootfs_lxc_ubuntu64</filesystem>
+    <if id="1" net="SDN_Net">
+      <ipv4>192.168.1.11/24</ipv4>
+    </if>
+    <if id="2" net="virbr0">
+      <ipv4>dhcp</ipv4>
+    </if>
+    <!-- Configurar contraseña de root a 'root' -->
+    <exec seq="on_boot" type="verbatim">echo "root:root" | chpasswd</exec>
+  </vm>
+
+  <!-- Máquina Atacante -->
+  <vm name="attacker" type="lxc" arch="x86_64">
+    <filesystem type="cow">/usr/share/vnx/filesystems/rootfs_lxc_ubuntu64</filesystem>
+    <if id="1" net="SDN_Net">
+      <ipv4>192.168.1.50/24</ipv4>
+    </if>
+    <if id="2" net="virbr0">
+      <ipv4>dhcp</ipv4>
+    </if>
+    
+    <!-- 1. Configurar contraseña de root a 'root' -->
+    <exec seq="on_boot" type="verbatim">echo "root:root" | chpasswd</exec>
+    
+    <!-- 2. Configurar DNS de Google para tener salida a internet limpia -->
+    <exec seq="on_boot" type="verbatim">echo "nameserver 8.8.8.8" > /etc/resolv.conf</exec>
+    
+    <!-- 3. Actualizar repositorios e instalar suite de ataques (nmap, hydra, hping3, slowhttptest) -->
+    <!-- Nota: En XML se usa &amp;&amp; en lugar de && -->
+    <exec seq="on_boot" type="verbatim">apt-get update &amp;&amp; DEBIAN_FRONTEND=noninteractive apt-get install -y hydra hping3 nmap slowhttptest</exec>
+    
+    <!-- 4. Crear el diccionario de contraseñas para pruebas de fuerza bruta SSH -->
+    <exec seq="on_boot" type="verbatim">echo -e "admin\n12345\npassword\nroot\nqwerty" > /root/passwords.txt</exec>
+  </vm>
+</vnx>

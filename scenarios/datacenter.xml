@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<vnx xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:noNamespaceSchemaLocation="/usr/share/xml/vnx/vnx-2.00.xsd">
+  <global>
+    <version>2.0</version>
+    <scenario_name>datacenter</scenario_name>
+    <automac offset="1"/>
+    <vm_mgmt type="none" />
+    <vm_defaults>
+        <console id="0" display="no"/>
+        <console id="1" display="yes"/>
+    </vm_defaults>
+  </global>
+
+  <!-- Red datacenter SDN controlada por Ryu en host -->
+  <net name="NetDC" mode="openvswitch" controller="tcp:127.0.0.1:6633" of_version="OpenFlow13" />
+
+  <vm name="web" type="lxc" arch="x86_64">
+    <filesystem type="cow">/usr/share/vnx/filesystems/rootfs_lxc_ubuntu64</filesystem>
+    <mem>512M</mem>
+    <if id="1" net="NetDC">
+      <ipv4>10.10.10.11/24</ipv4>
+    </if>
+  </vm>
+  <vm name="db" type="lxc" arch="x86_64">
+    <filesystem type="cow">/usr/share/vnx/filesystems/rootfs_lxc_ubuntu64</filesystem>
+    <mem>512M</mem>
+    <if id="1" net="NetDC">
+      <ipv4>10.10.10.12/24</ipv4>
+    </if>
+  </vm>
+  <vm name="app" type="lxc" arch="x86_64">
+    <filesystem type="cow">/usr/share/vnx/filesystems/rootfs_lxc_ubuntu64</filesystem>
+    <mem>512M</mem>
+    <if id="1" net="NetDC">
+      <ipv4>10.10.10.13/24</ipv4>
+    </if>
+  </vm>
+  <vm name="mon" type="lxc" arch="x86_64">
+    <filesystem type="cow">/usr/share/vnx/filesystems/rootfs_lxc_ubuntu64</filesystem>
+    <mem>512M</mem>
+    <if id="1" net="NetDC">
+      <ipv4>10.10.10.14/24</ipv4>
+    </if>
+  </vm>
+  <vm name="atk" type="lxc" arch="x86_64">
+    <filesystem type="cow">/usr/share/vnx/filesystems/rootfs_lxc_ubuntu64</filesystem>
+    <mem>512M</mem>
+    <if id="1" net="NetDC">
+      <ipv4>10.10.10.99/24</ipv4>
+    </if>
+  </vm>
+
+  <host>
+    <hostif net="NetDC">
+       <ipv4>10.10.10.1/24</ipv4>
+    </hostif>
+  </host>
+
+</vnx>

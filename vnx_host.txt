@@ -1,0 +1,21 @@
+sudo lxc-attach -n attacker
+
+# --- PEGA ESTO DENTRO DEL ATACANTE ---
+# 1. Configurar salida a internet con Google DNS
+echo "nameserver 8.8.8.8" > /etc/resolv.conf
+
+# 2. Actualizar repositorios e instalar la suite de ataques
+apt-get update
+apt-get install -y hydra hping3 nmap slowhttptest
+
+# 3. Crear el diccionario de contraseñas para la prueba SSH
+echo -e "admin\n12345\npassword\nroot\nqwerty" > passwords.txt
+
+# (Opcional) Verificar que las herramientas estén instaladas
+hydra -h | head -n 1 && hping3 -v && nmap -V | head -n 1 && slowhttptest -h | head -n 1
+# -------------------------------------
+
+
+sudo lxc-attach -n server1
+python3 -m http.server 80 &
+exit
