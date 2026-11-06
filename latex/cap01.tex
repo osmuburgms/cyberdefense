@@ -13,6 +13,8 @@ Ante este panorama, los sistemas de detecci\'on de intrusiones basados en firmas
 
 Las redes programables (Software-Defined Networking, SDN) aparecen como una alternativa que rompe esa separaci\'on entre detecci\'on y acci\'on. Al separar el plano de control del plano de datos \cite{rfc7426}, la l\'ogica de la red se vuelve programable y centralizada, de modo que un evento de seguridad puede ser analizado por un modelo de aprendizaje autom\'atico y traducir su respuesta en una actualizaci\'on de flujos sobre el switch, de forma autom\'atica y en tiempo real \cite{ryu2015onosr}. Esta capacidad de cerrar el ciclo detecci\'on--mitigaci\'on es el eje del presente proyecto.
 
+El presente documento se organiza en los siguientes cap\'itulos: el Cap\'itulo 1 presenta la introducci\'on, la descripci\'on del problema, los objetivos, el alcance, el marco te\'orico, el estado del arte y las contribuciones del proyecto. El Cap\'itulo 2 desarrolla la metodolog\'ia aplicada, la evaluaci\'on de riesgos y las alternativas tecnol\'ogicas consideradas. El Cap\'itulo 3 presenta los resultados experimentales obtenidos en el escenario de pruebas. El Cap\'itulo 4 expone las conclusiones y las l\'ineas futuras de trabajo. Finalmente, se incluyen las referencias bibliogr\'aficas y los ap\'endices con el material complementario del proyecto.
+
 % ---------------------------------------------------------------------------
 \section{Descripci\'on del Problema}
 
@@ -65,7 +67,7 @@ Estos son los objetivos espec\'ificos que gu\'ian el desarrollo del proyecto:
 \end{itemize}
 
 % ---------------------------------------------------------------------------
-\section{Alcance}
+\section{Alcance y limitaciones}
 
 El alcance del proyecto comprende el desarrollo de un prototipo funcional de ciberdefensa adaptativa que integre IA para detectar anomalías, SDN para ejecutar acciones autom\'aticas de mitigaci\'on y que permita registrar eventos de seguridad, acompañado de una evaluaci\'on experimental de su desempeño. El desarrollo se realizar\'a y validar\'a en un entorno virtual de pruebas, construido sobre un laboratorio de redes programables dentro del Centro de Datos de la FIEC.
 
@@ -141,8 +143,3 @@ Registro auditable con blockchain &No aplica &No aplica &Costo computacional y d
 Del an\'alisis de la Tabla \ref{tbl:estadoArte} se desprenden dos observaciones. La primera es que las t\'ecnicas que mejor resuelven la detecci\'on (aprendizaje autom\'atico) y las que mejor resuelven la respuesta (programabilidad de la red) han sido desarrolladas de forma pr\'acticamente independiente, de modo que son escasas las soluciones integradas que permitan clasificar un evento y traducirlo a una acci\'on concreta sobre la red dentro de una misma plataforma. La segunda es que la literatura revisada rara vez considera el ciclo operativo completo: el inventario de los activos del centro de datos, la gesti\'on de pol\'iticas de filtrado por \'area o por equipo, la notificaci\'n al equipo de soporte y la entrega de recomendaciones de mitigaci\'on tras el incidente.
 
 El presente proyecto se sit\'ua en esa intersecci\'on. Su aportaci\'on consiste en integrar en una \'unica plataforma la detecci\'on automatizada mediante aprendizaje autom\'atico, la mitigaci\'on automatizada mediante reglas de flujo sobre la red programable, el registro auditable de los eventos y un conjunto de funciones operativas orientadas al cliente --inventario de equipos, gesti\'on de pol\'iticas de filtrado, notificaci\'on al equipo de soporte de TI y recomendaciones post-incidente-- validadas sobre un escenario de pruebas controlado y destinadas a su despliegue en el Centro de Datos de la FIEC.
-
-% ---------------------------------------------------------------------------
-\section{Estructura del documento}
-
-El presente documento se organiza en los siguientes cap\'itulos: el Cap\'itulo 1 presenta la introducci\'on, la descripci\'on del problema, los objetivos, el alcance, el marco te\'orico, el estado del arte y las contribuciones del proyecto. El Cap\'itulo 2 desarrolla la metodolog\'ia aplicada, la evaluaci\'on de riesgos y las alternativas tecnol\'ogicas consideradas. El Cap\'itulo 3 presenta los resultados experimentales obtenidos en el escenario de pruebas. El Cap\'itulo 4 expone las conclusiones y las l\'ineas futuras de trabajo. Finalmente, se incluyen las referencias bibliogr\'aficas y los ap\'endices con el material complementario del proyecto.
