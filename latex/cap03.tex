@@ -13,26 +13,26 @@
 %  Formato de referencia utilizado: APA (configurado en el preambulo
 %  con \usepackage[natbib=true,backend=biber,sorting=nyt,style=apa]{biblatex}).
 %  Para agregar una referencia nueva: editar referencias.bib y citarla
-%  con \cite{clave}.
+%  con \parencite{clave}.
 %
 %  Ejemplo de entrada BibTeX:
 %
-%  @article{velasquez2017relation,
-%    title={Relation between BMI and Exit Time of a Building in an Emergency Situation},
-%    author={Velásquez, Washington and Munoz-Arcentales, Andres and Salvachúa, Joaquín},
-%    journal={Engineering Letters},
-%    volume={25},
-%    number={4},
-%    year={2017}
+%  @inproceedings{shin2013,
+%    author    = {Shin, Seungwon and Yegneswaran, Vinod and Porras, Phillip and Gu, Guofei},
+%    title     = {{AVANT-GUARD}: Scalable and Vigilant Switch Flow Management in Software-Defined Networks},
+%    booktitle = {Proceedings of the 2013 ACM SIGSAC Conference on Computer \& Communications Security},
+%    pages     = {413--424},
+%    year      = {2013},
+%    doi       = {10.1145/2508859.2516684}
 %  }
 %
-%  Cita en el texto: El articulo presentado por Velásquez, et al.
-%  \cite{velasquez2017relation}.
+%  Cita en el texto: El trabajo de Shin et al.
+%  \parencite{shin2013}.
 % =====================================================================
 
 \section{C\'omo citar en este documento}
 
-Las referencias utilizadas en el texto se invocan con el comando \verb|\cite{clave}|,
+Las referencias utilizadas en el texto se invocan con el comando \verb|\parencite{clave}|,
 donde \emph{clave} corresponde al identificador de la entrada en el archivo
 \verb|referencias.bib|. La bibliograf\'ia final se genera autom\'aticamente al
 final del documento con el comando \verb|\printbibliography{}|, empleando el
@@ -40,7 +40,8 @@ estilo APA definido en el pre\'ambulo.
 
 Las fuentes consultadas para la construcci\'on del marco te\'orico incluyen,
 entre otras, la especificaci\'on de las capas de las redes programables
-\cite{rfc7426}, los trabajos originales sobre el controlador de red empleado
-\cite{ryu2015onosr,openvswitch2014}, la literatura sobre aprendizaje autom\'atico
-aplicado a la detecci\'on de intrusiones \cite{lightgbm2017} y las gu\'ias
-institucionales de gesti\'on de incidentes de seguridad \cite{nist80061r2,nistcsf20}.
+\parencite{rfc7426}, los trabajos originales sobre el controlador de red empleado
+\parencite{kubo2014ryu,ryudocs} y el conmutador virtualizado \parencite{openvswitch2015},
+la literatura sobre aprendizaje autom\'atico
+aplicado a la detecci\'on de intrusiones \parencite{lightgbm2017} y las gu\'ias
+institucionales de gesti\'on de incidentes de seguridad \parencite{nist80061r2,nistcsf20}.
