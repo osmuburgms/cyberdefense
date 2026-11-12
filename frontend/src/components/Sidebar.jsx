@@ -1,4 +1,5 @@
 import { LayoutDashboard, Activity, Server, Users, Settings, Menu } from 'lucide-react';
+import { LogoIcon } from './Logo.jsx';
 
 // Barra lateral estilo Issabel: oscura, con grupos, colapsable a iconos.
 const NAV_ITEMS = [
@@ -15,26 +16,26 @@ const NAV_ITEMS = [
 export default function Sidebar({ view, setView, collapsed, setCollapsed, isAdmin }) {
   return (
     <aside
-      className={`shrink-0 bg-[#141a29] border-r border-gray-800 flex flex-col transition-all duration-150 h-screen sticky top-0 ${collapsed ? 'w-[60px]' : 'w-[218px]'}`}
+      // Colapsada la barra no puede bajar de ~76px: el logo (28) + el botón de
+      // menú (24) + el hueco entre ellos (6) + el padding (16) suman 74px. Con
+      // menos ancho el botón se salía del raíl y quedaba tapado por el panel
+      // principal, de modo que ya no se podía volver a desplegar.
+      className={`cd-sidebar shrink-0 bg-[#101a2e] border-r border-gray-800 flex flex-col transition-all duration-150 h-screen sticky top-0 ${collapsed ? 'w-[76px]' : 'w-[218px]'}`}
       aria-label="Navegación principal"
     >
-      <div className="flex items-center gap-2 px-3 h-14 border-b border-gray-800 shrink-0">
-        <img
-          src="/logo-escudo.png"
-          alt="CyberDefense SDN"
-          className="w-8 h-8 object-contain shrink-0"
-        />
+      <div className={`flex items-center h-14 border-b border-gray-800 shrink-0 ${collapsed ? 'px-2 gap-1.5' : 'px-3 gap-2'}`}>
+        <LogoIcon className={`${collapsed ? 'w-7 h-7' : 'w-8 h-8'} shrink-0`} />
         {!collapsed && (
           <span className="flex-1 min-w-0">
-            <span className="block text-[13px] font-bold text-gray-100 leading-tight truncate">SDN Cyberdefense</span>
+            <span className="block text-[13px] font-bold text-gray-100 leading-tight truncate">CyberDefense AI</span>
             <span className="block text-[9px] text-gray-500 font-mono">SOC · datacenter</span>
           </span>
         )}
         <button
           onClick={() => setCollapsed((v) => !v)}
-          className="p-1.5 rounded text-gray-500 hover:text-gray-100 hover:bg-gray-800 shrink-0"
+          className={`shrink-0 rounded text-gray-500 hover:text-gray-100 hover:bg-gray-800 ${collapsed ? 'p-1' : 'p-1.5'}`}
           aria-label={collapsed ? 'Expandir menú' : 'Contraer menú'}
-          title="Menú"
+          title={collapsed ? 'Expandir menú' : 'Contraer menú'}
         >
           <Menu size={16} />
         </button>

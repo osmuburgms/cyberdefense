@@ -46,28 +46,29 @@ const HOSTS = {
 
 const HOST_IDS = Object.keys(HOSTS);
 
+// Tema de xterm alineado con la paleta del logo (azul marino + cian de marca).
 const TERM_THEME = {
-  background: '#030712',
-  foreground: '#e5e7eb',
+  background: '#070d1a',
+  foreground: '#e6edf6',
   cursor: '#4ade80',
-  cursorAccent: '#030712',
-  selectionBackground: 'rgba(59, 130, 246, 0.35)',
-  black: '#111827',
+  cursorAccent: '#070d1a',
+  selectionBackground: 'rgba(56, 189, 248, 0.35)',
+  black: '#0e1829',
   red: '#f87171',
   green: '#4ade80',
   yellow: '#facc15',
-  blue: '#60a5fa',
+  blue: '#38bdf8',
   magenta: '#c084fc',
   cyan: '#22d3ee',
-  white: '#e5e7eb',
-  brightBlack: '#4b5563',
+  white: '#e6edf6',
+  brightBlack: '#5d6f8b',
   brightRed: '#fca5a5',
   brightGreen: '#86efac',
   brightYellow: '#fde047',
-  brightBlue: '#93c5fd',
+  brightBlue: '#7dd3fc',
   brightMagenta: '#d8b4fe',
   brightCyan: '#67e8f9',
-  brightWhite: '#f9fafb',
+  brightWhite: '#f2f7ff',
 };
 
 const GEOM_KEY = 'sdn-dash:terminal-geom';
@@ -423,7 +424,7 @@ export default function HostTerminal({ initialHost = 'attacker', backendUrl, onC
 
   return (
     <div
-      className="fixed z-[70] bg-gray-950 border border-gray-700 rounded-xl shadow-2xl flex flex-col overflow-hidden modal-in"
+      className="cd-terminal fixed z-[70] bg-gray-950 border border-gray-700 rounded-xl shadow-2xl flex flex-col overflow-hidden modal-in"
       role="dialog"
       aria-modal="false"
       aria-label={`Consola SDN — ${activeHost}`}
@@ -482,7 +483,7 @@ export default function HostTerminal({ initialHost = 'attacker', backendUrl, onC
       </div>
 
       {/* Área xterm (una instancia viva por host, solo la activa visible) */}
-      <div className="relative flex-1 min-h-0 bg-[#030712]">
+      <div className="relative flex-1 min-h-0 bg-[#070d1a]">
         {HOST_IDS.map((h) => (
           <div
             key={h}
@@ -493,7 +494,7 @@ export default function HostTerminal({ initialHost = 'attacker', backendUrl, onC
           />
         ))}
         {connState === 'connecting' && (
-          <div className="absolute inset-0 flex items-center justify-center gap-2 text-gray-500 text-xs font-mono bg-[#030712]/80 pointer-events-none">
+          <div className="absolute inset-0 flex items-center justify-center gap-2 text-gray-500 text-xs font-mono bg-[#070d1a]/80 pointer-events-none">
             <Loader2 size={14} className="animate-spin" /> Abriendo shell en {activeHost}…
           </div>
         )}

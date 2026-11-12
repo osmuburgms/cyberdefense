@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Loader2, Server } from 'lucide-react';
 import { useAuth } from '../auth';
+import { LogoHorizontal } from '../components/Logo.jsx';
 
 // Pantalla de acceso: operador o administrador según el rol de la cuenta.
 export default function Login({ backendUrl, onBackendUrl }) {
@@ -40,13 +41,11 @@ export default function Login({ backendUrl, onBackendUrl }) {
     <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
       <div className="modal-in w-full max-w-sm">
         <div className="flex flex-col items-center mb-6">
-          <img
-            src="/logo-escudo.png"
-            alt="CyberDefense SDN"
-            className="h-20 w-auto mb-3 drop-shadow-[0_0_18px_rgba(56,189,248,0.35)]"
-          />
-          <h1 className="text-xl font-bold text-gray-100">SDN Cyberdefense</h1>
-          <p className="text-xs text-gray-500 font-mono mt-1">Acceso de operadores y administradores</p>
+          <h1 className="w-[280px] max-w-full drop-shadow-[0_0_18px_rgba(56,189,248,0.25)]">
+            <LogoHorizontal className="w-full" />
+            <span className="sr-only">CyberDefense AI</span>
+          </h1>
+          <p className="text-xs text-gray-500 font-mono mt-3">Acceso de operadores y administradores</p>
         </div>
 
         <form onSubmit={submit} className="bg-gray-800 border border-gray-700 rounded-xl p-5 shadow-2xl space-y-3">

@@ -389,8 +389,8 @@ function HealthRing({ states, isLight }) {
   const total = states.length;
   const known = states.filter((s) => s !== 'unknown');
   const on = states.filter((s) => s === 'on').length;
-  const track = isLight ? '#e5e7eb' : '#111827';
-  const centerFill = isLight ? '#64748b' : '#9ca3af';
+  const track = isLight ? '#e2e8f0' : '#0e1829';
+  const centerFill = isLight ? '#5d6f8b' : '#9fb0c8';
 
   if (known.length === 0) {
     return (
@@ -418,7 +418,7 @@ function HealthRing({ states, isLight }) {
           strokeDasharray={`${onPct} ${100 - onPct}`} strokeDashoffset={0}
         />
       )}
-      <text x="21" y="21" textAnchor="middle" dominantBaseline="central" fill={isLight ? '#1e293b' : '#e5e7eb'} fontSize="8" fontFamily="monospace" transform="rotate(90 21 21)">
+      <text x="21" y="21" textAnchor="middle" dominantBaseline="central" fill={isLight ? '#16233a' : '#e6edf6'} fontSize="8" fontFamily="monospace" transform="rotate(90 21 21)">
         {on}/{total}
       </text>
     </svg>
@@ -489,7 +489,7 @@ function Field({ label, value, mono = true, copy, className = '', valueClass = '
 
 // --- Gráfico: mezcla de ataques en vivo (% por tipo, se actualiza con cada evento) ---
 
-const MIX_PALETTE = ['#f87171', '#fb923c', '#facc15', '#60a5fa', '#c084fc', '#22d3ee', '#4ade80', '#f472b6'];
+const MIX_PALETTE = ['#f87171', '#fb923c', '#facc15', '#38bdf8', '#c084fc', '#22d3ee', '#4ade80', '#f472b6'];
 
 function mixColor(label) {
   let h = 0;
@@ -571,7 +571,7 @@ const SEVERITY_BUCKETS = [
   { label: 'CRÍTICA', color: '#f87171' },
   { label: 'ALTA', color: '#fb923c' },
   { label: 'MEDIA', color: '#facc15' },
-  { label: 'BAJA', color: '#60a5fa' },
+  { label: 'BAJA', color: '#38bdf8' },
 ];
 
 function SeverityDonut({ alerts, isLight }) {
@@ -589,7 +589,7 @@ function SeverityDonut({ alerts, isLight }) {
   return (
     <div className="flex items-center gap-4">
       <svg viewBox="0 0 42 42" className="w-28 h-28 shrink-0 -rotate-90">
-        <circle cx="21" cy="21" r="15.915" fill="transparent" stroke={isLight ? '#e5e7eb' : '#111827'} strokeWidth="5" />
+        <circle cx="21" cy="21" r="15.915" fill="transparent" stroke={isLight ? '#e2e8f0' : '#0e1829'} strokeWidth="5" />
         {counts.filter((c) => c.value > 0).map((c) => {
           const pct = (c.value / total) * 100;
           const el = (
@@ -606,7 +606,7 @@ function SeverityDonut({ alerts, isLight }) {
           offset += pct;
           return el;
         })}
-        <text x="21" y="21" textAnchor="middle" dominantBaseline="central" fill={isLight ? '#1e293b' : '#e5e7eb'} fontSize="8" fontFamily="monospace" transform="rotate(90 21 21)">
+        <text x="21" y="21" textAnchor="middle" dominantBaseline="central" fill={isLight ? '#16233a' : '#e6edf6'} fontSize="8" fontFamily="monospace" transform="rotate(90 21 21)">
           {total}
         </text>
       </svg>
@@ -658,8 +658,8 @@ function NetworkMap({ latestAlert, isActive, blocked, targetLabel, zoom, positio
   const P = positions;
   const server1Active = isActive && targetLabel === 'server1';
   const server2Active = isActive && targetLabel === 'server2';
-  const idleLink = isLight ? '#cbd5e1' : '#4b5563';
-  const idleBranch = isLight ? '#cbd5e1' : '#374151';
+  const idleLink = isLight ? '#b8cbe2' : '#3f5070';
+  const idleBranch = isLight ? '#d6e2f0' : '#26344f';
 
   // Convierte la posición del puntero a % del contenedor. getBoundingClientRect ya
   // incluye el scale() del zoom, así que el cálculo es correcto a cualquier nivel de zoom.
@@ -2839,7 +2839,7 @@ export function MainApp() {
       <div className="flex-1 min-w-0 flex flex-col min-h-screen">
 
       {/* Barra superior */}
-      <header className="px-4 h-14 border-b border-gray-800 flex justify-between items-center gap-3 shrink-0 sticky top-0 z-40 bg-gray-900">
+      <header className="cd-header px-4 h-14 border-b border-gray-800 flex justify-between items-center gap-3 shrink-0 sticky top-0 z-40 bg-gray-900">
         <nav className="flex items-center gap-2 min-w-0" aria-label="Ubicación actual">
           <ShieldAlert size={16} className="text-red-500 shrink-0" />
           <span className="text-xs text-gray-500 font-mono hidden sm:inline">SOC</span>
@@ -3198,7 +3198,7 @@ export function MainApp() {
               )}
               {w.ports && (
                 <Panel title="Puertos más atacados">
-                  <HBarChart data={stats.byPort} color="#60a5fa" emptyText="Sin puertos registrados." />
+                  <HBarChart data={stats.byPort} color="#38bdf8" emptyText="Sin puertos registrados." />
                 </Panel>
               )}
             </div>

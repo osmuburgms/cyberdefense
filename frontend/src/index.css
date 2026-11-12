@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 body {
-  background-color: #111827; /* Fondo oscuro estilo SOC */
-  color: white;
+  background-color: #0e1829; /* Fondo oscuro estilo SOC (azul marino de marca) */
+  color: #e6edf6;
   margin: 0;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 }
@@ -101,9 +101,9 @@ body {
 /* Scrollbar fina para la miniconsola SDN */
 .terminal-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
 .terminal-scroll::-webkit-scrollbar-track { background: transparent; }
-.terminal-scroll::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
-.terminal-scroll::-webkit-scrollbar-thumb:hover { background: #4b5563; }
-.terminal-scroll { scrollbar-width: thin; scrollbar-color: #374151 transparent; }
+.terminal-scroll::-webkit-scrollbar-thumb { background: #3f5070; border-radius: 4px; }
+.terminal-scroll::-webkit-scrollbar-thumb:hover { background: #5d6f8b; }
+.terminal-scroll { scrollbar-width: thin; scrollbar-color: #3f5070 transparent; }
 
 @media (prefers-reduced-motion: reduce) {
   .drawer-in, .backdrop-in, .pop-in, .toast-in, .modal-in, .count-bump,
@@ -114,49 +114,85 @@ body {
 
 
 /* ================================================================
+   MARCA CYBERDEFENSE AI
+   Los SVG oficiales (src/assets/cyberdefense_logo*.svg) se insertan en
+   línea para poder repintarlos por modo sin tocar el archivo firmado.
+   ================================================================ */
+.cd-logo {
+  display: inline-block;
+  line-height: 0;
+}
+.cd-logo > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+/* El lockup horizontal mantiene su proporción 1200x320 */
+.cd-logo--horizontal > svg { height: auto; }
+
+/* Modo claro: en el SVG original el texto del lockup es casi blanco
+   (#e6edf6) y el lema gris (#9fb0c8), ilegibles sobre fondo claro.
+   El CSS gana a los atributos de presentación del SVG, así que "Cyber" y
+   "AI" pasan a azul tinta; "Defense" conserva el cian de marca porque su
+   <tspan> define su propio fill. */
+html.light .cd-logo--horizontal text { fill: #0b1524; }
+html.light .cd-logo--horizontal text:nth-of-type(2) { fill: #5d6f8b; }
+
+/* Acentos de marca: los estados activos (navegación, modos, intervalos) usan
+   el cian del logo en lugar del azul genérico de Tailwind. */
+.bg-blue-600\/10 { background-color: rgb(56 189 248 / 0.10); }
+.bg-blue-600\/20 { background-color: rgb(56 189 248 / 0.16); }
+.border-blue-500 { border-color: #38bdf8; }
+.border-blue-600 { border-color: #2563eb; }
+
+
+/* ================================================================
    MODO CLARO
    Se activa con la clase "light" en <html> (botón sol/luna del header).
-   Remapea las utilidades de Tailwind usadas en App.jsx a una paleta clara.
+   Remapea las utilidades de Tailwind usadas en App.jsx a una paleta clara
+   de la marca (cianes/sky de los SVG + azules profundos).
    ================================================================ */
 html { color-scheme: dark; }
 html.light { color-scheme: light; }
-html.light body { background-color: #eef1f5; color: #0f172a; }
+html.light body { background-color: #f1f5fb; color: #0b1524; }
 html.light .ring-offset-gray-800 { --tw-ring-offset-color: #ffffff; }
 
-html.light .bg-gray-900 { background-color: #eef1f5; }
-html.light .bg-gray-900\/40 { background-color: #f1f5f9; }
-html.light .bg-gray-900\/50 { background-color: #f1f5f9; }
+html.light .bg-gray-900 { background-color: #f1f5fb; }
+html.light .bg-gray-900\/40 { background-color: #f4f8fd; }
+html.light .bg-gray-900\/50 { background-color: #f4f8fd; }
 html.light .bg-gray-900\/95 { background-color: rgb(255 255 255 / 0.97); }
 html.light .bg-gray-800 { background-color: #ffffff; }
-html.light .bg-gray-700 { background-color: #cbd5e1; }
-html.light .bg-gray-600 { background-color: #94a3b8; }
-html.light .hover\:bg-gray-800:hover { background-color: #e2e8f0; }
-html.light .hover\:bg-gray-700:hover { background-color: #e2e8f0; }
-html.light .hover\:bg-gray-700\/30:hover { background-color: #f1f5f9; }
-html.light .hover\:bg-gray-700\/40:hover { background-color: #e2e8f0; }
-html.light .hover\:bg-gray-600:hover { background-color: #94a3b8; }
-html.light .text-gray-100 { color: #0f172a; }
-html.light .text-gray-200 { color: #1e293b; }
-html.light .text-gray-300 { color: #334155; }
-html.light .text-gray-400 { color: #475569; }
-html.light .text-gray-500 { color: #64748b; }
-html.light .text-gray-600 { color: #94a3b8; }
-html.light .hover\:text-gray-100:hover { color: #0f172a; }
-html.light .hover\:text-gray-200:hover { color: #1e293b; }
-html.light .border-gray-700 { border-color: #d9e0e8; }
-html.light .border-gray-700\/60 { border-color: #e8edf2; }
+html.light .bg-gray-700 { background-color: #dbe6f4; }
+html.light .bg-gray-600 { background-color: #9fb0c8; }
+html.light .hover\:bg-gray-800:hover { background-color: #eef4fb; }
+html.light .hover\:bg-gray-700:hover { background-color: #e4edf9; }
+html.light .hover\:bg-gray-700\/30:hover { background-color: #f1f6fc; }
+html.light .hover\:bg-gray-700\/40:hover { background-color: #e4edf9; }
+html.light .hover\:bg-gray-600:hover { background-color: #8496ae; }
+html.light .text-gray-100 { color: #0b1524; }
+html.light .text-gray-200 { color: #16233a; }
+html.light .text-gray-300 { color: #33455e; }
+html.light .text-gray-400 { color: #4a5c75; }
+html.light .text-gray-500 { color: #5d6f8b; }
+html.light .text-gray-600 { color: #8496ae; }
+html.light .hover\:text-gray-100:hover { color: #0b1524; }
+html.light .hover\:text-gray-200:hover { color: #16233a; }
+html.light .border-gray-700 { border-color: #d6e2f0; }
+html.light .border-gray-700\/60 { border-color: #e3ecf7; }
 html.light .border-gray-900 { border-color: #ffffff; }
-html.light .hover\:border-gray-500:hover { border-color: #94a3b8; }
+html.light .hover\:border-gray-500:hover { border-color: #8496ae; }
 html.light .text-red-400 { color: #dc2626; }
 html.light .text-red-500 { color: #dc2626; }
 html.light .text-green-400 { color: #15803d; }
 html.light .text-green-500 { color: #16a34a; }
 html.light .text-yellow-400 { color: #a16207; }
 html.light .text-orange-400 { color: #c2410c; }
-html.light .text-blue-400 { color: #2563eb; }
-html.light .text-blue-300 { color: #1d4ed8; }
+/* Acentos de marca: el cian #38bdf8 no tiene contraste sobre blanco, así que
+   en modo claro se usa su versión profunda (sky-700/sky-800). */
+html.light .text-blue-400 { color: #0369a1; }
+html.light .text-blue-300 { color: #075985; }
 html.light .text-purple-400 { color: #7e22ce; }
-html.light .hover\:text-blue-300:hover { color: #1e40af; }
+html.light .hover\:text-blue-300:hover { color: #0c4a6e; }
 html.light .hover\:text-red-300:hover { color: #b91c1c; }
 html.light .bg-red-900\/30 { background-color: #fee2e2; }
 html.light .bg-red-900\/40 { background-color: #fee2e2; }
@@ -166,5 +202,39 @@ html.light .bg-green-900\/30 { background-color: #dcfce7; }
 html.light .bg-yellow-900\/30 { background-color: #fef3c7; }
 html.light .bg-yellow-900\/40 { background-color: #fef3c7; }
 html.light .bg-orange-900\/30 { background-color: #ffedd5; }
-html.light .bg-blue-900\/30 { background-color: #dbeafe; }
+html.light .bg-blue-900\/30 { background-color: #e0f2fe; }
 html.light .bg-black\/50 { background-color: rgb(15 23 42 / 0.35); }
+html.light .accent-blue-500 { accent-color: #0369a1; }
+html.light .focus\:border-blue-500 { border-color: #0ea5e9; }
+html.light .ring-blue-400 { --tw-ring-color: rgb(14 165 233 / 0.7); }
+html.light .ring-blue-400\/70 { --tw-ring-color: rgb(14 165 233 / 0.7); }
+/* Estados activos: cian profundo para que se vean sobre blanco */
+html.light .bg-blue-600\/10 { background-color: rgb(2 132 199 / 0.10); }
+html.light .bg-blue-600\/20 { background-color: rgb(2 132 199 / 0.14); }
+html.light .border-blue-500 { border-color: #0ea5e9; }
+html.light .border-blue-600 { border-color: #2563eb; }
+
+/* Barra lateral: sigue siendo el raíl oscuro del SOC en los dos modos, así que
+   se anulan los remapeos claros (si no, el texto quedaría oscuro sobre fondo
+   oscuro) y se devuelve la paleta de marca del logo. */
+html.light .cd-sidebar { background-color: #101a2e; border-color: #1b2740; }
+html.light .cd-sidebar .text-gray-100 { color: #e6edf6; }
+html.light .cd-sidebar .text-gray-400 { color: #9fb0c8; }
+html.light .cd-sidebar .text-gray-500 { color: #7b8da7; }
+html.light .cd-sidebar .text-gray-600 { color: #5d6f8b; }
+html.light .cd-sidebar .text-blue-400 { color: #38bdf8; }
+html.light .cd-sidebar .hover\:text-gray-100:hover { color: #ffffff; }
+html.light .cd-sidebar .hover\:text-gray-200:hover { color: #e6edf6; }
+html.light .cd-sidebar .bg-gray-800 { background-color: #1b2740; }
+html.light .cd-sidebar .hover\:bg-gray-800:hover { background-color: #1b2740; }
+html.light .cd-sidebar .hover\:bg-gray-800\/50:hover { background-color: rgb(27 39 64 / 0.5); }
+html.light .cd-sidebar .border-gray-800 { border-color: #1b2740; }
+html.light .cd-sidebar .bg-blue-600\/10 { background-color: rgb(56 189 248 / 0.12); }
+html.light .cd-sidebar .border-blue-500 { border-color: #38bdf8; }
+
+/* Cabecera: separador suave en modo claro */
+html.light .cd-header { border-color: #d6e2f0; }
+
+/* La consola SDN es siempre oscura: sus bordes no se aclaran */
+html.light .cd-terminal,
+html.light .cd-terminal .border-gray-800 { border-color: #1b2740; }
