@@ -48,12 +48,12 @@ const HOST_IDS = Object.keys(HOSTS);
 
 // Tema de xterm alineado con la paleta del logo (azul marino + cian de marca).
 const TERM_THEME = {
-  background: '#070d1a',
+  background: '#101a2e',
   foreground: '#e6edf6',
   cursor: '#4ade80',
-  cursorAccent: '#070d1a',
+  cursorAccent: '#101a2e',
   selectionBackground: 'rgba(56, 189, 248, 0.35)',
-  black: '#0e1829',
+  black: '#101a2e',
   red: '#f87171',
   green: '#4ade80',
   yellow: '#facc15',
@@ -438,7 +438,7 @@ export default function HostTerminal({ initialHost = 'attacker', backendUrl, onC
         onPointerUp={endMove}
         onPointerCancel={endMove}
         onDoubleClick={centerWindow}
-        className={`flex items-center gap-2 px-3 py-2 bg-gray-900 border-b border-gray-700 select-none ${dragging ? 'cursor-grabbing' : 'cursor-move'}`}
+        className={`cd-terminal-header flex items-center gap-2 px-3 py-2 bg-gray-900 border-b border-gray-700 select-none ${dragging ? 'cursor-grabbing' : 'cursor-move'}`}
         style={{ touchAction: 'none' }}
         title="Arrastra para mover · Doble click para centrar"
       >
@@ -483,7 +483,7 @@ export default function HostTerminal({ initialHost = 'attacker', backendUrl, onC
       </div>
 
       {/* Área xterm (una instancia viva por host, solo la activa visible) */}
-      <div className="relative flex-1 min-h-0 bg-[#070d1a]">
+      <div className="cd-terminal-body relative flex-1 min-h-0 bg-[#101a2e]">
         {HOST_IDS.map((h) => (
           <div
             key={h}
@@ -494,7 +494,7 @@ export default function HostTerminal({ initialHost = 'attacker', backendUrl, onC
           />
         ))}
         {connState === 'connecting' && (
-          <div className="absolute inset-0 flex items-center justify-center gap-2 text-gray-500 text-xs font-mono bg-[#070d1a]/80 pointer-events-none">
+          <div className="cd-terminal-loading absolute inset-0 flex items-center justify-center gap-2 text-gray-500 text-xs font-mono pointer-events-none">
             <Loader2 size={14} className="animate-spin" /> Abriendo shell en {activeHost}…
           </div>
         )}
@@ -511,12 +511,12 @@ export default function HostTerminal({ initialHost = 'attacker', backendUrl, onC
       </div>
 
       {/* Comandos rápidos (se escriben en el shell vivo) */}
-      <div className="px-3 py-1.5 border-t border-gray-800 bg-gray-900/60 flex gap-1.5 overflow-x-auto">
+      <div className="cd-terminal-quick px-3 py-1.5 border-t border-gray-800 bg-gray-900/60 flex gap-1.5 overflow-x-auto">
         {HOSTS[activeHost].quick.map((q) => (
           <button
             key={q}
             onClick={() => sendQuick(activeHost, q)}
-            className="shrink-0 text-[10px] font-mono px-2 py-1 rounded border border-gray-700 text-gray-400 hover:text-gray-100 hover:border-gray-500"
+            className="cd-terminal-command shrink-0 text-[10px] font-mono px-2 py-1 rounded border border-gray-700 text-gray-400 hover:text-gray-100 hover:border-gray-500"
             title={`Escribir en el shell: ${q}`}
           >
             {q.length > 28 ? q.slice(0, 28) + '…' : q}
@@ -532,7 +532,7 @@ export default function HostTerminal({ initialHost = 'attacker', backendUrl, onC
           sendQuick(activeHost, quick.trim());
           setQuick('');
         }}
-        className="flex items-center gap-2 px-3 py-2 bg-gray-900 border-t border-gray-700"
+        className="cd-terminal-input-bar flex items-center gap-2 px-3 py-2 bg-gray-900 border-t border-gray-700"
       >
         <input
           value={quick}
@@ -553,7 +553,7 @@ export default function HostTerminal({ initialHost = 'attacker', backendUrl, onC
           <Send size={14} />
         </button>
       </form>
-      <div className="px-3 py-1 bg-gray-900 border-t border-gray-800 text-[10px] font-mono text-gray-600 truncate pr-8">
+      <div className="cd-terminal-footer px-3 py-1 bg-gray-900 border-t border-gray-800 text-[10px] font-mono text-gray-600 truncate pr-8">
         ≡ shell real en {activeHost} · {HOSTS[activeHost].ip} · streaming WS · Ctrl+C = SIGINT · click derecho = pegar
       </div>
 

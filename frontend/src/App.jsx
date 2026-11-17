@@ -320,7 +320,7 @@ function alertToNotification(a) {
 
 function Panel({ title, subtitle, children, className = '' }) {
   return (
-    <div className={`bg-gray-800 p-4 rounded-lg border border-gray-700 shadow-lg ${className}`}>
+    <div className={`cd-card bg-gray-800 p-4 rounded-lg border border-gray-700 shadow-lg ${className}`}>
       <div className="flex items-center justify-between mb-3 gap-2">
         <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">{title}</h2>
         {subtitle && <span className="text-[10px] text-gray-600 font-mono shrink-0">{subtitle}</span>}
@@ -636,7 +636,7 @@ function KpiStrip({ stats, totalAlerts, totalBlocked }) {
   return (
     <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
       {items.map((it) => (
-        <div key={it.label} className="bg-gray-800 p-3 rounded-lg border border-gray-700 shadow-lg">
+        <div key={it.label} className="cd-card cd-kpi-card bg-gray-800 p-3 rounded-lg border border-gray-700 shadow-lg">
           <p className="text-[11px] text-gray-500">{it.label}</p>
           <p className={`font-mono font-bold mt-1 truncate ${it.small ? 'text-base' : 'text-2xl'} ${it.color}`}>
             {it.value}
@@ -775,8 +775,8 @@ function NetworkMap({ latestAlert, isActive, blocked, targetLabel, zoom, positio
 
       {/* Attacker */}
       <div {...nodeProps('attacker')}>
-        <div className={`relative rounded-lg bg-gray-800 ${dragRing('attacker')}`}>
-          <div className={`w-14 h-14 rounded-lg flex items-center justify-center border-2 transition-colors hover:border-green-400 ${blocked ? 'bg-red-900/60 border-red-500' : 'bg-green-900/30 border-green-700'}`}>
+        <div className={`cd-map-node relative rounded-lg bg-gray-800 ${dragRing('attacker')}`}>
+          <div className={`cd-map-node-icon w-14 h-14 rounded-lg flex items-center justify-center border-2 transition-colors hover:border-green-400 ${blocked ? 'bg-red-900/60 border-red-500' : 'bg-green-900/30 border-green-700'}`}>
             <ShieldAlert size={24} className={blocked ? 'text-red-400' : 'text-green-400'} />
           </div>
           <div className="absolute -bottom-2 -right-2 w-6 h-6 rounded-full bg-gray-900 border border-gray-600 flex items-center justify-center" title="Abrir consola">
@@ -792,7 +792,7 @@ function NetworkMap({ latestAlert, isActive, blocked, targetLabel, zoom, positio
       {/* Switch / OVS */}
       <div {...nodeProps('switchNode')}>
         <div className="relative">
-          <div className={`w-16 h-16 rounded-lg flex items-center justify-center border-2 bg-gray-800 ${blocked ? 'border-red-500' : 'border-blue-600'} ${dragRing('switchNode')}`}>
+          <div className={`cd-map-node-icon w-16 h-16 rounded-lg flex items-center justify-center border-2 bg-gray-800 ${blocked ? 'border-red-500' : 'border-blue-600'} ${dragRing('switchNode')}`}>
             <NetworkIcon size={26} className={blocked ? 'text-red-400' : 'text-blue-400'} />
           </div>
           {blocked ? (
@@ -812,8 +812,8 @@ function NetworkMap({ latestAlert, isActive, blocked, targetLabel, zoom, positio
 
       {/* server1 */}
       <div {...nodeProps('server1')}>
-        <div className={`relative rounded-lg bg-gray-800 ${dragRing('server1')}`}>
-          <div className={`w-12 h-12 rounded-lg flex items-center justify-center border-2 transition-colors hover:border-green-400 ${server1Active ? 'bg-red-900/40 border-red-500' : 'bg-gray-800 border-green-700'}`}>
+        <div className={`cd-map-node relative rounded-lg bg-gray-800 ${dragRing('server1')}`}>
+          <div className={`cd-map-node-icon w-12 h-12 rounded-lg flex items-center justify-center border-2 transition-colors hover:border-green-400 ${server1Active ? 'bg-red-900/40 border-red-500' : 'bg-gray-800 border-green-700'}`}>
             <Server size={19} className={server1Active ? 'text-red-400' : 'text-green-400'} />
           </div>
           <div className="absolute -bottom-2 -right-2 w-6 h-6 rounded-full bg-gray-900 border border-gray-600 flex items-center justify-center" title="Abrir consola">
@@ -828,8 +828,8 @@ function NetworkMap({ latestAlert, isActive, blocked, targetLabel, zoom, positio
 
       {/* server2 */}
       <div {...nodeProps('server2')}>
-        <div className={`relative rounded-lg bg-gray-800 ${dragRing('server2')}`}>
-          <div className={`w-12 h-12 rounded-lg flex items-center justify-center border-2 transition-colors hover:border-green-400 ${server2Active ? 'bg-red-900/40 border-red-500' : 'bg-gray-800 border-green-700'}`}>
+        <div className={`cd-map-node relative rounded-lg bg-gray-800 ${dragRing('server2')}`}>
+          <div className={`cd-map-node-icon w-12 h-12 rounded-lg flex items-center justify-center border-2 transition-colors hover:border-green-400 ${server2Active ? 'bg-red-900/40 border-red-500' : 'bg-gray-800 border-green-700'}`}>
             <Server size={19} className={server2Active ? 'text-red-400' : 'text-green-400'} />
           </div>
           <div className="absolute -bottom-2 -right-2 w-6 h-6 rounded-full bg-gray-900 border border-gray-600 flex items-center justify-center" title="Abrir consola">
@@ -858,7 +858,7 @@ function NetworkMap({ latestAlert, isActive, blocked, targetLabel, zoom, positio
       )}
 
       {/* Estado inferior */}
-      <div className="absolute bottom-1 left-1/2 -translate-x-1/2 text-[11px] font-mono text-center px-2 pointer-events-none">
+      <div className="cd-map-status absolute bottom-1 left-1/2 -translate-x-1/2 text-[11px] font-mono text-center px-2 pointer-events-none">
         {blocked ? (
           <span className="text-green-400">Estado: Mitigación quirúrgica activa mediante reglas DROP en OVS.</span>
         ) : isActive && latestAlert ? (
@@ -907,7 +907,7 @@ function EventRow({ alert, onClick }) {
     <button
       type="button"
       onClick={() => onClick(alert)}
-      className={`w-full text-left border-l-2 pl-2 p-1.5 rounded bg-gray-900/40 hover:bg-gray-700/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 transition-colors ${isBlocked ? 'border-red-500' : 'border-yellow-500'}`}
+      className={`cd-event-row w-full text-left border-l-2 pl-2 p-1.5 rounded bg-gray-900/40 hover:bg-gray-700/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 transition-colors ${isBlocked ? 'border-red-500' : 'border-yellow-500'}`}
       title="Ver detalle del ataque"
     >
       <div className="flex items-center justify-between gap-2">
@@ -1728,9 +1728,9 @@ function EventLogCard(props) {
     confirmWipe, setConfirmWipe, deleteAllRecords, className,
   } = props;
   return (
-    <div className={`bg-gray-800 p-4 rounded-lg border border-gray-700 shadow-lg flex flex-col min-w-0 ${className || ''}`}>
+    <div className={`cd-card cd-event-log-card bg-gray-800 p-4 rounded-lg border border-gray-700 shadow-lg flex flex-col min-w-0 ${className || ''}`}>
       <div className="flex items-center justify-between mb-2 gap-2">
-        <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Registro de Eventos en Vivo</h2>
+        <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Eventos en tiempo real</h2>
         <div className="flex items-center gap-1 shrink-0">
           {isAdmin && (
           <button
@@ -2828,7 +2828,7 @@ export function MainApp() {
   }, [userMenuOpen]);
 
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-200 font-sans flex">
+    <div className="cd-app-shell min-h-screen bg-gray-900 text-gray-200 font-sans flex">
       <Sidebar
         view={safeView}
         setView={setView}
@@ -2836,7 +2836,7 @@ export function MainApp() {
         setCollapsed={setSidebarCollapsed}
         isAdmin={isAdmin}
       />
-      <div className="flex-1 min-w-0 flex flex-col min-h-screen">
+      <div className="cd-app-workspace flex-1 min-w-0 flex flex-col min-h-screen">
 
       {/* Barra superior */}
       <header className="cd-header px-4 h-14 border-b border-gray-800 flex justify-between items-center gap-3 shrink-0 sticky top-0 z-40 bg-gray-900">
@@ -2847,9 +2847,9 @@ export function MainApp() {
           <span className="text-sm text-gray-100 font-semibold truncate">{VIEW_LABELS[safeView]}</span>
         </nav>
         <div className="flex items-center gap-3">
-          <div className={`text-sm flex items-center gap-2 font-mono ${connected ? 'text-green-400' : 'text-red-400'}`}>
-            <span className={`w-2.5 h-2.5 rounded-full animate-pulse ${connected ? 'bg-green-500' : 'bg-red-500'}`}></span>
-            {connected ? 'Conectado al Backend & Orquestador' : 'Backend no disponible'}
+          <div className={`cd-connection-pill text-sm flex items-center gap-2 font-mono ${connected ? 'text-green-400' : 'text-red-400'}`} title={connected ? 'La API del backend está respondiendo' : 'No se recibe respuesta de la API del backend'}>
+            <span className={`cd-connection-dot w-2.5 h-2.5 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500'}`}></span>
+            {connected ? 'Sistema conectado' : 'Sin conexión'}
           </div>
 
           {/* Modo claro / oscuro: el icono indica el modo al que se cambiará */}
@@ -2965,18 +2965,39 @@ export function MainApp() {
         </div>
       </header>
 
-      <main className="flex-1 p-4 min-w-0 flex flex-col">
+      <main className="cd-main flex-1 p-4 min-w-0 flex flex-col">
+
+      <div className="cd-page-heading">
+        <div className="cd-page-heading-copy">
+          <p className="cd-page-eyebrow">PLATAFORMA DE CIBERDEFENSA <span>·</span> ESPOL / FIEC</p>
+          <h1>{VIEW_LABELS[safeView]}</h1>
+          <p className="cd-page-description">
+            {{
+              dashboard: 'Detección, mitigación y visibilidad de la infraestructura SDN.',
+              eventos: 'Evidencia, contexto y trazabilidad de los incidentes detectados.',
+              sistema: 'Estado de los servicios y registro inmutable de eventos.',
+              usuarios: 'Cuentas y permisos de acceso a la plataforma.',
+              config: 'Parámetros de monitorización, notificaciones y conexión.',
+            }[safeView]}
+          </p>
+        </div>
+        <div className="cd-local-clock" aria-label="Hora local">
+          <span className="cd-local-clock-label">HORA LOCAL</span>
+          <time>{new Date(now).toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</time>
+          <span>{new Date(now).toLocaleDateString('es-EC', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+        </div>
+      </div>
 
       {safeView === 'dashboard' && (
-        <div className="flex-1 min-h-0 flex flex-col gap-4">
+        <div className="cd-dashboard flex-1 min-h-0 flex flex-col gap-4">
           {w.kpis && <KpiStrip stats={stats} totalAlerts={totalAlerts} totalBlocked={totalBlocked} />}
-          <div className="grid grid-cols-12 gap-4 items-stretch flex-1 min-h-0">
-            <div className="col-span-12 xl:col-span-8 flex flex-col gap-4 min-h-[520px]">
+          <div className="cd-dashboard-grid grid grid-cols-12 gap-4 items-stretch flex-1 min-h-0">
+            <div className="cd-topology-column col-span-12 xl:col-span-7 flex flex-col gap-4 min-h-[520px]">
               {w.topology && (
-                <div className="bg-gray-800 rounded-lg border border-gray-700 relative overflow-hidden shadow-lg p-4 flex-1 min-h-[480px] flex flex-col">
+                <div className="cd-card cd-topology-panel bg-gray-800 rounded-lg border border-gray-700 relative overflow-hidden shadow-lg p-4 flex-1 min-h-[480px] flex flex-col">
                   <div className="flex items-center justify-between mb-2 relative z-10 gap-2">
-                    <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Topología</h2>
-                    <div className="flex items-center gap-1">
+                    <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Topología de red</h2>
+                    <div className="cd-topology-tools flex items-center gap-1">
                       <span className="hidden xl:inline text-[10px] text-gray-600 font-mono mr-2">
                         {settings.topology.lockNodes ? 'Nodos bloqueados · click abre consola' : 'Click en un host abre su consola · Arrastra para mover'}
                       </span>
@@ -3028,7 +3049,7 @@ export function MainApp() {
                       </button>
                     </div>
                   </div>
-                  <div className="relative w-full flex-1 min-h-0">
+                  <div className="cd-topology-canvas relative w-full flex-1 min-h-0">
                     <div className={connected ? '' : 'blur-sm opacity-40 pointer-events-none transition-all'} style={{ width: '100%', height: '100%' }}>
                       <NetworkMap
                         latestAlert={latest}
@@ -3055,7 +3076,7 @@ export function MainApp() {
                 </div>
               )}
             </div>
-            <div className="col-span-12 xl:col-span-4 flex flex-col gap-4 min-h-[520px]">
+            <div className="cd-event-log-column col-span-12 xl:col-span-5 flex flex-col gap-4 min-h-[520px]">
               {w.eventLog && <EventLogCard className="flex-1" listHeight="flex-1 min-h-0" {...logCardProps} />}
             </div>
           </div>
@@ -3074,7 +3095,7 @@ export function MainApp() {
           <div className="grid grid-cols-12 gap-4 items-stretch">
             <div className="col-span-12 xl:col-span-5 flex flex-col gap-4 min-h-0">
               {w.threat && (
-                <div className="bg-gray-800 p-4 rounded-lg border border-gray-700 shadow-lg flex-1 flex flex-col min-h-0">
+                <div className="cd-card bg-gray-800 p-4 rounded-lg border border-gray-700 shadow-lg flex-1 flex flex-col min-h-0">
                   <div className="flex items-center justify-between gap-2 mb-1">
                     <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Contexto de Amenaza Crítica</h2>
                     <div className="flex items-center gap-1 shrink-0">
@@ -3143,7 +3164,7 @@ export function MainApp() {
             </div>
             <div className="col-span-12 xl:col-span-7 flex flex-col gap-4 min-h-0">
               {w.aiPanel && (
-                <div className="bg-gray-800 p-4 rounded-lg border border-gray-700 shadow-lg flex flex-col">
+                <div className="cd-card bg-gray-800 p-4 rounded-lg border border-gray-700 shadow-lg flex flex-col">
                   <div className="flex items-center justify-between mb-1">
                     <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Panel de IA</h2>
                     <span className="text-[10px] text-gray-600 font-mono">
@@ -3172,7 +3193,7 @@ export function MainApp() {
             </div>
           </div>
           {w.timeline && (
-            <div className="bg-gray-800 p-4 rounded-lg border border-gray-700 shadow-lg flex flex-col">
+            <div className="cd-card bg-gray-800 p-4 rounded-lg border border-gray-700 shadow-lg flex flex-col">
               <h2 className="text-sm font-semibold text-gray-400 mb-3 uppercase tracking-wider">Línea de Tiempo de Integridad de Activos</h2>
               <div className="flex-1 flex flex-col justify-center min-h-0">
                 <AssetTimeline alerts={alerts} limit={settings.timelineSize} />
@@ -3218,7 +3239,7 @@ export function MainApp() {
         <div className="flex flex-col gap-4">
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 items-start">
             {w.services && (
-              <div className="bg-gray-800 p-4 rounded-lg border border-gray-700 shadow-lg flex-1 flex flex-col">
+              <div className="cd-card bg-gray-800 p-4 rounded-lg border border-gray-700 shadow-lg flex-1 flex flex-col">
                 <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Estado de Servicios</h2>
                 <div className="flex-1 flex flex-col items-center justify-center gap-4 py-3 min-h-0">
                   <HealthRing
@@ -3252,7 +3273,7 @@ export function MainApp() {
             )}
             <div className="flex flex-col gap-4 min-h-0">
               {w.blockchain && (
-                <div className="bg-gray-800 p-4 rounded-lg border border-gray-700 shadow-lg flex flex-col">
+                <div className="cd-card bg-gray-800 p-4 rounded-lg border border-gray-700 shadow-lg flex flex-col">
                   <h2 className="text-sm font-semibold text-gray-400 mb-2 uppercase tracking-wider">Último Hash Blockchain (Solana)</h2>
                   <div className="flex-1 flex flex-col justify-center min-h-0">
                   {lastBlockchainAlert ? (
@@ -3265,7 +3286,7 @@ export function MainApp() {
                   </div>
                 </div>
               )}
-              <div className="bg-gray-800 p-4 rounded-lg border border-gray-700 shadow-lg">
+              <div className="cd-card bg-gray-800 p-4 rounded-lg border border-gray-700 shadow-lg">
                 <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-2">Mantenimiento del switch</h2>
                 <div className="flex items-center justify-between gap-3 flex-wrap">
                   <div className="flex items-center gap-2 text-xs font-mono">

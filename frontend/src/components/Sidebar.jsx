@@ -20,7 +20,7 @@ export default function Sidebar({ view, setView, collapsed, setCollapsed, isAdmi
       // menú (24) + el hueco entre ellos (6) + el padding (16) suman 74px. Con
       // menos ancho el botón se salía del raíl y quedaba tapado por el panel
       // principal, de modo que ya no se podía volver a desplegar.
-      className={`cd-sidebar shrink-0 bg-[#101a2e] border-r border-gray-800 flex flex-col transition-all duration-150 h-screen sticky top-0 ${collapsed ? 'w-[76px]' : 'w-[218px]'}`}
+      className={`cd-sidebar shrink-0 bg-[#101a2e] border-r border-gray-800 flex flex-col transition-all duration-150 h-screen sticky top-0 ${collapsed ? 'w-[76px]' : 'w-[232px]'}`}
       aria-label="Navegación principal"
     >
       <div className={`flex items-center h-14 border-b border-gray-800 shrink-0 ${collapsed ? 'px-2 gap-1.5' : 'px-3 gap-2'}`}>
