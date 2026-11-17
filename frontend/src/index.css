@@ -585,8 +585,6 @@ html.light .cd-event-log-card .cd-event-row:hover { background: #eff8fa; }
 .cd-login-capability-icon { display: grid; place-items: center; width: 34px; height: 34px; flex: 0 0 34px; color: #78d3dd; border: 1px solid rgba(112, 187, 204, 0.18); border-radius: 10px; background: rgba(44, 111, 132, 0.14); }
 .cd-login-capability strong { display: block; margin: 1px 0 5px; color: #e6eef6; font-size: 11px; font-weight: 650; }
 .cd-login-capability small { display: block; color: #8395aa; font-size: 9px; line-height: 1.45; }
-.cd-login-stack { display: flex; align-items: center; gap: 9px; margin: 38px 0 0; color: #7f91a7; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 9px; }
-.cd-login-stack i { width: 3px; height: 3px; border-radius: 50%; background: #4cc4d5; }
 .cd-login-content { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 36px clamp(28px, 5vw, 78px); background: #f4f7fa; }
 .cd-login-content-top { width: min(100%, 420px); display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 36px; color: #8796a9; font-size: 9px; font-weight: 700; letter-spacing: 0.13em; }
 .cd-login-private { display: flex; align-items: center; gap: 5px; color: #497c75; font-size: 9px; font-weight: 600; letter-spacing: 0.02em; }
@@ -624,7 +622,6 @@ html.light .cd-event-log-card .cd-event-row:hover { background: #eff8fa; }
   .cd-login-brandmark { margin-bottom: 26px; }
   .cd-login-intro h1 { font-size: clamp(38px, 8vw, 54px); }
   .cd-login-capabilities { max-width: 740px; }
-  .cd-login-stack { margin-top: 26px; }
   .cd-login-content { padding: 42px 28px 32px; }
   .cd-login-content-top { margin-bottom: 22px; }
   .cd-login-content-footer { margin-top: 30px; }
@@ -660,7 +657,6 @@ html.light .cd-event-log-card .cd-event-row:hover { background: #eff8fa; }
   .cd-login-lede { margin-top: 15px; font-size: 12px; }
   .cd-login-capabilities { grid-template-columns: 1fr; gap: 12px; }
   .cd-login-capability { align-items: center; }
-  .cd-login-stack { flex-wrap: wrap; gap: 7px; margin-top: 23px; font-size: 8px; }
   .cd-login-content { padding: 32px 20px 28px; }
   .cd-login-content-top { margin-bottom: 20px; font-size: 8px; }
   .cd-login-form-card { padding: 17px; }

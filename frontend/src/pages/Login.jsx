@@ -45,7 +45,7 @@ export default function Login({ backendUrl, onBackendUrl }) {
             <LogoHorizontal className="w-[340px] max-w-full" />
           </div>
           <p className="cd-login-eyebrow"><span /> PLATAFORMA DE CIBERDEFENSA · ESPOL / FIEC</p>
-          <h1>Detección y respuesta<br /><span>en redes SDN.</span></h1>
+          <h1>Detección y respuesta<br /><span>adaptativa</span></h1>
           <p className="cd-login-lede">Detección de anomalías, mitigación automatizada y registro auditable desde un mismo panel.</p>
         </div>
         <div className="cd-login-capabilities">
@@ -61,9 +61,6 @@ export default function Login({ backendUrl, onBackendUrl }) {
             <span className="cd-login-capability-icon"><ShieldCheck size={17} /></span>
             <span><strong>Trazabilidad</strong><small>Registro auditable de eventos</small></span>
           </div>
-        </div>
-        <div className="cd-login-stack">
-          <span>Ryu</span><i /> <span>Open vSwitch</span><i /> <span>LightGBM</span><i /> <span>Solana</span>
         </div>
       </section>
 
