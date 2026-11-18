@@ -9,7 +9,7 @@ import {
   Bell, BellOff, ZoomIn, ZoomOut, Network as NetworkIcon, Loader2,
   Trash2, CheckCheck, X, RotateCcw, LayoutGrid,
   Sun, Moon, Search, ExternalLink, Copy, Check, RefreshCw, ChevronDown, ChevronUp,
-  Terminal, Eraser, Maximize2, LogOut, KeyRound,
+  Terminal, Eraser, Maximize2, LogOut, KeyRound, Mail, Send,
 } from 'lucide-react';
 
 const DEFAULT_BACKEND_URL = 'http://localhost:8001';
@@ -903,6 +903,18 @@ function AssetTimeline({ alerts, limit }) {
 
 function EventRow({ alert, onClick }) {
   const isBlocked = isBlockAction(alert.action_taken);
+  const mailDelivery = alert.email_notification;
+  const mailLabels = {
+    queued: ['Envío en cola', 'text-gray-500'],
+    sent: [`Correo enviado${mailDelivery?.recipient_count ? ` · ${mailDelivery.sent_count}/${mailDelivery.recipient_count}` : ''}`, 'text-green-400'],
+    partial: ['Correo enviado parcialmente', 'text-yellow-400'],
+    failed: ['Falló el correo', 'text-red-400'],
+    not_configured: ['SMTP sin configurar', 'text-gray-500'],
+    no_recipients: ['Sin destinatarios activos', 'text-gray-500'],
+    below_threshold: ['Debajo del umbral de correo', 'text-gray-500'],
+    suppressed_duplicate: ['Correo repetido omitido', 'text-gray-500'],
+  };
+  const mailLabel = mailLabels[mailDelivery?.status];
   return (
     <button
       type="button"
@@ -918,7 +930,14 @@ function EventRow({ alert, onClick }) {
         {alert.attack_type} (Conf: {Number(alert.confidence ?? 0).toFixed(1)}%)
       </p>
       <p className="text-gray-300 text-[11px]">Src: {alert.attacker_ip} → Dst: {alert.victim_ip}:{alert.victim_port}</p>
-      <p className="text-green-400 text-[10px]">Acción: {alert.action_taken}</p>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-green-400 text-[10px]">Acción: {alert.action_taken}</p>
+        {mailLabel && (
+          <span className={`inline-flex items-center gap-1 text-[9px] ${mailLabel[1]}`} title="Estado de la notificación por correo">
+            <Mail size={10} /> {mailLabel[0]}
+          </span>
+        )}
+      </div>
     </button>
   );
 }
@@ -1850,36 +1869,32 @@ function EventLogCard(props) {
 
 function UsersPage({ api }) {
   const [users, setUsers] = useState(null);
+  const [emailStatus, setEmailStatus] = useState(null);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
-  const [form, setForm] = useState({ username: '', password: '', role: 'operator' });
+  const [form, setForm] = useState({ username: '', password: '', role: 'operator', email: '' });
   const [busy, setBusy] = useState(false);
   const [editPw, setEditPw] = useState({}); // username -> draft de nueva clave
+  const [emailDrafts, setEmailDrafts] = useState({});
+  const [emailTestBusy, setEmailTestBusy] = useState('');
 
   const load = useCallback(async () => {
     try {
-      setUsers(await api('/api/users'));
+      const rows = await api('/api/users');
+      setUsers(rows);
+      setEmailDrafts(Object.fromEntries(rows.map((u) => [u.username, u.email || ''])));
+      try {
+        setEmailStatus(await api('/api/notifications/email/status'));
+      } catch {
+        setEmailStatus({ smtp_configured: false, missing_config: ['SMTP del backend'], recipient_count: 0, recipients: [], minimum_severity: 'BAJA', dedup_seconds: 60 });
+      }
       setError('');
     } catch (e) {
       setError(e.message || 'No se pudo cargar');
     }
   }, [api]);
 
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      try {
-        const u = await api('/api/users');
-        if (alive) {
-          setUsers(u);
-          setError('');
-        }
-      } catch (e) {
-        if (alive) setError(e.message || 'No se pudo cargar');
-      }
-    })();
-    return () => { alive = false; };
-  }, [api]);
+  useEffect(() => { load(); }, [load]);
 
   const flash = (msg) => {
     setNotice(msg);
@@ -1892,7 +1907,7 @@ function UsersPage({ api }) {
     setError('');
     try {
       await api('/api/users', { method: 'POST', body: form });
-      setForm({ username: '', password: '', role: 'operator' });
+      setForm({ username: '', password: '', role: 'operator', email: '' });
       await load();
       flash(`Usuario '${form.username.trim()}' creado.`);
     } catch (err) {
@@ -1913,6 +1928,19 @@ function UsersPage({ api }) {
     }
   };
 
+  const sendEmailTest = async (username) => {
+    setEmailTestBusy(username);
+    setError('');
+    try {
+      const result = await api('/api/notifications/email/test', { method: 'POST', body: { username } });
+      flash(`Correo simulado enviado a ${result.to}.`);
+    } catch (err) {
+      setError(err.message || 'No se pudo enviar la prueba');
+    } finally {
+      setEmailTestBusy('');
+    }
+  };
+
   const remove = async (username) => {
     if (!window.confirm(`¿Eliminar al usuario '${username}'? Perderá el acceso de inmediato.`)) return;
     setError('');
@@ -1929,6 +1957,27 @@ function UsersPage({ api }) {
 
   return (
     <div className="flex flex-col gap-4">
+      <Panel title="Notificaciones por correo" subtitle="grupo de soporte">
+        <div className="flex flex-wrap items-center gap-3 mb-3">
+          <span className={`inline-flex items-center gap-1.5 text-[10px] font-mono font-bold px-2.5 py-1 rounded-full border ${emailStatus?.smtp_configured ? 'border-green-700 bg-green-900/30 text-green-400' : 'border-yellow-700 bg-yellow-900/30 text-yellow-400'}`}>
+            <Mail size={12} /> {emailStatus?.smtp_configured ? 'SMTP listo' : 'SMTP pendiente de configuración'}
+          </span>
+          <span className="text-[11px] text-gray-500">
+            {emailStatus ? `${emailStatus.recipient_count} destinatario${emailStatus.recipient_count === 1 ? '' : 's'} activo${emailStatus.recipient_count === 1 ? '' : 's'}` : 'Cargando estado…'}
+          </span>
+          {emailStatus?.smtp_configured && <span className="text-[10px] text-gray-500 font-mono">Remitente: {emailStatus.sender}</span>}
+        </div>
+        <p className="text-[11px] text-gray-400 leading-relaxed">
+          Las alertas se envían a todas las cuentas activas con rol <span className="font-mono text-gray-200">operator</span> (soporte) o <span className="font-mono text-gray-200">admin</span> que tengan un correo guardado.
+          Umbral mínimo: <span className="font-mono text-gray-200">{emailStatus?.minimum_severity || 'BAJA'}</span>. Se agrupan correos repetidos durante {emailStatus?.dedup_seconds || 60} segundos; cada evento permanece en el panel.
+        </p>
+        {!emailStatus?.smtp_configured && (
+          <p className="mt-2 text-[10px] text-yellow-400/90 leading-relaxed">
+            Configura el servidor aprobado en <span className="font-mono">backend/.env</span> con <span className="font-mono">SMTP_HOST, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD y SMTP_FROM_EMAIL</span>, y reinicia el backend. Las credenciales no se guardan en MongoDB ni se muestran aquí.
+          </p>
+        )}
+      </Panel>
+
       <Panel title="Usuarios del sistema" subtitle="roles y acceso">
         {error && <p className="text-xs text-red-400 font-mono bg-red-900/20 border border-red-800 rounded px-2.5 py-2 mb-3">{error}</p>}
         {notice && <p className="text-xs text-green-400 font-mono bg-green-900/20 border border-green-800 rounded px-2.5 py-2 mb-3">{notice}</p>}
@@ -1940,6 +1989,7 @@ function UsersPage({ api }) {
               <thead>
                 <tr className="text-left text-[10px] text-gray-500 uppercase tracking-wider border-b border-gray-700">
                   <th className="py-2 pr-2 font-semibold">Usuario</th>
+                  <th className="py-2 pr-2 font-semibold">Correo de notificación</th>
                   <th className="py-2 pr-2 font-semibold">Rol</th>
                   <th className="py-2 pr-2 font-semibold">Estado</th>
                   <th className="py-2 pr-2 font-semibold">Creado por</th>
@@ -1950,6 +2000,36 @@ function UsersPage({ api }) {
                 {users.map((u) => (
                   <tr key={u.username} className="border-b border-gray-700/60 last:border-0">
                     <td className="py-2 pr-2 font-mono text-gray-100">{u.username}</td>
+                    <td className="py-2 pr-2">
+                      <div className="flex min-w-[330px] items-center gap-1.5">
+                        <input
+                          type="email"
+                          value={emailDrafts[u.username] ?? u.email ?? ''}
+                          onChange={(e) => setEmailDrafts((p) => ({ ...p, [u.username]: e.target.value }))}
+                          className={`${inputClass} min-w-0 flex-1`}
+                          placeholder="correo@institucion.edu"
+                          aria-label={`Correo de notificación de ${u.username}`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => patch(u.username, { email: (emailDrafts[u.username] ?? '').trim() }, `Correo de '${u.username}' actualizado.`)}
+                          disabled={(emailDrafts[u.username] ?? '') === (u.email || '')}
+                          className="text-[10px] font-semibold px-2 py-1.5 rounded border border-gray-700 text-gray-300 hover:border-blue-500 hover:text-blue-300 disabled:opacity-40 disabled:pointer-events-none"
+                          title="Guardar o quitar el correo de esta cuenta"
+                        >
+                          Guardar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => sendEmailTest(u.username)}
+                          disabled={!emailStatus?.smtp_configured || !u.email || !u.active || !!emailTestBusy}
+                          className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1.5 rounded border border-gray-700 text-gray-300 hover:border-green-600 hover:text-green-300 disabled:opacity-40 disabled:pointer-events-none"
+                          title={emailStatus?.smtp_configured ? `Enviar prueba simulada a ${u.email || 'este usuario'}` : 'Configura SMTP para enviar la prueba'}
+                        >
+                          <Send size={11} /> {emailTestBusy === u.username ? 'Enviando…' : 'Probar'}
+                        </button>
+                      </div>
+                    </td>
                     <td className="py-2 pr-2">
                       <select
                         value={u.role}
@@ -2006,7 +2086,7 @@ function UsersPage({ api }) {
       </Panel>
 
       <Panel title="Crear usuario" subtitle="operator u admin">
-        <form onSubmit={create} className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
+        <form onSubmit={create} className="grid grid-cols-1 sm:grid-cols-5 gap-3 items-end">
           <label className="block">
             <span className="block text-[11px] text-gray-500 mb-1">Usuario</span>
             <input className={`${inputClass} w-full font-mono`} value={form.username} onChange={(e) => setForm((f) => ({ ...f, username: e.target.value }))} placeholder="nombre" autoComplete="off" />
@@ -2014,6 +2094,10 @@ function UsersPage({ api }) {
           <label className="block">
             <span className="block text-[11px] text-gray-500 mb-1">Contraseña (mín. 4)</span>
             <input type="password" className={`${inputClass} w-full font-mono`} value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))} placeholder="••••" autoComplete="new-password" />
+          </label>
+          <label className="block">
+            <span className="block text-[11px] text-gray-500 mb-1">Correo de notificación</span>
+            <input type="email" className={`${inputClass} w-full`} value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} placeholder="opcional" autoComplete="email" />
           </label>
           <label className="block">
             <span className="block text-[11px] text-gray-500 mb-1">Rol</span>

@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware  # <--- 1. Importar CORS
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
 from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo.errors import DuplicateKeyError
 from bson import ObjectId
 from solana.rpc.async_api import AsyncClient
 from solders.keypair import Keypair
@@ -15,6 +16,7 @@ from solana.rpc.types import TxOpts
 import asyncio
 import bcrypt
 import fcntl
+import hashlib
 import json
 import jwt as pyjwt
 import os
@@ -26,6 +28,18 @@ import struct
 import termios
 import uuid
 from datetime import datetime, timezone, timedelta
+from dotenv import load_dotenv
+
+BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
+load_dotenv(os.path.join(BACKEND_DIR, ".env"))
+
+from notifications import (  # noqa: E402
+    build_security_email,
+    email_configuration_status,
+    load_smtp_settings,
+    send_email,
+    severity_for,
+)
 
 app = FastAPI(title="IPS Security Backend")
 
@@ -46,6 +60,7 @@ alerts_collection = db.alerts
 status_collection = db.system_status  # Estado persistente real del switch (no se infiere por tiempo)
 users_collection = db.users           # Cuentas del dashboard (hash bcrypt, nunca en claro)
 config_collection = db.system_config  # Parámetros globales que verán todos (los edita el admin)
+email_dedup_collection = db.email_notification_dedup
 
 # --- CONFIGURACIÓN SOLANA ---
 SOLANA_URL = "http://localhost:8899"
@@ -67,7 +82,6 @@ payer = Keypair.from_bytes(bytes(secret))
 # - El motor de IA no hace login: usa X-API-Key compartida (IPS_API_KEY o el
 #   fichero ~/cyberdefense/.engine_key que genera ips_manager.sh). Si no hay
 #   clave configurada, POST /api/alerts queda abierto (modo desarrollo).
-BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
 JWT_EXP_HOURS = 12
 
 
@@ -141,6 +155,7 @@ def public_user(doc) -> dict:
         "username": doc["_id"],
         "role": doc.get("role", "operator"),
         "active": doc.get("active", True),
+        "email": doc.get("email"),
         "created_at": doc.get("created_at"),
         "created_by": doc.get("created_by"),
     }
@@ -199,6 +214,7 @@ async def engine_or_user(request: Request):
 
 
 USERNAME_RE = re.compile(r"^[A-Za-z0-9_.\-]{3,32}$")
+EMAIL_RE = re.compile(r"^[A-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?(?:\.[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?)+$", re.IGNORECASE)
 VALID_ROLES = ("operator", "admin")
 
 
@@ -212,6 +228,17 @@ def _check_password(password: str):
         raise HTTPException(status_code=400, detail="La contraseña debe tener al menos 4 caracteres")
     if len(password) > 128:
         raise HTTPException(status_code=400, detail="La contraseña es demasiado larga")
+
+
+def _normalize_email(email: str | None) -> str | None:
+    if email is None:
+        return None
+    value = email.strip().lower()
+    if not value:
+        return None
+    if len(value) > 254 or not EMAIL_RE.fullmatch(value):
+        raise HTTPException(status_code=400, detail="Correo electrónico inválido")
+    return value
 
 
 async def _ensure_not_last_admin(except_username: str | None = None):
@@ -231,12 +258,167 @@ class UserCreateModel(BaseModel):
     username: str
     password: str
     role: str = "operator"
+    email: str | None = None
 
 
 class UserUpdateModel(BaseModel):
     role: str | None = None
     password: str | None = None
     active: bool | None = None
+    email: str | None = None
+
+
+class EmailTestModel(BaseModel):
+    username: str
+
+
+EMAIL_SEVERITY_ORDER = {"BAJA": 1, "MEDIA": 2, "ALTA": 3, "CRÍTICA": 4, "CRITICA": 4}
+_email_dedup_index_ready = False
+
+
+def _email_minimum_severity() -> str:
+    value = (os.getenv("EMAIL_MIN_SEVERITY", "BAJA") or "BAJA").strip().upper()
+    return value if value in EMAIL_SEVERITY_ORDER else "BAJA"
+
+
+def _email_dedup_window() -> int:
+    try:
+        value = int(os.getenv("EMAIL_DEDUP_SECONDS", "60"))
+    except ValueError:
+        value = 60
+    return max(10, min(3600, value))
+
+
+async def _notification_recipients() -> list[dict]:
+    recipients = []
+    seen_addresses = set()
+    async for doc in users_collection.find({"role": {"$in": list(VALID_ROLES)}}).sort("_id", 1):
+        if not doc.get("active", True):
+            continue
+        try:
+            email = _normalize_email(doc.get("email"))
+        except HTTPException:
+            print(f"⚠️ [EMAIL] Correo inválido en el perfil '{doc.get('_id', '?')}'; se omite como destinatario.")
+            continue
+        if not email or email in seen_addresses:
+            continue
+        seen_addresses.add(email)
+        recipients.append({
+            "username": doc.get("_id", ""),
+            "role": doc.get("role", "operator"),
+            "email": email,
+        })
+    return recipients
+
+
+async def _claim_email_notification(alert: dict) -> bool:
+    """Evita más de un correo por patrón idéntico dentro de una ventana corta.
+
+    Las alertas repetidas siguen guardándose y apareciendo en el panel; solo se
+    agrupa el correo. El _id de MongoDB garantiza la exclusión entre procesos.
+    """
+    global _email_dedup_index_ready
+    seconds = _email_dedup_window()
+    try:
+        stamp = datetime.fromisoformat(str(alert.get("timestamp", "")).replace("Z", "+00:00"))
+        if stamp.tzinfo is None:
+            stamp = stamp.replace(tzinfo=timezone.utc)
+    except Exception:
+        stamp = datetime.now(timezone.utc)
+    bucket = int(stamp.timestamp() // seconds)
+    fingerprint = "|".join(str(alert.get(k, "")).strip().lower() for k in (
+        "attack_type", "attacker_ip", "victim_ip", "victim_port", "action_taken",
+    ))
+    dedup_id = hashlib.sha256(f"{fingerprint}|{bucket}".encode("utf-8")).hexdigest()
+    try:
+        if not _email_dedup_index_ready:
+            await email_dedup_collection.create_index("expires_at", expireAfterSeconds=0)
+            _email_dedup_index_ready = True
+        await email_dedup_collection.insert_one({
+            "_id": dedup_id,
+            "expires_at": datetime.now(timezone.utc) + timedelta(seconds=seconds * 2),
+        })
+        return True
+    except DuplicateKeyError:
+        return False
+    except Exception as exc:
+        # Si el índice TTL no está disponible en una colección de prueba, se
+        # mantiene el envío para no perder una alerta por un fallo secundario.
+        if not _email_dedup_index_ready:
+            print(f"⚠️ [EMAIL] No se pudo preparar la deduplicación ({type(exc).__name__}); se continúa con el envío.")
+        return True
+
+
+async def _set_email_delivery_status(alert_id, status: dict):
+    try:
+        await alerts_collection.update_one(
+            {"_id": alert_id},
+            {"$set": {"email_notification": status}},
+        )
+    except Exception as exc:
+        print(f"⚠️ [EMAIL] No se pudo guardar el estado del correo ({type(exc).__name__}).")
+
+
+async def _send_alert_email(alert_id, alert: dict):
+    try:
+        settings = load_smtp_settings()
+        if not settings.configured:
+            await _set_email_delivery_status(alert_id, {
+                "status": "not_configured",
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            })
+            print("ℹ️ [EMAIL] Alerta registrada en el panel; SMTP no está configurado.")
+            return
+
+        recipients = await _notification_recipients()
+        if not recipients:
+            await _set_email_delivery_status(alert_id, {
+                "status": "no_recipients",
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            })
+            print("ℹ️ [EMAIL] No hay cuentas activas con correo registrado.")
+            return
+
+        severity, _ = severity_for(alert.get("confidence"))
+        minimum = _email_minimum_severity()
+        if EMAIL_SEVERITY_ORDER.get(severity, 1) < EMAIL_SEVERITY_ORDER.get(minimum, 1):
+            await _set_email_delivery_status(alert_id, {
+                "status": "below_threshold",
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            })
+            return
+
+        if not await _claim_email_notification(alert):
+            await _set_email_delivery_status(alert_id, {
+                "status": "suppressed_duplicate",
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            })
+            print("ℹ️ [EMAIL] Correo duplicado omitido dentro de la ventana configurada.")
+            return
+
+        subject, plain, html_body = build_security_email(alert)
+        sent = 0
+        for recipient in recipients:
+            try:
+                await asyncio.to_thread(send_email, settings, recipient["email"], subject, plain, html_body)
+                sent += 1
+            except Exception as exc:
+                print(f"❌ [EMAIL] Falló el envío para '{recipient['username']}' ({type(exc).__name__}).")
+
+        status = "sent" if sent == len(recipients) else "partial" if sent else "failed"
+        await _set_email_delivery_status(alert_id, {
+            "status": status,
+            "sent_count": sent,
+            "recipient_count": len(recipients),
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        })
+        print(f"📧 [EMAIL] Notificación {status}: {sent}/{len(recipients)} destinatarios.")
+    except Exception as exc:
+        print(f"❌ [EMAIL] Error al procesar la notificación ({type(exc).__name__}).")
+        await _set_email_delivery_status(alert_id, {
+            "status": "failed",
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        })
 
 
 class PasswordChangeModel(BaseModel):
@@ -303,11 +485,63 @@ async def list_users(_admin: dict = Depends(require_admin)):
     return out
 
 
+@app.get("/api/notifications/email/status")
+async def email_notification_status(_admin: dict = Depends(require_admin)):
+    config = email_configuration_status(load_smtp_settings())
+    recipients = await _notification_recipients()
+    return {
+        "smtp_configured": config["configured"],
+        "sender": config["sender"],
+        "missing_config": config["missing"],
+        "minimum_severity": _email_minimum_severity(),
+        "dedup_seconds": _email_dedup_window(),
+        "recipient_count": len(recipients),
+        "recipients": recipients,
+    }
+
+
+@app.post("/api/notifications/email/test")
+async def send_simulated_email_test(body: EmailTestModel, _admin: dict = Depends(require_admin)):
+    recipient = await users_collection.find_one({"_id": body.username.strip()})
+    if not recipient:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    if not recipient.get("active", True):
+        raise HTTPException(status_code=400, detail="La cuenta está inactiva")
+    email = _normalize_email(recipient.get("email"))
+    if not email:
+        raise HTTPException(status_code=400, detail="Registra un correo para esta cuenta antes de probar")
+
+    settings = load_smtp_settings()
+    if not settings.configured:
+        missing = ", ".join(settings.missing_fields)
+        raise HTTPException(status_code=503, detail=f"SMTP no está configurado en el backend ({missing})")
+
+    now = datetime.now(timezone.utc).isoformat()
+    simulated_alert = {
+        "_id": "simulacion-correo",
+        "attack_type": "SSH Brute Force (simulado)",
+        "confidence": 92.4,
+        "attacker_ip": "198.51.100.24",  # TEST-NET-2, reservado para documentación
+        "victim_ip": "192.168.1.10",
+        "victim_port": 22,
+        "action_taken": "DROP (simulado)",
+        "timestamp": now,
+    }
+    subject, plain, html_body = build_security_email(simulated_alert, simulated=True)
+    try:
+        await asyncio.to_thread(send_email, settings, email, subject, plain, html_body)
+    except Exception as exc:
+        print(f"❌ [EMAIL] Falló la prueba simulada para '{recipient['_id']}' ({type(exc).__name__}).")
+        raise HTTPException(status_code=502, detail="No se pudo enviar el correo de prueba; revisa SMTP y los logs del backend")
+    return {"status": "sent", "username": recipient["_id"], "to": email, "simulated": True}
+
+
 @app.post("/api/users")
 async def create_user(body: UserCreateModel, admin: dict = Depends(require_admin)):
     username = (body.username or "").strip()
     _check_username(username)
     _check_password(body.password or "")
+    email = _normalize_email(body.email)
     if body.role not in VALID_ROLES:
         raise HTTPException(status_code=400, detail="Rol inválido (operator | admin)")
     if await users_collection.find_one({"_id": username}):
@@ -317,10 +551,11 @@ async def create_user(body: UserCreateModel, admin: dict = Depends(require_admin
         "password_hash": hash_password(body.password),
         "role": body.role,
         "active": True,
+        "email": email,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "created_by": admin["username"],
     })
-    return {"status": "ok", "user": {"username": username, "role": body.role}}
+    return {"status": "ok", "user": {"username": username, "role": body.role, "email": email}}
 
 
 @app.patch("/api/users/{username}")
@@ -342,6 +577,8 @@ async def update_user(username: str, body: UserUpdateModel, admin: dict = Depend
     if body.password is not None:
         _check_password(body.password)
         patch["password_hash"] = hash_password(body.password)
+    if "email" in body.model_fields_set:
+        patch["email"] = _normalize_email(body.email)
     if not patch:
         raise HTTPException(status_code=400, detail="Nada que actualizar")
     if patch.get("role") == "operator" or patch.get("active") is False:
@@ -657,6 +894,7 @@ async def registrar_en_solana(alert_data: dict):
 async def receive_alert(alert: AlertModel, background_tasks: BackgroundTasks, _auth=Depends(engine_or_user)):
     alert_dict = alert.model_dump()
     alert_dict["timestamp"] = datetime.now(timezone.utc).isoformat()
+    alert_dict["email_notification"] = {"status": "queued"}
     
     result = await alerts_collection.insert_one(alert_dict)
     alert_dict["_id"] = result.inserted_id
@@ -669,6 +907,7 @@ async def receive_alert(alert: AlertModel, background_tasks: BackgroundTasks, _a
             upsert=True,
         )
 
+    background_tasks.add_task(_send_alert_email, result.inserted_id, alert_dict)
     background_tasks.add_task(registrar_en_solana, alert_dict)
 
     return {"status": "success", "message": "Alert received and processing"}

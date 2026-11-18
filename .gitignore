@@ -22,6 +22,7 @@ ai/iaenv/
 # Secretos locales (nunca al repo): clave motor IA y secreto JWT
 .engine_key
 backend/.jwt_secret
+backend/.env
 
 # LaTeX (reporte del PI): auxiliares de compilación, se regeneran con `make`
 latex/*.aux

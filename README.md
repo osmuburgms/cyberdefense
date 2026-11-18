@@ -150,6 +150,14 @@ Roles implementados:
 
 > Cambia la contraseña del administrador en el primer ingreso: *Configuración → Mi cuenta*.
 
+### Notificaciones por correo
+
+El backend envía alertas al correo registrado de cada cuenta **activa** con rol `operator` o `admin`. El administrador asigna las direcciones en *Usuarios*; los correos duplicados se deduplican y se puede definir un umbral mínimo de severidad.
+
+El relay SMTP y sus credenciales se configuran localmente en `backend/.env` a partir de `backend/.env.example`. La carta de compromiso asigna al cliente la provisión del relay y de sus destinatarios autorizados. No guardes estas credenciales en MongoDB ni en el frontend. Tras completar la configuración, reinicia el backend.
+
+Desde *Usuarios* se puede enviar una prueba a una cuenta seleccionada. La prueba usa datos sintéticos identificados como **PRUEBA SIMULADA**; no inserta una alerta, no genera tráfico y no modifica la red.
+
 ---
 
 ## API principal
@@ -161,6 +169,8 @@ Roles implementados:
 | POST | `/api/auth/change-password` | JWT |
 | GET / POST | `/api/users` | GET: admin · POST: admin |
 | PATCH / DELETE | `/api/users/{username}` | admin |
+| GET | `/api/notifications/email/status` | admin |
+| POST | `/api/notifications/email/test` | admin · cuerpo: `{"username":"..."}` |
 | GET / PUT | `/api/config` | GET: todos · PUT: admin |
 | GET | `/api/alerts`, `/api/alerts/count` | JWT |
 | POST | `/api/alerts` | JWT o `X-API-Key` |
