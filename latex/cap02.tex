@@ -1,36 +1,504 @@
-\chapter{Metodolog\'ia}
+\chapter{METODOLOGÍA}
 \thispagestyle{empty}
+\label{chapter:metodologia}
+
+\newcolumntype{L}[1]{>{\RaggedRight\arraybackslash}p{#1}}
 
 % =====================================================================
-%  Capitulo 2 -- Metodología (habilitado para compilación)
+%  Capítulo 2 -- Metodología
+%  Figuras: recursos/fig_*.svg (se generan con recursos/gen_diagramas.py y
+%  "make" las convierte a PDF). El diagrama de arquitectura es
+%  recursos/CyberDefense_despues_diagrama.svg.
+%  Figuras y tablas usan [H] (paquete float) para quedar fijas en su sitio.
 % =====================================================================
 
-El proyecto aplica una investigaci\'on aplicada de car\'acter tecnol\'ogico, orientada a resolver un problema concreto del cliente mediante el desarrollo de un prototipo funcional. El proceso se estructura en cinco fases: (i) an\'alisis del contexto y definici\'on de requisitos funcionales y no funcionales; (ii) dise\~no de la arquitectura del sistema; (iii) implementaci\'on de cada m\'odulo; (iv) validaci\'on experimental; y (v) despliegue y documentaci\'on.
+El presente capítulo expone la metodología con la que se diseña y se evaluará la plataforma de ciberdefensa propuesta en el Capítulo~\ref{chapter:introduction}. El problema abordado es de carácter aplicado: dotar al Centro de Datos de la FIEC de una capacidad de detección y de respuesta automática sobre su red programable. Por esta razón, el trabajo se orienta al desarrollo tecnológico. Las decisiones de diseño parten de requisitos derivados de las necesidades operativas identificadas, se justifican frente a las alternativas disponibles y se verifican mediante un experimento controlado, cuyas variables y criterios de aceptación se establecen antes de su ejecución.
 
-La arquitectura propuesta es modular y se articula en cuatro capas, tal como se ilustra en la Figura \ref{fig:arquitectura}.
+La evaluación del prototipo combina dos perspectivas complementarias. La primera es técnica y mide, en un laboratorio virtual que reproduce el segmento de red del cliente, la capacidad de detección del modelo de inteligencia artificial, el tiempo de respuesta, la efectividad de la mitigación y su impacto sobre el tráfico legítimo. La segunda es la percepción de los usuarios, que se recoge mediante una encuesta de satisfacción, pues una herramienta de seguridad solo resulta útil si quienes la operan pueden interpretar sus alertas y confiar en las acciones que ejecuta.
 
-\begin{figure}[!htbp]
+El capítulo se organiza de la siguiente manera. La Sección~\ref{sec:requisitos} define los requisitos de la plataforma y la Sección~\ref{sec:alternativas} justifica las tecnologías seleccionadas. Las secciones~\ref{sec:arquitectura} a~\ref{sec:ia} documentan el diseño: la arquitectura, los mecanismos de control, seguridad y registro, el modelo de base de datos y el módulo de inteligencia artificial. La Sección~\ref{sec:riesgos} analiza los riesgos del proyecto. Por último, las secciones~\ref{sec:variables} a~\ref{sec:satisfaccion} definen las variables de estudio, el diseño experimental y la evaluación de la satisfacción del usuario, cuyos resultados se presentan en el Capítulo~3.
+
+% ---------------------------------------------------------------------------
+\section{Análisis de requisitos}
+\label{sec:requisitos}
+
+La definición de requisitos parte de los vacíos operativos descritos en el Capítulo~\ref{chapter:introduction}: la monitorización fragmentada de la red, los controles de mitigación manuales, la ausencia de análisis automatizado y de un registro auditable de los incidentes, la falta de un inventario estructurado de activos y de un módulo de reglas de tráfico, y la inexistencia de un canal de notificación al equipo de soporte. Cada vacío se tradujo en uno o más requisitos, de modo que el diseño y la evaluación posteriores resulten trazables a un problema concreto y no a características deseables en abstracto.
+
+Los requisitos funcionales, presentados en la Tabla~\ref{tbl:rf}, describen lo que la plataforma debe hacer. Los seis primeros (RF1 a RF6) conforman el ciclo central de detección y respuesta, desde la captura del tráfico hasta su visualización por el operador; RF7 y RF8 corresponden a la operación cotidiana, es decir, al acceso y a la notificación; y RF9 a RF12 a la gestión de activos y de políticas de seguridad.
+
+\begin{table}[H]
+\centering
+\footnotesize
+\renewcommand{\arraystretch}{1.2}
+\caption{{\fontsize{11pt}{13}\selectfont Requisitos funcionales}}
+\label{tbl:rf}
+\begin{tabular}{@{}L{1.1cm}L{12.8cm}@{}}
+\toprule
+\textbf{ID} & \textbf{Requisito} \\
+\midrule
+RF1 & Capturar el tráfico del segmento de red y agruparlo en flujos para su análisis en tiempo real. \\
+RF2 & Clasificar cada flujo como benigno o como un tipo de ataque mediante un modelo de aprendizaje automático. \\
+RF3 & Mitigar automáticamente las amenazas confirmadas mediante reglas de flujo instaladas en el switch programable. \\
+RF4 & Registrar cada alerta con atacante, víctima, puerto, confianza, acción ejecutada y marca de tiempo en una base de datos persistente. \\
+RF5 & Mantener un registro auditable e inalterable de los incidentes de seguridad. \\
+RF6 & Ofrecer un panel web con vista unificada: indicadores, topología, eventos, gráficas y estado del switch. \\
+RF7 & Autenticar a los usuarios y restringir las funciones según su rol (operador, administrador), incluida la gestión de cuentas. \\
+RF8 & Notificar por correo al equipo de soporte de TI, con severidad mínima configurable y sin enviar avisos duplicados. \\
+RF9 & Gestionar el inventario de activos (alta, edición, consulta, baja y búsqueda) con nombre, IP, MAC, área, segmento, tipo, sistema operativo, ubicación, propietario y criticidad, y relacionar cada equipo con sus eventos. \\
+RF10 & Importar equipos de forma masiva desde archivos JSON, YAML, XML, XLSX y CSV, con plantilla y modo de verificación previa (simulación). \\
+RF11 & Gestionar reglas de tráfico por equipo, grupo o segmento, puerto, protocolo y destino, con acciones de permitir, bloquear, alertar o limitar, y con prioridad y vigencia. \\
+RF12 & Incluir recomendaciones de mitigación y prevención en el informe de incidentes y en la notificación, según el tipo de ataque y los servicios del equipo afectado. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Los requisitos no funcionales, presentados en la Tabla~\ref{tbl:rnf}, establecen las condiciones de calidad y las restricciones que debe respetar la solución en materia de seguridad, desempeño, modularidad, reproducibilidad, licenciamiento, no intrusión y recursos de cómputo. Entre ellos destaca la no intrusión (RNF6): la plataforma opera sin alterar las políticas ya instaladas en la red del Centro de Datos, y solo aplica reglas sobre tráfico productivo con la autorización escrita del cliente.
+
+\begin{table}[H]
+\centering
+\footnotesize
+\renewcommand{\arraystretch}{1.2}
+\caption{{\fontsize{11pt}{13}\selectfont Requisitos no funcionales}}
+\label{tbl:rnf}
+\begin{tabular}{@{}L{1.3cm}L{3.2cm}L{9.4cm}@{}}
+\toprule
+\textbf{ID} & \textbf{Atributo} & \textbf{Requisito} \\
+\midrule
+RNF1 & Seguridad & Contraseñas almacenadas solo como hash, sesiones firmadas, secretos fuera del repositorio y permisos verificados en el backend, no solo ocultos en la interfaz. \\
+RNF2 & Desempeño & Detección y mitigación dentro de los tiempos de aceptación de la Sección~\ref{sec:variables}, sin degradar de forma apreciable el tráfico legítimo. \\
+RNF3 & Modularidad & Componentes desacoplados que se reinician de forma independiente y se comunican mediante interfaces documentadas. \\
+RNF4 & Reproducibilidad & Instalación automatizada, versiones de dependencias fijadas y escenario de red declarativo. \\
+RNF5 & Licenciamiento & Uso exclusivo de software de código abierto o sin costo de licencia. \\
+RNF6 & No intrusión & No modificar las políticas ni las listas de control de acceso ya instaladas en el Centro de Datos; aplicar reglas sobre tráfico productivo solo con autorización escrita del cliente. \\
+RNF7 & Recursos & Ejecutarse en un servidor de 2 vCPU, 16~GB de RAM y 500~GB de almacenamiento. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ---------------------------------------------------------------------------
+\section{Selección de tecnologías}
+\label{sec:alternativas}
+
+La plataforma se construye exclusivamente con software de código abierto. Para cada componente crítico se evaluaron alternativas conforme a tres criterios: su adecuación a la función requerida, su facilidad de integración con el resto de la plataforma y el esfuerzo que supone su despliegue y operación. La Tabla~\ref{tbl:alternativas} resume las alternativas consideradas y la decisión adoptada, que se justifica en las subsecciones siguientes. El modelo de detección se trata aparte, pues el proyecto adopta LightGBM como único modelo de inteligencia artificial.
+
+\begin{table}[H]
+\centering
+\footnotesize
+\renewcommand{\arraystretch}{1.2}
+\caption{{\fontsize{11pt}{13}\selectfont Alternativas tecnológicas evaluadas y decisión adoptada}}
+\label{tbl:alternativas}
+\begin{tabular}{@{}L{2.7cm}L{4.8cm}L{4.1cm}L{3.2cm}@{}}
+\toprule
+\textbf{Componente} & \textbf{Alternativas consideradas} & \textbf{Criterio determinante} & \textbf{Decisión} \\
+\midrule
+Sensor de tráfico & Scapy; Zeek; Suricata & Control total sobre las características de flujo que consume el modelo & Scapy \\
+Controlador SDN & Ryu; ONOS; OpenDaylight & Integración con Python y OpenFlow 1.3, y simplicidad de despliegue & Ryu \\
+Registro auditable & Encadenamiento de hashes local; cadena de bloques (Solana) & Evidencia verificable fuera de la base de datos operativa & Solana (programa Memo), junto con MongoDB \\
+Entorno de pruebas & VNX con LXC; Mininet & Hosts completos y escenario declarativo reproducible & VNX con LXC y Open vSwitch \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Sensor de tráfico}
+
+Zeek y Suricata son herramientas consolidadas de monitorización de redes: la primera genera registros de conexión y eventos mediante scripts \parencite{paxson1999,zeekdocs}, y la segunda aplica reglas de detección por firmas \parencite{suricata}. Sin embargo, ninguna entrega de forma nativa el conjunto de 78 características de flujo con el que se entrena el modelo, por lo que sería necesario desarrollar un extractor adicional. Scapy, en cambio, es una biblioteca de Python para el análisis de paquetes \parencite{scapydocs} que permite construir ese extractor directamente, calcular las características según las definiciones de CICFlowMeter \parencite{lashkari2017} y mantener un único componente de captura y análisis. Su principal limitación es el rendimiento ante tráfico muy elevado, razón por la cual el consumo de recursos del sensor se incluye entre las variables medidas. Zeek y Suricata quedan como complementos posibles para trabajo futuro.
+
+\subsection{Modelo de detección}
+
+Para la capa de análisis se adopta LightGBM, una implementación eficiente de \emph{gradient boosting} sobre árboles de decisión \parencite{lightgbm2017}. La elección responde a tres razones. En primer lugar, el problema es de clasificación sobre datos tabulares, las características estadísticas de cada flujo, ámbito en el que los métodos basados en árboles son frecuentes en la literatura sobre detección de intrusiones \parencite{buczak2016,khraisat2019}. En segundo lugar, un clasificador supervisado multiclase no solo detecta la anomalía, sino que identifica el tipo de ataque, información indispensable para las notificaciones, las recomendaciones y el registro del incidente (RF2, RF8 y RF12). En tercer lugar, su entrenamiento basado en histogramas permite trabajar con más de un millón de flujos con un consumo de recursos moderado y produce un modelo compacto que se carga directamente en el motor de detección. El diseño del módulo se describe en la Sección~\ref{sec:ia}.
+
+\subsection{Controlador y conmutador SDN}
+
+Ryu es un marco de código abierto escrito en Python, basado en componentes, que soporta OpenFlow 1.3 y ofrece una interfaz REST sencilla de extender \parencite{kubo2014ryu,ryudocs}. ONOS y OpenDaylight son plataformas en Java orientadas a despliegues de mayor escala, con arquitecturas distribuidas y modulares, pero con una complejidad de instalación y operación superior a la que requiere un segmento de laboratorio \parencite{berde2014onos,khattak2014odl,bondkovskii2016}. Dado que el backend y el motor de detección están escritos en Python, Ryu permite compartir lenguaje y dependencias. Como conmutador se emplea Open vSwitch, que implementa OpenFlow sobre entornos virtualizados \parencite{openvswitch2015,mckeown2008openflow}.
+
+\subsection{Registro auditable}
+
+Un encadenamiento de hashes mantenido por la propia plataforma es sencillo, pero su confiabilidad depende de quien custodia el archivo. Una cadena de bloques, en cambio, ofrece un libro mayor de solo adición verificable por terceros \parencite{nakamoto2008}. Se seleccionó Solana por la baja latencia de confirmación de sus transacciones \parencite{solanawp} y por su programa Memo, que permite escribir un texto arbitrario en el libro mayor sin desarrollar un contrato inteligente. Cada alerta se almacena además en MongoDB, que constituye la fuente operativa de consulta, de modo que la cadena de bloques actúa como respaldo verificable de la evidencia.
+
+\subsection{Entorno de pruebas}
+
+Mininet es una herramienta difundida para emular redes SDN en la que los hosts son procesos aislados \parencite{lantz2010}. VNX, por su parte, permite describir el escenario completo en un archivo XML y desplegarlo con contenedores LXC \parencite{vnxdocs}, de modo que cada host es un sistema Ubuntu completo en el que se ejecutan las herramientas reales de ataque. Se eligió VNX por la reproducibilidad del escenario y por la fidelidad de los hosts, integrado con Open vSwitch como conmutador SDN.
+
+% ---------------------------------------------------------------------------
+\section{Arquitectura de la solución}
+\label{sec:arquitectura}
+
+La arquitectura de la plataforma es modular y se organiza en capas funcionales con responsabilidades diferenciadas, de modo que cada componente puede desarrollarse, probarse y reiniciarse de forma independiente (RNF3). En esta sección se presenta su estructura general, las capas que la componen y la secuencia con la que una amenaza detectada se convierte en una acción de mitigación y en un registro visible para el operador.
+
+\subsection{Visión general}
+
+La plataforma se despliega en un servidor dedicado conectado al switch del Centro de Datos. El switch replica el tráfico del segmento hacia el servidor mediante un puerto espejo (\emph{port mirroring}), de modo que el análisis se realiza sobre una copia del tráfico y sin interponerse en la ruta de los datos. Sobre esa copia opera la cadena de detección, y la respuesta se aplica en el segmento SDN a través del controlador. La Figura~\ref{fig:arquitectura} ilustra este despliegue y distingue la infraestructura existente del cliente --usuarios, enrutador, switch y servidores-- de los componentes de CyberDefense AI.
+
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.95\linewidth]{recursos/Ciberdefense_despues_diagrama.pdf}
     \caption{Arquitectura general de la plataforma de ciberseguridad propuesta.}
     \label{fig:arquitectura}
 \end{figure}
 
+\subsection{Capas funcionales}
+
+La solución se estructura en cuatro capas funcionales alrededor de un núcleo de integración:
+
 \begin{description}
-    \item[Capa de percepci\'on.] Captura el tr\'afico de red mediante un puerto espejo (port mirroring) en el switch del Centro de Datos. El tr\'afico es analizado por herramientas de detecci\'on (Zeek \parencite{paxson1999,zeekdocs} y Suricata \parencite{suricata}) que identifican actividades sospechosas y las envían al modelo de inteligencia artificial para su clasificaci\'on.
-    \item[Capa de an\'alisis.] Procesa las caracter\'isticas extraídas del tr\'afico mediante el modelo LightGBM \parencite{lightgbm2017} para detectar anomalías y amenazas. Los eventos detectados se envían al backend (FastAPI) que los almacena en MongoDB junto con sus alertas y logs asociados.
-    \item[Capa de control.] El controlador Ryu \parencite{kubo2014ryu,ryudocs}, ejecutando OpenFlow 1.3 \parencite{mckeown2008openflow}, gestiona el switch virtual (Open vSwitch \parencite{openvswitch2015}) del segmento SDN. Recibe instrucciones del backend para insertar, modificar o eliminar reglas de flujo dinámicamente, permitiendo la mitigaci\'on automática de amenazas detectadas.
-    \item[Capa de presentaci\'on.] Interfaz web desarrollada en React que centraliza la visualizaci\'on del estado de la red, los eventos de seguridad y las acciones de mitigaci\'on ejecutadas. Incluye el tablero de monitoreo, el panel de administración y el acceso a los registros de eventos.
-    \item[Capa de comunicaci\'on.] Conecta los diferentes componentes mediante APIs REST y WebSockets. El backend expone endpoints para el frontend, el motor de IA y el controlador, permitiendo el intercambio de eventos de seguridad y comandos de mitigaci\'on en tiempo real.
+    \item[Capa de percepción.] Captura el tráfico, lo agrupa en flujos y calcula sus características mediante Scapy. En el laboratorio, el sensor captura directamente en la interfaz del switch virtual, mientras que en el Centro de Datos recibe la copia del tráfico entregada por el puerto espejo.
+    \item[Capa de análisis.] El modelo LightGBM clasifica cada flujo y asigna una confianza a la clase predicha. Cuando la clase es distinta de benigna y la confianza supera el umbral configurado, el motor genera una alerta (Sección~\ref{sec:ia}).
+    \item[Capa de control.] El controlador Ryu, con OpenFlow 1.3, gestiona el switch virtual Open vSwitch del segmento SDN y recibe del motor de detección las órdenes de bloqueo, que traduce en reglas de flujo.
+    \item[Capa de presentación.] Un panel web desarrollado en React centraliza el estado de la red, los eventos de seguridad, la gestión de usuarios y la configuración del sistema.
+    \item[Núcleo de integración y registro.] El backend, desarrollado en FastAPI, recibe las alertas del motor, las persiste en MongoDB, las registra en Solana, envía las notificaciones y expone la información al panel mediante una API REST. La consola de los hosts utiliza WebSockets.
 \end{description}
 
-La validaci\'on se realiza en un entorno virtual que reproduce la topolog\'ia del escenario del cliente: tres m\'aquinas virtuales con roles diferenciados (atacante, servidor de aplicaci\'on y servidor de datos) conectadas a un switch virtual programable, gobernado por un controlador de red. Sobre este escenario se reproducen t\'ecnicas de ataque de reconocimiento, fuerza bruta y denegaci\'on de servicio, midiendo la capacidad de detecci\'on, el tiempo de respuesta y la efectividad de la mitigaci\'on.
+\subsection{Flujo de una alerta}
 
-\section{Evaluaci\'on de Riesgos}
-% --- PENDIENTE: comparar alternativas tecnológicas y evaluar riesgos ---
+La Figura~\ref{fig:flujoAlerta} detalla la secuencia de mensajes desde que se captura el tráfico hasta que la alerta es visible para el operador. El motor de detección agrupa los paquetes en flujos y extrae sus 78 características (pasos 1 y 2). Si el modelo clasifica el flujo como ataque con confianza suficiente (paso 3), el motor ordena a Ryu el bloqueo del atacante (paso 4) y notifica al backend (paso 5). El backend guarda la alerta (paso 6) y, de forma asíncrona, envía el correo a los operadores (paso 7) y registra la evidencia en Solana (pasos 8 a 10), sin demorar la respuesta al motor. Finalmente, el panel consulta la API de forma periódica con su token de sesión (pasos 11 y 12).
 
-\section{Resultados}
-% --- PENDIENTE: presentar los resultados experimentales obtenidos ---
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{recursos/fig_flujo_alerta.pdf}
+    \caption{Secuencia de una alerta: captura, clasificación, mitigación, registro y visualización.}
+    \label{fig:flujoAlerta}
+\end{figure}
 
-\section{Conclusiones y Líneas Futuras}
-% --- PENDIENTE: ver cap04.tex (CONCLUSIONES Y LÍNEAS FUTURAS) ---
+% ---------------------------------------------------------------------------
+\section{Mecanismos de control, seguridad y registro}
+\label{sec:mecanismos}
+
+Sobre la arquitectura descrita operan cuatro mecanismos cuyo diseño condiciona el comportamiento de la plataforma: la mitigación sobre el plano de datos, el control de acceso, la notificación al equipo de soporte y el registro auditable de los incidentes.
+
+\subsection{Mitigación mediante reglas de flujo}
+
+El switch opera en modo \texttt{secure} y con OpenFlow 1.3. Al conectarse el switch, Ryu instala una regla de menor prioridad que envía al controlador los paquetes sin coincidencia, y actúa como conmutador de aprendizaje de direcciones MAC mediante reglas de prioridad 1. Para mitigar una amenaza, el motor de detección invoca la interfaz REST del controlador (\texttt{POST /ips/block}) con la dirección IP del atacante. El controlador instala entonces, en todos los switches registrados, una regla de prioridad 100 que coincide con el tráfico IPv4 cuyo origen es esa dirección y que no tiene acciones, por lo que los paquetes se descartan en el plano de datos. La prioridad superior garantiza que la regla de bloqueo prevalezca sobre las de reenvío. El bloqueo permanece hasta que un operador limpia el switch desde el panel, operación que elimina las reglas de flujo y reinicia el controlador.
+
+El gestor de reglas de tráfico previsto en los requisitos generaliza este mecanismo. Las políticas por equipo, grupo o segmento, con puerto, protocolo y destino, y con acciones de permitir, bloquear, alertar o limitar, se traducen en reglas OpenFlow aplicadas por el mismo controlador. Su aplicación sobre tráfico productivo queda condicionada a la autorización escrita del cliente (RNF6).
+
+\subsection{Autenticación y control de acceso}
+
+Las cuentas de usuario se almacenan en MongoDB con la contraseña protegida mediante bcrypt. La sesión se mantiene con un token JWT firmado (HS256) de 12 horas de vigencia. Existen dos roles: el operador, con acceso de lectura al sistema y a la consola de hosts, y el administrador, que además gestiona usuarios, parámetros globales y el borrado de registros. Las restricciones se aplican en el backend, que responde con el código 403 ante cualquier acceso no permitido, y no únicamente en la interfaz. El motor de detección, por su parte, no utiliza una cuenta de usuario, sino una clave compartida con el backend (\texttt{X-API-Key}). Los secretos --clave de firma, clave del motor y credenciales del servidor de correo-- se guardan en archivos locales fuera del control de versiones (RNF1).
+
+\subsection{Notificación al equipo de soporte}
+
+El backend envía cada alerta por correo electrónico a las cuentas activas con rol de operador o administrador que tengan una dirección registrada. La severidad se deriva de la confianza del modelo: crítica (≥ 90), alta (≥ 75), media (≥ 50) y baja en los demás casos, y el administrador define la severidad mínima que genera aviso. Para evitar la saturación del equipo, cada alerta se resume en una huella SHA-256 construida con su tipo, atacante, víctima, puerto y acción dentro de una ventana de tiempo, y solo se envía un correo por huella. Las alertas repetidas siguen almacenándose y mostrándose en el panel. Las pruebas del módulo emplean datos sintéticos identificados como simulación, de modo que no generan alertas reales.
+
+\subsection{Registro auditable}
+
+Por cada alerta se escribe en Solana una transacción del programa Memo con el texto \texttt{AUDIT\_IPS} seguido del tipo de ataque, el atacante, la víctima, la confianza, la acción y la fecha. La firma de la transacción se guarda en MongoDB en cuanto el validador la acepta, con estado \texttt{pending}, y la confirmación posterior la actualiza a \texttt{confirmed} o \texttt{unconfirmed}. De esta forma nunca se pierde una firma válida aunque la confirmación se demore. El envío se reintenta hasta cinco veces con una espera creciente para tolerar el arranque del validador.
+
+% ---------------------------------------------------------------------------
+\section{Modelo de base de datos}
+\label{sec:bd}
+
+La persistencia se resuelve con MongoDB, una base de datos orientada a documentos. Esta elección se justifica porque las alertas son registros autocontenidos y de estructura evolutiva --por ejemplo, el estado de la notificación y el de la confirmación en la cadena de bloques se añaden después de crear el registro-- y porque ofrece índices con expiración automática (TTL), utilizados para la deduplicación de correos. El modelo, ilustrado en la Figura~\ref{fig:modeloBD}, se compone de cinco colecciones en la base \texttt{cyberdefense}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth,height=0.80\textheight,keepaspectratio]{recursos/fig_modelo_bd.pdf}
+    \caption{Modelo de datos de la plataforma: colecciones, campos y relaciones lógicas.}
+    \label{fig:modeloBD}
+\end{figure}
+
+\begin{itemize}
+    \item \textbf{\texttt{alerts}.} Almacena cada evento de seguridad con el tipo de ataque, la confianza, el atacante, la víctima, el puerto, la acción ejecutada y la marca de tiempo, junto con el estado de la notificación por correo y la firma y el estado de confirmación del registro en Solana.
+    \item \textbf{\texttt{users}.} Contiene las cuentas del panel, con el nombre de usuario como identificador, el hash de la contraseña, el rol, el estado de la cuenta y el correo.
+    \item \textbf{\texttt{system\_status}.} Guarda el estado persistente del switch (bloqueado o no), que se actualiza cuando una alerta ejecuta una acción de bloqueo, de modo que no se infiere por tiempo.
+    \item \textbf{\texttt{system\_config}.} Reúne los parámetros globales compartidos por todos los usuarios, como el intervalo de actualización y los componentes visibles del panel.
+    \item \textbf{\texttt{email\_notification\_dedup}.} Almacena las huellas de las notificaciones enviadas, con un índice TTL que las elimina al vencer la ventana de deduplicación.
+\end{itemize}
+
+Las relaciones entre colecciones son lógicas, pues MongoDB no impone claves foráneas. Los usuarios activos con correo registrado son los destinatarios de las notificaciones de cada alerta; una alerta con acción de bloqueo actualiza el estado del switch; la huella de la alerta determina si se envía el correo; y la firma guardada en la alerta referencia la transacción en Solana. El modelo corresponde al núcleo de la plataforma. Los módulos de inventario de activos, reglas de tráfico y recomendaciones ampliarán la base con colecciones propias, cuyos campos son los definidos en los requisitos RF9 a RF12, y se relacionarán con las alertas a través de la dirección IP del equipo.
+
+% ---------------------------------------------------------------------------
+\section{Diseño del módulo de inteligencia artificial}
+\label{sec:ia}
+
+El módulo de inteligencia artificial se basa en un único modelo, LightGBM, entrenado con tráfico etiquetado de ataques y de actividad legítima. La Figura~\ref{fig:pipelineIA} resume el proceso completo, desde la preparación de los datos hasta la evaluación del modelo, que se detalla en las subsecciones siguientes. El script de entrenamiento se incluye en el Apéndice~\ref{app:entrenamiento}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth,height=0.80\textheight,keepaspectratio]{recursos/fig_pipeline_ia.pdf}
+    \caption{Proceso de preparación de datos, entrenamiento y evaluación del modelo de detección.}
+    \label{fig:pipelineIA}
+\end{figure}
+
+\subsection{Conjuntos de datos}
+
+El modelo se entrena con CIC-IDS2017 \parencite{sharafaldin2018}, un conjunto público de tráfico de red que contiene flujos benignos y flujos de ataques generados en un entorno controlado, descritos mediante 78 características estadísticas calculadas con CICFlowMeter \parencite{lashkari2017}. Algunas clases de ataque cuentan con muy pocas muestras en este conjunto, lo que impide entrenarlas y evaluarlas de manera adecuada. Por ello se refuerzan las clases \emph{Bot}, \emph{Infiltration}, \emph{XSS} y \emph{SQL Injection} con flujos de CIC-IDS2018, perteneciente a la misma familia de conjuntos. El conjunto integrado comprende 14 clases: BENIGN, Bot, DDoS, DoS GoldenEye, DoS Hulk, DoS Slowhttptest, DoS slowloris, FTP-Patator, Infiltration, PortScan, SQL Injection, SSH-Patator, Web Attack Brute Force y XSS.
+
+\subsection{Preprocesamiento e integración}
+
+El preprocesamiento comprende cuatro operaciones. En primer lugar, se elimina la clase Heartbleed por no contar con muestras suficientes. En segundo lugar, se descarta la columna duplicada \texttt{Fwd Header Length.1}, idéntica a \texttt{Fwd Header Length}, y se normalizan las etiquetas de las clases de ataques web. En tercer lugar, se homologan los nombres de las columnas de CIC-IDS2018 al esquema de CIC-IDS2017 y se descartan las columnas inexistentes en este último, de modo que ambos conjuntos compartan las mismas 78 características; el resultado es un conjunto de 2\,966\,190 flujos. Por último, los valores indefinidos de las tasas de bytes y de paquetes por segundo, que se producen en flujos de duración cero, se sustituyen por cero en lugar de eliminar las filas, para no perder muestras de clases minoritarias como Infiltration.
+
+\subsection{Partición y balanceo de clases}
+
+El conjunto integrado se divide de forma estratificada en 80\,\% para entrenamiento y 20\,\% para prueba (semilla 42), antes de cualquier balanceo. De este modo, el conjunto de prueba, de 593\,238 flujos, conserva la distribución real de las clases y ningún dato sintético contamina la evaluación. El desbalance es marcado: la clase BENIGN representa más del 76\,\% de la prueba, mientras que SQL Injection cuenta con 22 flujos.
+
+El balanceo se aplica únicamente al conjunto de entrenamiento y consta de tres pasos. Primero, un sobremuestreo con SMOTE \parencite{chawla2002} de las clases XSS y SQL Injection hasta 30\,000 muestras. Segundo, un submuestreo aleatorio de la clase BENIGN hasta 500\,000 flujos. Tercero, un segundo sobremuestreo de seis clases minoritarias (DoS GoldenEye, FTP-Patator, SSH-Patator, DoS slowloris, DoS Slowhttptest y Web Attack Brute Force) hasta 20\,000 muestras cada una. El resultado es un conjunto de entrenamiento de 1\,205\,562 flujos, que se baraja antes de entrenar.
+
+\subsection{Entrenamiento}
+
+Se entrena un clasificador LightGBM multiclase \parencite{lightgbm2017} con 300 árboles, una tasa de aprendizaje de 0,05, una profundidad máxima de 12, 128 hojas por árbol, un mínimo de 100 muestras por hoja y un submuestreo de filas y de columnas de 0,8, hiperparámetros orientados a regularizar el modelo. Para garantizar la reproducibilidad se fija la semilla y se entrena con un solo hilo. La configuración final se estableció tras más de treinta pruebas intermedias que variaron el tamaño del conjunto de entrenamiento (300\,000, 600\,000 y 1,2 millones de flujos), la ponderación por clase, la estrategia de remuestreo y parámetros de discretización, y que verificaron la reproducibilidad de los resultados. El modelo y el codificador de las 14 etiquetas se guardan como artefactos independientes para su carga en el motor de detección.
+
+\subsection{Evaluación del modelo}
+
+El modelo se evaluó sobre el conjunto de prueba sin balancear. La exactitud global (\emph{accuracy}) fue de 0,9978, y los promedios macro de precisión, exhaustividad y valor F1 fueron 0,93, 0,94 y 0,93, respectivamente (Tabla~\ref{tbl:metricasClase}). Dado que la clase BENIGN domina la prueba, la exactitud global es poco informativa por sí sola, y el valor F1 macro, que pondera por igual a todas las clases, es el indicador principal.
+
+\begin{table}[H]
+\centering
+\footnotesize
+\renewcommand{\arraystretch}{1.1}
+\caption{{\fontsize{11pt}{13}\selectfont Métricas del modelo por clase sobre el conjunto de prueba (593\,238 flujos)}}
+\label{tbl:metricasClase}
+\begin{tabular}{@{}L{5.2cm}rrrr@{}}
+\toprule
+\textbf{Clase} & \textbf{Precisión} & \textbf{Exhaustividad} & \textbf{F1} & \textbf{Soporte} \\
+\midrule
+BENIGN & 1,00 & 1,00 & 1,00 & 454\,264 \\
+Bot & 0,99 & 1,00 & 0,99 & 14\,000 \\
+DDoS & 1,00 & 1,00 & 1,00 & 25\,605 \\
+DoS GoldenEye & 1,00 & 1,00 & 1,00 & 2\,059 \\
+DoS Hulk & 1,00 & 1,00 & 1,00 & 46\,025 \\
+DoS Slowhttptest & 0,99 & 0,99 & 0,99 & 1\,100 \\
+DoS slowloris & 0,99 & 1,00 & 1,00 & 1\,159 \\
+FTP-Patator & 1,00 & 1,00 & 1,00 & 1\,587 \\
+Infiltration & 0,97 & 0,99 & 0,98 & 14\,000 \\
+PortScan & 0,99 & 1,00 & 1,00 & 31\,761 \\
+SQL Injection & 0,78 & 0,82 & 0,80 & 22 \\
+SSH-Patator & 1,00 & 1,00 & 1,00 & 1\,179 \\
+Web Attack Brute Force & 0,77 & 0,68 & 0,72 & 301 \\
+XSS & 0,53 & 0,64 & 0,58 & 176 \\
+\midrule
+Exactitud global & & & 1,00 & 593\,238 \\
+Promedio macro & 0,93 & 0,94 & 0,93 & 593\,238 \\
+Promedio ponderado & 1,00 & 1,00 & 1,00 & 593\,238 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+El desempeño es casi perfecto en las clases con soporte alto, entre ellas los ataques de denegación de servicio, el escaneo de puertos y la fuerza bruta de FTP y SSH. Las clases con menor desempeño son XSS, Web Attack Brute Force y SQL Injection, que cuentan con pocas muestras reales (176, 301 y 22) y cuyos flujos son similares entre sí por tratarse de ataques web sobre HTTP. Con un soporte tan reducido, sus métricas tienen una incertidumbre elevada y no deben interpretarse como un desempeño estable. Además, estas métricas corresponden a una validación \emph{offline}: se obtienen con datos de la misma distribución que los de entrenamiento y no reflejan el desempeño sobre el tráfico del laboratorio ni del Centro de Datos. Esa evaluación se realiza con las variables de la Sección~\ref{sec:variables} y se reporta en el Capítulo~3.
+
+\subsection{Política de decisión}
+
+En operación, el motor de detección agrupa los paquetes capturados en flujos identificados por su 5-tupla, calcula las 78 características de cada flujo siguiendo las definiciones de CICFlowMeter y obtiene del modelo la clase predicha y su confianza. Se genera una alerta cuando la clase es distinta de BENIGN y la confianza supera un umbral configurable. Este umbral controla el compromiso entre exhaustividad y falsos positivos: valores bajos detectan más ataques, pero aumentan las alertas sobre tráfico legítimo, y valores altos producen el efecto contrario. Por esa razón no se fija a priori, sino que se trata como una variable independiente del estudio y se calibra experimentalmente en el laboratorio (Sección~\ref{sec:experimental}).
+
+% ---------------------------------------------------------------------------
+\section{Evaluación de riesgos}
+\label{sec:riesgos}
+
+Se identificaron los riesgos técnicos y operativos del proyecto y se estimó, para cada uno, su probabilidad de ocurrencia y su impacto en una escala cualitativa de tres niveles: baja, media y alta. La Tabla~\ref{tbl:riesgos} presenta la matriz resultante junto con las medidas de mitigación previstas. Los riesgos de mayor probabilidad --el desajuste entre los datos de entrenamiento y el tráfico real, y la baja confiabilidad en las clases con pocas muestras-- son inherentes al uso de conjuntos de datos públicos, y por ello la evaluación experimental se diseñó para contrastar el modelo con tráfico propio del laboratorio.
+
+\begin{table}[H]
+\centering
+\footnotesize
+\renewcommand{\arraystretch}{1.15}
+\setlength{\tabcolsep}{3.5pt}
+\caption{{\fontsize{11pt}{13}\selectfont Matriz de riesgos del proyecto}}
+\label{tbl:riesgos}
+\begin{tabular}{@{}L{0.9cm}L{4.4cm}L{1.3cm}L{1.3cm}L{7.2cm}@{}}
+\toprule
+\textbf{ID} & \textbf{Riesgo} & \textbf{Prob.} & \textbf{Impacto} & \textbf{Mitigación} \\
+\midrule
+R1 & Falsos positivos que bloquean tráfico legítimo & Media & Alto & Umbral de confianza ajustable, calibrado en laboratorio; limpieza del bloqueo desde el panel; pruebas solo en segmentos autorizados. \\
+R2 & Desajuste entre el conjunto de entrenamiento y el tráfico real (deriva) & Alta & Alto & Evaluación en el laboratorio con tráfico propio, informe separado de métricas \emph{offline} y en operación, y reentrenamiento como línea futura. \\
+R3 & Falla del controlador: con el switch en modo \texttt{secure} no se reenvían flujos nuevos sin él & Media & Alto & Servicios con reinicio independiente, supervisión del estado del controlador y alta disponibilidad como línea futura. \\
+R4 & Reglas de bloqueo sin expiración que persisten tras la amenaza & Media & Medio & Limpieza manual desde el panel; vigencia configurable en el gestor de reglas. \\
+R5 & Detección poco confiable en clases con pocas muestras (XSS, SQL Injection, Web Attack Brute Force) & Alta & Medio & Reportar las métricas por clase, no basar conclusiones en ellas y ampliar los datos como línea futura. \\
+R6 & Tráfico cifrado, que reduce la visibilidad del contenido & Media & Medio & Las características son estadísticas del flujo y no dependen del contenido; la optimización para tráfico cifrado queda fuera del alcance. \\
+R7 & Sensor en Python con rendimiento limitado ante tráfico elevado & Media & Medio & Medición del consumo de recursos y de la pérdida de paquetes; límites de carga declarados. \\
+R8 & Exposición de credenciales o secretos & Baja & Alto & Hash bcrypt, tokens firmados, roles verificados en el backend, secretos fuera del repositorio con permisos restringidos. \\
+R9 & Uso indebido de la consola de hosts & Baja & Alto & Acceso solo con sesión válida, filtro de comandos y reglas de \texttt{sudo} acotadas. \\
+R10 & Registro en un validador local de pruebas, con inmutabilidad limitada frente a una red pública & Media & Bajo & Documentar la limitación; usar una red con múltiples validadores como línea futura. \\
+R11 & Saturación del equipo de soporte por notificaciones repetidas & Media & Bajo & Deduplicación por huella, severidad mínima configurable. \\
+R12 & Pruebas de ataque fuera del alcance autorizado & Baja & Alto & Escenario virtual aislado, autorización escrita y ventanas acordadas con el cliente. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ---------------------------------------------------------------------------
+\section{Variables de estudio}
+\label{sec:variables}
+
+Las variables se definen en función del objetivo específico de evaluación del proyecto. Se distingue entre las variables independientes, que el equipo controla, y las variables dependientes, que se miden y se comparan con un criterio de aceptación. Estas últimas se agrupan en tres familias: las del modelo de inteligencia artificial, las del sistema y las de satisfacción del usuario, de acuerdo con las dimensiones de eficacia, eficiencia y satisfacción que la norma ISO~9241-11 establece para evaluar la usabilidad de un sistema \parencite{iso9241}.
+
+\subsection{Variables independientes}
+
+Las variables independientes, resumidas en la Tabla~\ref{tbl:varIndep}, son los factores que se modifican de manera deliberada en los experimentos para observar su efecto sobre el desempeño de la plataforma.
+
+\begin{table}[H]
+\centering
+\footnotesize
+\renewcommand{\arraystretch}{1.2}
+\caption{{\fontsize{11pt}{13}\selectfont Variables independientes}}
+\label{tbl:varIndep}
+\begin{tabular}{@{}L{3.6cm}L{7.4cm}L{4.5cm}@{}}
+\toprule
+\textbf{Variable} & \textbf{Niveles} & \textbf{Propósito} \\
+\midrule
+Tipo de ataque & Reconocimiento (nmap), fuerza bruta SSH (hydra), DoS volumétrico (hping3) y DoS lento de aplicación (slowhttptest). & Cubrir las técnicas del alcance. \\
+Intensidad del ataque & Baja, media y alta (paquetes por segundo o conexiones simultáneas). & Observar la respuesta ante distintas cargas. \\
+Tráfico legítimo de fondo & Sin carga y con carga moderada (\emph{ping}, HTTP e iperf3). & Medir falsos positivos e impacto. \\
+Umbral de confianza & Tres valores: 0,50, 0,70 y 0,90. & Calibrar el compromiso entre detección y falsos positivos. \\
+Mitigación & Desactivada y activada. & Aislar el efecto de la respuesta automática. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Variables dependientes del modelo de inteligencia artificial}
+
+Estas variables se calculan sobre el conjunto de prueba y caracterizan la capacidad de clasificación del modelo de forma independiente del resto del sistema (Tabla~\ref{tbl:varModelo}). La mayoría cuenta ya con valores preliminares (Tabla~\ref{tbl:metricasClase}); la tasa de falsos positivos, la matriz de confusión y el área bajo la curva ROC se calcularán con el mismo modelo en la evaluación final.
+
+\begin{table}[H]
+\centering
+\footnotesize
+\renewcommand{\arraystretch}{1.2}
+\caption{{\fontsize{11pt}{13}\selectfont Variables dependientes del modelo de IA y criterios de aceptación}}
+\label{tbl:varModelo}
+\begin{tabular}{@{}L{3.5cm}L{6.3cm}L{1.4cm}L{3.7cm}@{}}
+\toprule
+\textbf{Variable} & \textbf{Definición operacional} & \textbf{Unidad} & \textbf{Meta} \\
+\midrule
+Exactitud global & Flujos bien clasificados sobre el total de la prueba. & 0--1 & ≥ 0,99 \\
+Valor F1 macro & Promedio no ponderado del F1 de las 14 clases. & 0--1 & ≥ 0,90 \\
+F1 por clase & F1 de cada clase; se exige a las de soporte mayor a 1\,000 y se reporta en las demás. & 0--1 & ≥ 0,95 (soporte >1\,000); ≥ 0,50 (resto) \\
+Tasa de falsos positivos & Flujos BENIGN clasificados como ataque sobre el total de BENIGN. & \% & ≤ 1 \\
+Área bajo la curva ROC & Promedio uno contra todos entre clases. & 0--1 & ≥ 0,95 \\
+Tiempo de inferencia & Tiempo de clasificación de un flujo. & ms & ≤ 50 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Variables dependientes del sistema}
+
+Las variables del sistema se miden en el laboratorio sobre el prototipo completo y reflejan su desempeño como solución de ciberdefensa (Tabla~\ref{tbl:varSistema}). Las marcas de tiempo del lanzamiento del ataque, de la alerta y de la instalación de la regla se obtienen del mismo servidor, que aloja los contenedores, por lo que comparten reloj.
+
+\begin{table}[H]
+\centering
+\footnotesize
+\renewcommand{\arraystretch}{1.15}
+\setlength{\tabcolsep}{3.5pt}
+\caption{{\fontsize{11pt}{13}\selectfont Variables dependientes del sistema y criterios de aceptación}}
+\label{tbl:varSistema}
+\begin{tabular}{@{}L{2.9cm}L{5.2cm}L{3.9cm}L{2.9cm}@{}}
+\toprule
+\textbf{Variable} & \textbf{Definición operacional} & \textbf{Instrumento} & \textbf{Meta} \\
+\midrule
+Tasa de detección & Ataques con al menos una alerta atribuida a la IP del atacante, sobre los ataques lanzados, por escenario. & Registro de corridas y colección \texttt{alerts}. & ≥ 80\,\% en cada escenario \\
+Tiempo de detección & Instante de la primera alerta menos el inicio del ataque. & Marca de tiempo del lanzador y campo \texttt{timestamp} de la alerta. & ≤ 30~s \\
+Tiempo de mitigación & Instante en que la regla DROP aparece en el switch menos el instante de la alerta. & \texttt{ovs-ofctl dump-flows} y marca de la alerta. & ≤ 2~s \\
+Efectividad de mitigación & Porcentaje de paquetes del atacante descartados tras instalarse la regla. & Contadores de la regla de flujo y captura en la víctima. & ≥ 95\,\% \\
+Falsos positivos en operación & Alertas generadas por tráfico legítimo por hora. & Escenario de línea base y colección \texttt{alerts}. & ≤ 1 por hora \\
+Impacto en el tráfico legítimo & Variación porcentual de la latencia (RTT) y del caudal entre la línea base y la operación con el sistema activo. & ping e iperf3. & ≤ 10\,\% \\
+Consumo de recursos & Uso medio y máximo de CPU y memoria del motor de IA, el backend y el controlador. & Monitoreo del sistema (psutil, top). & CPU ≤ 70\,\% y memoria ≤ 8~GB \\
+Notificación por correo & Tiempo entre la alerta y la recepción del correo, y correos duplicados por huella. & Marcas del backend y buzón de prueba. & ≤ 60~s en ≥ 95\,\% de las alertas elegibles; sin duplicados \\
+Registro auditable & Transacciones confirmadas sobre las enviadas y tiempo de confirmación. & Campo \texttt{blockchain\_status} y registros del validador. & ≥ 95\,\% y ≤ 10~s \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Variables de satisfacción del usuario}
+
+La satisfacción de los usuarios se mide con la encuesta descrita en la Sección~\ref{sec:satisfaccion}, cuyos indicadores se resumen en la Tabla~\ref{tbl:varSatisf}.
+
+\begin{table}[H]
+\centering
+\footnotesize
+\renewcommand{\arraystretch}{1.2}
+\caption{{\fontsize{11pt}{13}\selectfont Variables de satisfacción del usuario y criterios de aceptación}}
+\label{tbl:varSatisf}
+\begin{tabular}{@{}L{3.4cm}L{6.0cm}L{1.8cm}L{3.6cm}@{}}
+\toprule
+\textbf{Variable} & \textbf{Definición operacional} & \textbf{Unidad} & \textbf{Meta} \\
+\midrule
+Usabilidad global (SUS) & Puntaje de la escala SUS \parencite{brooke1996}. & 0--100 & ≥ 70 \\
+Valoración por dimensión & Media de los ítems del cuestionario complementario, por dimensión (Likert 1--5). & 1--5 & Media ≥ 4,0 \\
+Aceptación & Proporción de respuestas de 4 o 5 en los ítems complementarios. & \% & ≥ 70\,\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Criterios de aceptación}
+
+Las metas de las tablas anteriores son criterios de aceptación establecidos por el equipo del proyecto a partir de los resultados preliminares del modelo y del alcance del prototipo. No pretenden constituir estándares de la industria y podrán ajustarse con el cliente y el tutor. Su cumplimiento se verifica en el Capítulo~3. La Tabla~\ref{tbl:trazabilidad} relaciona los objetivos específicos del proyecto con la evidencia que los respalda.
+
+\begin{table}[H]
+\centering
+\footnotesize
+\renewcommand{\arraystretch}{1.2}
+\caption{{\fontsize{11pt}{13}\selectfont Trazabilidad entre objetivos específicos y evidencia}}
+\label{tbl:trazabilidad}
+\begin{tabular}{@{}L{4.6cm}L{7.2cm}L{3.7cm}@{}}
+\toprule
+\textbf{Objetivo específico} & \textbf{Evidencia} & \textbf{Dónde se presenta} \\
+\midrule
+OE1. Diseñar la arquitectura & Requisitos, arquitectura, modelo de datos y diseño del módulo de IA. & Capítulo~2 \\
+OE2. Implementar el prototipo & Cumplimiento de los requisitos funcionales y no funcionales; consumo de recursos. & Capítulo~3 \\
+OE3. Evaluar el desempeño & Variables del modelo, del sistema y de satisfacción frente a sus metas. & Capítulo~3 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ---------------------------------------------------------------------------
+\section{Diseño experimental}
+\label{sec:experimental}
+
+El experimento tiene por objeto medir el desempeño del prototipo completo frente a ataques reales y bajo condiciones controladas y repetibles. Esta sección describe el entorno de validación, los escenarios de prueba y el procedimiento que se sigue en cada corrida.
+
+\subsection{Entorno de validación}
+
+La validación se realiza en un laboratorio virtual que reproduce el segmento SDN del cliente, ilustrado en la Figura~\ref{fig:topologia}. VNX despliega tres contenedores LXC conectados al puente Open vSwitch \texttt{SDN\_Net}: dos servidores (\texttt{server1}, 192.168.1.10, de aplicación, y \texttt{server2}, 192.168.1.11, de datos) y un atacante (192.168.1.50) provisto de las herramientas nmap, hydra, hping3 y slowhttptest. El switch está gobernado por el controlador Ryu en el puerto 6653. Una segunda interfaz de cada host sale a Internet por una red NAT, únicamente para instalar herramientas, y el tráfico se captura en la interfaz del servidor de aplicación. El laboratorio permite repetir los ataques en condiciones controladas sin afectar a la red productiva.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth,height=0.84\textheight,keepaspectratio]{recursos/fig_topologia.pdf}
+    \caption{Topología del escenario de validación y relación entre los componentes de la plataforma.}
+    \label{fig:topologia}
+\end{figure}
+
+\subsection{Escenarios experimentales}
+
+Se definen cinco escenarios (Tabla~\ref{tbl:escenarios}): uno de línea base, sin ataques, y cuatro de ataque que corresponden a las técnicas del alcance.
+
+\begin{table}[H]
+\centering
+\footnotesize
+\renewcommand{\arraystretch}{1.2}
+\caption{{\fontsize{11pt}{13}\selectfont Escenarios experimentales}}
+\label{tbl:escenarios}
+\begin{tabular}{@{}L{1.0cm}L{3.6cm}L{6.4cm}L{4.2cm}@{}}
+\toprule
+\textbf{ID} & \textbf{Escenario} & \textbf{Descripción} & \textbf{Repeticiones} \\
+\midrule
+E0 & Línea base & Tráfico legítimo (ping, HTTP, iperf3) entre los hosts, sin ataques. & 3 corridas de 30 min por umbral \\
+E1 & Reconocimiento & Escaneo de puertos con nmap desde el atacante hacia los servidores. & 10 por combinación \\
+E2 & Fuerza bruta & Ataque de diccionario contra SSH con hydra. & 10 por combinación \\
+E3 & DoS volumétrico & Inundación de paquetes SYN con hping3. & 10 por combinación \\
+E4 & DoS de aplicación & Conexiones HTTP lentas con slowhttptest. & 10 por combinación \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Procedimiento y análisis de datos}
+
+Los escenarios E1 a E4 se ejecutan primero con la mitigación desactivada para los tres valores del umbral, de modo que el efecto sobre la detección se mida sin interferencia. Con el valor del umbral que ofrezca el mejor compromiso entre tasa de detección y falsos positivos se repiten con la mitigación activada, para medir su efectividad y su impacto sobre el tráfico legítimo. Cada corrida sigue el mismo procedimiento:
+\begin{enumerate}
+    \item Restablecer el estado: limpiar las reglas del switch y verificar que los servicios y la conectividad base funcionan.
+    \item Iniciar el monitoreo de recursos y el tráfico legítimo de fondo, según el escenario.
+    \item Lanzar el ataque y registrar la marca de tiempo de inicio.
+    \item Mantener la corrida durante una duración fija o hasta la mitigación, y registrar las marcas de la alerta y de la instalación de la regla, junto con los contadores del switch.
+    \item Detener el ataque, exportar los registros a un archivo estructurado y dejar el entorno limpio.
+\end{enumerate}
+
+Las variables continuas se resumen con la media, la desviación estándar y los valores mínimo y máximo, y las proporciones se informan junto con los conteos que las originan. El impacto sobre el tráfico legítimo se expresa como diferencia porcentual respecto de la línea base. Las pruebas se realizan exclusivamente en el escenario virtual aislado, con los ataques dirigidos solo a los hosts del laboratorio y bajo las condiciones y ventanas acordadas con el cliente.
+
+% ---------------------------------------------------------------------------
+\section{Evaluación de la satisfacción del usuario}
+\label{sec:satisfaccion}
+
+Además de las métricas técnicas, se valora la percepción de quienes usarán la plataforma mediante una encuesta. El instrumento combina dos partes. La primera es la escala SUS (\emph{System Usability Scale}), un cuestionario estandarizado de diez ítems que produce un puntaje de usabilidad de 0 a 100 \parencite{brooke1996}. La segunda es un cuestionario complementario propio, en escala de Likert de cinco puntos, que explora las siguientes dimensiones:
+\begin{itemize}
+    \item utilidad de las alertas y de la visibilidad de la red;
+    \item claridad y facilidad de uso del panel;
+    \item confianza en la detección y en la mitigación automática;
+    \item oportunidad y utilidad de las notificaciones por correo;
+    \item utilidad de las recomendaciones, del inventario y de las reglas de tráfico, en la medida en que estén implementados.
+\end{itemize}
+
+La encuesta se dirige a las personas del Centro de Datos de la FIEC que administran la red o brindan soporte de TI, incluido el contacto del cliente, mediante un muestreo intencional. Dado que se trata de un grupo reducido, el análisis es descriptivo --medias, desviaciones y distribución de las respuestas-- y no se plantean pruebas de inferencia estadística. Cada participante recibe una demostración guiada y realiza un conjunto breve de tareas en el panel, como consultar una alerta, revisar un bloqueo, limpiar el switch o revisar una notificación, antes de contestar el cuestionario. La participación es voluntaria y las respuestas son anónimas. El instrumento completo se incluirá en los apéndices una vez validado con el tutor.

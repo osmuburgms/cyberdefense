@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1170" height="1210" viewBox="0 0 1170 1210" font-family="Arial, 'Liberation Sans', Helvetica, sans-serif">
+<defs><marker id="m48566a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#48566a"/></marker><marker id="m48566as" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M10,0 L0,5 L10,10 z" fill="#48566a"/></marker><marker id="m2f8f5b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#2f8f5b"/></marker><marker id="m2f8f5bs" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M10,0 L0,5 L10,10 z" fill="#2f8f5b"/></marker><marker id="m2f6fb0" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#2f6fb0"/></marker><marker id="m2f6fb0s" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M10,0 L0,5 L10,10 z" fill="#2f6fb0"/></marker><marker id="mc9772b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#c9772b"/></marker><marker id="mc9772bs" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M10,0 L0,5 L10,10 z" fill="#c9772b"/></marker><marker id="mb04a4a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#b04a4a"/></marker><marker id="mb04a4as" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M10,0 L0,5 L10,10 z" fill="#b04a4a"/></marker><linearGradient id="g_blue" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e6effa"/><stop offset="1" stop-color="#c9dcf2"/></linearGradient><linearGradient id="g_green" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e7f5ec"/><stop offset="1" stop-color="#c6e6d2"/></linearGradient><linearGradient id="g_amber" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fdf3df"/><stop offset="1" stop-color="#f4dcaa"/></linearGradient><linearGradient id="g_gray" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eef1f5"/><stop offset="1" stop-color="#d5dbe4"/></linearGradient><linearGradient id="g_rose" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#faeaea"/><stop offset="1" stop-color="#efc9c9"/></linearGradient><linearGradient id="g_dark" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a4a5e"/><stop offset="1" stop-color="#26323f"/></linearGradient></defs>
+<rect width="1170" height="1210" fill="#ffffff"/>
+<rect x="43" y="34" width="520" height="246" rx="10" fill="#1b2533" opacity="0.10"/>
+<rect x="40" y="30" width="520" height="246" rx="10" fill="#ffffff" stroke="#48566a" stroke-width="1.4"/>
+<path d="M40,92 V40 Q40,30 50,30 H550 Q560,30 560,40 V92 Z" fill="url(#g_blue)" stroke="#48566a" stroke-width="1.4"/>
+<circle cx="76" cy="61" r="22" fill="#dce8f5" stroke="#48566a" stroke-width="1.3"/>
+<g transform="translate(76,61) scale(0.9166666666666666)"><ellipse cx="0" cy="-10" rx="12" ry="4.5" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M-12,-10 V10 A12,4.5 0 0 0 12,10 V-10 M-12,0 A12,4.5 0 0 0 12,0" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text x="112" y="68" font-size="19" font-weight="bold" font-style="normal" text-anchor="start" fill="#26323f">Fuentes de datos</text>
+<circle cx="530" cy="61" r="15" fill="#48566a"/>
+<text x="530" y="66" font-size="15" font-weight="bold" font-style="normal" text-anchor="middle" fill="#ffffff">1</text>
+<text x="64" y="134" font-size="17" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">CIC-IDS2017 (8 archivos CSV)</text>
+<text x="64" y="164" font-size="17" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">CIC-IDS2018, solo refuerzo de:</text>
+<text x="64" y="194" font-size="17" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">Bot, Infiltration, XSS,</text>
+<text x="64" y="224" font-size="17" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">SQL Injection</text>
+<rect x="613" y="34" width="520" height="246" rx="10" fill="#1b2533" opacity="0.10"/>
+<rect x="610" y="30" width="520" height="246" rx="10" fill="#ffffff" stroke="#48566a" stroke-width="1.4"/>
+<path d="M610,92 V40 Q610,30 620,30 H1120 Q1130,30 1130,40 V92 Z" fill="url(#g_blue)" stroke="#48566a" stroke-width="1.4"/>
+<circle cx="646" cy="61" r="22" fill="#dce8f5" stroke="#48566a" stroke-width="1.3"/>
+<g transform="translate(646,61) scale(0.9166666666666666)"><path d="M-13,-11 H13 L4,0 V11 L-4,8 V0 Z" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text x="682" y="68" font-size="19" font-weight="bold" font-style="normal" text-anchor="start" fill="#26323f">Limpieza</text>
+<circle cx="1100" cy="61" r="15" fill="#48566a"/>
+<text x="1100" y="66" font-size="15" font-weight="bold" font-style="normal" text-anchor="middle" fill="#ffffff">2</text>
+<text x="634" y="134" font-size="17" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">Elimina la clase Heartbleed</text>
+<text x="634" y="164" font-size="17" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">Quita la columna duplicada</text>
+<text x="634" y="194" font-size="17" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">(Fwd Header Length.1)</text>
+<text x="634" y="224" font-size="17" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">Normaliza etiquetas y nombres</text>
+<text x="634" y="254" font-size="17" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">NaN/Inf → 0 si duración = 0</text>
+<rect x="43" y="340" width="520" height="246" rx="10" fill="#1b2533" opacity="0.10"/>
+<rect x="40" y="336" width="520" height="246" rx="10" fill="#ffffff" stroke="#48566a" stroke-width="1.4"/>
+<path d="M40,398 V346 Q40,336 50,336 H550 Q560,336 560,346 V398 Z" fill="url(#g_blue)" stroke="#48566a" stroke-width="1.4"/>
+<circle cx="76" cy="367" r="22" fill="#dce8f5" stroke="#48566a" stroke-width="1.3"/>
+<g transform="translate(76,367) scale(0.9166666666666666)"><path d="M-13,-9 L-1,0 L-13,9 M-1,0 H13 M8,-5 L13,0 L8,5" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text x="112" y="374" font-size="19" font-weight="bold" font-style="normal" text-anchor="start" fill="#26323f">Integración</text>
+<circle cx="530" cy="367" r="15" fill="#48566a"/>
+<text x="530" y="372" font-size="15" font-weight="bold" font-style="normal" text-anchor="middle" fill="#ffffff">3</text>
+<text x="64" y="440" font-size="17" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">Homologa las columnas de 2018</text>
+<text x="64" y="470" font-size="17" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">al esquema de 2017</text>
+<text x="64" y="500" font-size="17" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">78 características</text>
+<text x="64" y="530" font-size="17" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">2 966 190 flujos · 14 clases</text>
+<rect x="613" y="340" width="520" height="246" rx="10" fill="#1b2533" opacity="0.10"/>
+<rect x="610" y="336" width="520" height="246" rx="10" fill="#ffffff" stroke="#48566a" stroke-width="1.4"/>
+<path d="M610,398 V346 Q610,336 620,336 H1120 Q1130,336 1130,346 V398 Z" fill="url(#g_blue)" stroke="#48566a" stroke-width="1.4"/>
+<circle cx="646" cy="367" r="22" fill="#dce8f5" stroke="#48566a" stroke-width="1.3"/>
+<g transform="translate(646,367) scale(0.9166666666666666)"><path d="M-13,0 H-1 M-1,0 L10,-9 M-1,0 L10,9 M5,-10 H10 V-5 M5,10 H10 V5" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text x="682" y="374" font-size="19" font-weight="bold" font-style="normal" text-anchor="start" fill="#26323f">Partición</text>
+<circle cx="1100" cy="367" r="15" fill="#48566a"/>
+<text x="1100" y="372" font-size="15" font-weight="bold" font-style="normal" text-anchor="middle" fill="#ffffff">4</text>
+<text x="634" y="440" font-size="17" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">Estratificada 80 % / 20 %</text>
+<text x="634" y="470" font-size="17" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">random_state = 42</text>
+<text x="634" y="500" font-size="17" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">Prueba: 593 238 flujos</text>
+<text x="634" y="530" font-size="17" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">sin balancear (distribución real)</text>
+<rect x="43" y="646" width="520" height="246" rx="10" fill="#1b2533" opacity="0.10"/>
+<rect x="40" y="642" width="520" height="246" rx="10" fill="#ffffff" stroke="#48566a" stroke-width="1.4"/>
+<path d="M40,704 V652 Q40,642 50,642 H550 Q560,642 560,652 V704 Z" fill="url(#g_green)" stroke="#48566a" stroke-width="1.4"/>
+<circle cx="76" cy="673" r="22" fill="#dff0e6" stroke="#48566a" stroke-width="1.3"/>
+<g transform="translate(76,673) scale(0.9166666666666666)"><path d="M0,-12 V12 M-6,12 H6 M-13,-7 H13 M-13,-7 V0 M13,-7 V0" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M-17,0 Q-13,6 -9,0 Z M9,0 Q13,6 17,0 Z" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text x="112" y="680" font-size="19" font-weight="bold" font-style="normal" text-anchor="start" fill="#26323f">Balanceo (solo entrenamiento)</text>
+<circle cx="530" cy="673" r="15" fill="#48566a"/>
+<text x="530" y="678" font-size="15" font-weight="bold" font-style="normal" text-anchor="middle" fill="#ffffff">5</text>
+<text x="64" y="746" font-size="17" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">SMOTE: XSS, SQL Injection → 30 000</text>
+<text x="64" y="776" font-size="17" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">Submuestreo de BENIGN → 500 000</text>
+<text x="64" y="806" font-size="17" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">SMOTE: 6 clases menores → 20 000</text>
+<text x="64" y="836" font-size="17" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">Entrenamiento: 1 205 562 flujos</text>
+<rect x="613" y="646" width="520" height="246" rx="10" fill="#1b2533" opacity="0.10"/>
+<rect x="610" y="642" width="520" height="246" rx="10" fill="#ffffff" stroke="#48566a" stroke-width="1.4"/>
+<path d="M610,704 V652 Q610,642 620,642 H1120 Q1130,642 1130,652 V704 Z" fill="url(#g_green)" stroke="#48566a" stroke-width="1.4"/>
+<circle cx="646" cy="673" r="22" fill="#dff0e6" stroke="#48566a" stroke-width="1.3"/>
+<g transform="translate(646,673) scale(0.9166666666666666)"><circle cx="0" cy="-9" r="3.6" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><circle cx="-9" cy="8" r="3.6" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="8" r="3.6" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M-2,-6 L-8,5 M2,-6 L8,5" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text x="682" y="680" font-size="19" font-weight="bold" font-style="normal" text-anchor="start" fill="#26323f">Entrenamiento</text>
+<circle cx="1100" cy="673" r="15" fill="#48566a"/>
+<text x="1100" y="678" font-size="15" font-weight="bold" font-style="normal" text-anchor="middle" fill="#ffffff">6</text>
+<text x="634" y="746" font-size="17" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">LightGBM multiclase (14 clases)</text>
+<text x="634" y="776" font-size="17" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">300 árboles · learning rate 0,05</text>
+<text x="634" y="806" font-size="17" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">max_depth 12 · num_leaves 128</text>
+<text x="634" y="836" font-size="17" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">min_child_samples 100</text>
+<text x="634" y="866" font-size="17" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">subsample = colsample = 0,8</text>
+<rect x="43" y="952" width="520" height="246" rx="10" fill="#1b2533" opacity="0.10"/>
+<rect x="40" y="948" width="520" height="246" rx="10" fill="#ffffff" stroke="#48566a" stroke-width="1.4"/>
+<path d="M40,1010 V958 Q40,948 50,948 H550 Q560,948 560,958 V1010 Z" fill="url(#g_amber)" stroke="#48566a" stroke-width="1.4"/>
+<circle cx="76" cy="979" r="22" fill="#faecd2" stroke="#48566a" stroke-width="1.3"/>
+<g transform="translate(76,979) scale(0.9166666666666666)"><rect x="-12" y="2" width="6" height="9" fill="#26323f"/><rect x="-3" y="-4" width="6" height="15" fill="#26323f"/><rect x="6" y="-11" width="6" height="22" fill="#26323f"/></g>
+<text x="112" y="986" font-size="19" font-weight="bold" font-style="normal" text-anchor="start" fill="#26323f">Evaluación offline</text>
+<circle cx="530" cy="979" r="15" fill="#48566a"/>
+<text x="530" y="984" font-size="15" font-weight="bold" font-style="normal" text-anchor="middle" fill="#ffffff">7</text>
+<text x="64" y="1052" font-size="17" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">Accuracy = 0,9978</text>
+<text x="64" y="1082" font-size="17" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">Macro: P 0,93 · R 0,94 · F1 0,93</text>
+<text x="64" y="1112" font-size="17" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">Clases débiles (poco soporte):</text>
+<text x="64" y="1142" font-size="17" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">XSS, SQL Injection,</text>
+<text x="64" y="1172" font-size="17" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">Web Attack Brute Force</text>
+<rect x="610" y="948" width="520" height="246" rx="10" fill="#f6f8fb" stroke="#48566a" stroke-width="1.4" stroke-dasharray="8 5"/>
+<circle cx="646" cy="979" r="22" fill="#e8ecf1" stroke="#48566a" stroke-width="1.3"/>
+<g transform="translate(646,979) scale(0.9166666666666666)"><path d="M0,-12 L12,-6 V7 L0,13 L-12,7 V-6 Z M-12,-6 L0,0 L12,-6 M0,0 V13" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text x="682" y="986" font-size="19" font-weight="bold" font-style="normal" text-anchor="start" fill="#26323f">Artefactos generados</text>
+<text x="634" y="1058" font-size="17" font-weight="bold" font-style="normal" text-anchor="start" fill="#26323f">lightgbm_1_2M_final.txt</text>
+<text x="634" y="1084" font-size="15" font-weight="normal" font-style="normal" text-anchor="start" fill="#5b6b80">modelo entrenado (Booster)</text>
+<text x="634" y="1128" font-size="17" font-weight="bold" font-style="normal" text-anchor="start" fill="#26323f">label_encoder_1_2M_final.pkl</text>
+<text x="634" y="1154" font-size="15" font-weight="normal" font-style="normal" text-anchor="start" fill="#5b6b80">codificador de las 14 clases</text>
+<line x1="563" y1="61" x2="607" y2="61" stroke="#48566a" stroke-width="2.4" marker-end="url(#m48566a)"/>
+<line x1="563" y1="367" x2="607" y2="367" stroke="#48566a" stroke-width="2.4" marker-end="url(#m48566a)"/>
+<line x1="563" y1="673" x2="607" y2="673" stroke="#48566a" stroke-width="2.4" marker-end="url(#m48566a)"/>
+<line x1="563" y1="979" x2="607" y2="979" stroke="#48566a" stroke-width="2.4" stroke-dasharray="6 4" marker-end="url(#m48566a)"/>
+<path d="M870.0,279 V306 H300.0 V332" fill="none" stroke="#48566a" stroke-width="2.4" marker-end="url(#m48566a)"/>
+<path d="M870.0,585 V612 H300.0 V638" fill="none" stroke="#48566a" stroke-width="2.4" marker-end="url(#m48566a)"/>
+<path d="M870.0,891 V918 H300.0 V944" fill="none" stroke="#48566a" stroke-width="2.4" marker-end="url(#m48566a)"/>
+</svg>

@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1275" height="950" viewBox="0 0 1275 950" font-family="Arial, 'Liberation Sans', Helvetica, sans-serif">
+<defs><marker id="m48566a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#48566a"/></marker><marker id="m48566as" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M10,0 L0,5 L10,10 z" fill="#48566a"/></marker><marker id="m2f8f5b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#2f8f5b"/></marker><marker id="m2f8f5bs" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M10,0 L0,5 L10,10 z" fill="#2f8f5b"/></marker><marker id="m2f6fb0" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#2f6fb0"/></marker><marker id="m2f6fb0s" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M10,0 L0,5 L10,10 z" fill="#2f6fb0"/></marker><marker id="mc9772b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#c9772b"/></marker><marker id="mc9772bs" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M10,0 L0,5 L10,10 z" fill="#c9772b"/></marker><marker id="mb04a4a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#b04a4a"/></marker><marker id="mb04a4as" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M10,0 L0,5 L10,10 z" fill="#b04a4a"/></marker><linearGradient id="g_blue" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e6effa"/><stop offset="1" stop-color="#c9dcf2"/></linearGradient><linearGradient id="g_green" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e7f5ec"/><stop offset="1" stop-color="#c6e6d2"/></linearGradient><linearGradient id="g_amber" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fdf3df"/><stop offset="1" stop-color="#f4dcaa"/></linearGradient><linearGradient id="g_gray" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eef1f5"/><stop offset="1" stop-color="#d5dbe4"/></linearGradient><linearGradient id="g_rose" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#faeaea"/><stop offset="1" stop-color="#efc9c9"/></linearGradient><linearGradient id="g_dark" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a4a5e"/><stop offset="1" stop-color="#26323f"/></linearGradient></defs>
+<rect width="1275" height="950" fill="#ffffff"/>
+<rect x="26" y="24" width="144" height="88" rx="10" fill="#1b2533" opacity="0.10"/>
+<rect x="23" y="20" width="144" height="88" rx="10" fill="#ffffff" stroke="#48566a" stroke-width="1.4"/>
+<path d="M23,108 V30 Q23,20 33,20 H157 Q167,20 167,30 V108 Z" fill="url(#g_gray)" stroke="#48566a" stroke-width="1.4"/>
+<circle cx="95" cy="48" r="19" fill="#e8ecf1" stroke="#48566a" stroke-width="1.3"/>
+<g transform="translate(95,48) scale(0.7916666666666666)"><rect x="-16" y="-9" width="32" height="18" rx="3" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M-9,-3 H9 M5,-6.5 L9,-3 L5,0.5 M9,3 H-9 M-5,-0.5 L-9,3 L-5,6.5" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" transform="translate(0,0) scale(0.8)"/></g>
+<text x="95" y="91" font-size="16" font-weight="bold" font-style="normal" text-anchor="middle" fill="#26323f">Tráfico de red</text>
+<line x1="95" y1="108" x2="95" y2="925" stroke="#9aa8ba" stroke-width="1.3" stroke-dasharray="5 5"/>
+<rect x="181" y="24" width="144" height="88" rx="10" fill="#1b2533" opacity="0.10"/>
+<rect x="178" y="20" width="144" height="88" rx="10" fill="#ffffff" stroke="#48566a" stroke-width="1.4"/>
+<path d="M178,108 V30 Q178,20 188,20 H312 Q322,20 322,30 V108 Z" fill="url(#g_green)" stroke="#48566a" stroke-width="1.4"/>
+<circle cx="250" cy="48" r="19" fill="#dff0e6" stroke="#48566a" stroke-width="1.3"/>
+<g transform="translate(250,48) scale(0.7916666666666666)"><rect x="-10" y="-10" width="20" height="20" rx="3" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M-5,-10 V-15 M0,-10 V-15 M5,-10 V-15 M-5,10 V15 M0,10 V15 M5,10 V15 M-10,-5 H-15 M-10,0 H-15 M-10,5 H-15 M10,-5 H15 M10,0 H15 M10,5 H15" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><text x="0" y="4" font-size="10" font-weight="bold" text-anchor="middle" fill="#26323f">IA</text></g>
+<text x="250" y="91" font-size="16" font-weight="bold" font-style="normal" text-anchor="middle" fill="#26323f">Motor de IA</text>
+<line x1="250" y1="108" x2="250" y2="925" stroke="#9aa8ba" stroke-width="1.3" stroke-dasharray="5 5"/>
+<rect x="336" y="24" width="144" height="88" rx="10" fill="#1b2533" opacity="0.10"/>
+<rect x="333" y="20" width="144" height="88" rx="10" fill="#ffffff" stroke="#48566a" stroke-width="1.4"/>
+<path d="M333,108 V30 Q333,20 343,20 H467 Q477,20 477,30 V108 Z" fill="url(#g_green)" stroke="#48566a" stroke-width="1.4"/>
+<circle cx="405" cy="48" r="19" fill="#dff0e6" stroke="#48566a" stroke-width="1.3"/>
+<g transform="translate(405,48) scale(0.7916666666666666)"><path d="M0,-15 L12,-10 V0 C12,8 6,13 0,16 C-6,13 -12,8 -12,0 V-10 Z" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M-5,0 L-1,4 L6,-4" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text x="405" y="91" font-size="16" font-weight="bold" font-style="normal" text-anchor="middle" fill="#26323f">Ryu + OVS</text>
+<line x1="405" y1="108" x2="405" y2="925" stroke="#9aa8ba" stroke-width="1.3" stroke-dasharray="5 5"/>
+<rect x="491" y="24" width="144" height="88" rx="10" fill="#1b2533" opacity="0.10"/>
+<rect x="488" y="20" width="144" height="88" rx="10" fill="#ffffff" stroke="#48566a" stroke-width="1.4"/>
+<path d="M488,108 V30 Q488,20 498,20 H622 Q632,20 632,30 V108 Z" fill="url(#g_blue)" stroke="#48566a" stroke-width="1.4"/>
+<circle cx="560" cy="48" r="19" fill="#dce8f5" stroke="#48566a" stroke-width="1.3"/>
+<g transform="translate(560,48) scale(0.7916666666666666)"><text x="0" y="7" font-size="21" font-weight="bold" text-anchor="middle" fill="#26323f">{ }</text></g>
+<text x="560" y="91" font-size="16" font-weight="bold" font-style="normal" text-anchor="middle" fill="#26323f">Backend</text>
+<line x1="560" y1="108" x2="560" y2="925" stroke="#9aa8ba" stroke-width="1.3" stroke-dasharray="5 5"/>
+<rect x="646" y="24" width="144" height="88" rx="10" fill="#1b2533" opacity="0.10"/>
+<rect x="643" y="20" width="144" height="88" rx="10" fill="#ffffff" stroke="#48566a" stroke-width="1.4"/>
+<path d="M643,108 V30 Q643,20 653,20 H777 Q787,20 787,30 V108 Z" fill="url(#g_blue)" stroke="#48566a" stroke-width="1.4"/>
+<circle cx="715" cy="48" r="19" fill="#dce8f5" stroke="#48566a" stroke-width="1.3"/>
+<g transform="translate(715,48) scale(0.7916666666666666)"><ellipse cx="0" cy="-10" rx="12" ry="4.5" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M-12,-10 V10 A12,4.5 0 0 0 12,10 V-10 M-12,0 A12,4.5 0 0 0 12,0" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text x="715" y="91" font-size="16" font-weight="bold" font-style="normal" text-anchor="middle" fill="#26323f">MongoDB</text>
+<line x1="715" y1="108" x2="715" y2="925" stroke="#9aa8ba" stroke-width="1.3" stroke-dasharray="5 5"/>
+<rect x="801" y="24" width="144" height="88" rx="10" fill="#1b2533" opacity="0.10"/>
+<rect x="798" y="20" width="144" height="88" rx="10" fill="#ffffff" stroke="#48566a" stroke-width="1.4"/>
+<path d="M798,108 V30 Q798,20 808,20 H932 Q942,20 942,30 V108 Z" fill="url(#g_blue)" stroke="#48566a" stroke-width="1.4"/>
+<circle cx="870" cy="48" r="19" fill="#dce8f5" stroke="#48566a" stroke-width="1.3"/>
+<g transform="translate(870,48) scale(0.7916666666666666)"><rect x="-17" y="-6" width="11" height="12" rx="2" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><rect x="-5.5" y="-6" width="11" height="12" rx="2" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><rect x="6" y="-6" width="11" height="12" rx="2" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M-6,0 H-5.5 M5.5,0 H6" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text x="870" y="91" font-size="16" font-weight="bold" font-style="normal" text-anchor="middle" fill="#26323f">Solana</text>
+<line x1="870" y1="108" x2="870" y2="925" stroke="#9aa8ba" stroke-width="1.3" stroke-dasharray="5 5"/>
+<rect x="956" y="24" width="144" height="88" rx="10" fill="#1b2533" opacity="0.10"/>
+<rect x="953" y="20" width="144" height="88" rx="10" fill="#ffffff" stroke="#48566a" stroke-width="1.4"/>
+<path d="M953,108 V30 Q953,20 963,20 H1087 Q1097,20 1097,30 V108 Z" fill="url(#g_amber)" stroke="#48566a" stroke-width="1.4"/>
+<circle cx="1025" cy="48" r="19" fill="#faecd2" stroke="#48566a" stroke-width="1.3"/>
+<g transform="translate(1025,48) scale(0.7916666666666666)"><rect x="-14" y="-9" width="28" height="18" rx="2.5" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M-14,-9 L0,2 L14,-9" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text x="1025" y="91" font-size="16" font-weight="bold" font-style="normal" text-anchor="middle" fill="#26323f">Servidor SMTP</text>
+<line x1="1025" y1="108" x2="1025" y2="925" stroke="#9aa8ba" stroke-width="1.3" stroke-dasharray="5 5"/>
+<rect x="1111" y="24" width="144" height="88" rx="10" fill="#1b2533" opacity="0.10"/>
+<rect x="1108" y="20" width="144" height="88" rx="10" fill="#ffffff" stroke="#48566a" stroke-width="1.4"/>
+<path d="M1108,108 V30 Q1108,20 1118,20 H1242 Q1252,20 1252,30 V108 Z" fill="url(#g_gray)" stroke="#48566a" stroke-width="1.4"/>
+<circle cx="1180" cy="48" r="19" fill="#e8ecf1" stroke="#48566a" stroke-width="1.3"/>
+<g transform="translate(1180,48) scale(0.7916666666666666)"><rect x="-15" y="-12" width="30" height="21" rx="2.5" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M0,9 V14 M-7,14 H7" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><rect x="-9" y="-3" width="4" height="7" fill="#26323f"/><rect x="-2" y="-7" width="4" height="11" fill="#26323f"/><rect x="5" y="-5" width="4" height="9" fill="#26323f"/></g>
+<text x="1180" y="91" font-size="16" font-weight="bold" font-style="normal" text-anchor="middle" fill="#26323f">Dashboard</text>
+<line x1="1180" y1="108" x2="1180" y2="925" stroke="#9aa8ba" stroke-width="1.3" stroke-dasharray="5 5"/>
+<line x1="95" y1="150" x2="250" y2="150" stroke="#2f6fb0" stroke-width="2.2" marker-end="url(#m2f6fb0)"/>
+<text x="172.5" y="140" font-size="15.5" font-weight="normal" font-style="normal" text-anchor="middle" fill="#26323f">paquetes</text>
+<circle cx="69" cy="150" r="13" fill="#2f6fb0"/>
+<text x="69" y="155" font-size="15" font-weight="bold" font-style="normal" text-anchor="middle" fill="#ffffff">1</text>
+<rect x="122.0" y="180" width="262" height="60" rx="7" fill="#1b2533" opacity="0.10"/>
+<rect x="119.0" y="176" width="262" height="60" rx="7" fill="#ffffff" stroke="#48566a" stroke-width="1.2"/>
+<rect x="119.0" y="176" width="262" height="60" rx="7" fill="#faecd2" stroke="#48566a" stroke-width="1.2"/>
+<text x="250" y="202" font-size="15" font-weight="normal" font-style="normal" text-anchor="middle" fill="#26323f">Agrupa por flujo (5-tupla)</text>
+<text x="250" y="224" font-size="15" font-weight="normal" font-style="normal" text-anchor="middle" fill="#26323f">y extrae 78 características</text>
+<circle cx="101.0" cy="206.0" r="13" fill="#48566a"/>
+<text x="101.0" y="211.0" font-size="15" font-weight="bold" font-style="normal" text-anchor="middle" fill="#ffffff">2</text>
+<rect x="122.0" y="260" width="262" height="82" rx="7" fill="#1b2533" opacity="0.10"/>
+<rect x="119.0" y="256" width="262" height="82" rx="7" fill="#ffffff" stroke="#48566a" stroke-width="1.2"/>
+<rect x="119.0" y="256" width="262" height="82" rx="7" fill="#faecd2" stroke="#48566a" stroke-width="1.2"/>
+<text x="250" y="282" font-size="15" font-weight="normal" font-style="normal" text-anchor="middle" fill="#26323f">LightGBM → clase + confianza</text>
+<text x="250" y="304" font-size="15" font-weight="normal" font-style="normal" text-anchor="middle" fill="#26323f">Alerta si clase ≠ BENIGN</text>
+<text x="250" y="326" font-size="15" font-weight="normal" font-style="normal" text-anchor="middle" fill="#26323f">y confianza ≥ umbral</text>
+<circle cx="101.0" cy="297.0" r="13" fill="#48566a"/>
+<text x="101.0" y="302.0" font-size="15" font-weight="bold" font-style="normal" text-anchor="middle" fill="#ffffff">3</text>
+<line x1="250" y1="385" x2="405" y2="385" stroke="#2f8f5b" stroke-width="2.2" marker-end="url(#m2f8f5b)"/>
+<text x="327.5" y="375" font-size="15.5" font-weight="normal" font-style="normal" text-anchor="middle" fill="#26323f">POST /ips/block</text>
+<circle cx="224" cy="385" r="13" fill="#2f8f5b"/>
+<text x="224" y="390" font-size="15" font-weight="bold" font-style="normal" text-anchor="middle" fill="#ffffff">4</text>
+<rect x="290.0" y="409" width="236" height="60" rx="7" fill="#1b2533" opacity="0.10"/>
+<rect x="287.0" y="405" width="236" height="60" rx="7" fill="#ffffff" stroke="#48566a" stroke-width="1.2"/>
+<rect x="287.0" y="405" width="236" height="60" rx="7" fill="#f6e0e0" stroke="#48566a" stroke-width="1.2"/>
+<text x="405" y="431" font-size="15" font-weight="normal" font-style="normal" text-anchor="middle" fill="#26323f">FlowMod: DROP</text>
+<text x="405" y="453" font-size="15" font-weight="normal" font-style="normal" text-anchor="middle" fill="#26323f">ipv4_src · prioridad 100</text>
+<line x1="250" y1="505" x2="560" y2="505" stroke="#c9772b" stroke-width="2.2" marker-end="url(#mc9772b)"/>
+<text x="405.0" y="495" font-size="15.5" font-weight="normal" font-style="normal" text-anchor="middle" fill="#26323f">POST /api/alerts · X-API-Key</text>
+<circle cx="224" cy="505" r="13" fill="#c9772b"/>
+<text x="224" y="510" font-size="15" font-weight="bold" font-style="normal" text-anchor="middle" fill="#ffffff">5</text>
+<line x1="560" y1="561" x2="715" y2="561" stroke="#48566a" stroke-width="2.2" marker-end="url(#m48566a)"/>
+<text x="637.5" y="551" font-size="15.5" font-weight="normal" font-style="normal" text-anchor="middle" fill="#26323f">guardar alerta</text>
+<circle cx="534" cy="561" r="13" fill="#48566a"/>
+<text x="534" y="566" font-size="15" font-weight="bold" font-style="normal" text-anchor="middle" fill="#ffffff">6</text>
+<line x1="560" y1="617" x2="1025" y2="617" stroke="#48566a" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#m48566a)"/>
+<text x="792.5" y="607" font-size="15.5" font-weight="normal" font-style="normal" text-anchor="middle" fill="#26323f">correo a operadores (async)</text>
+<circle cx="534" cy="617" r="13" fill="#48566a"/>
+<text x="534" y="622" font-size="15" font-weight="bold" font-style="normal" text-anchor="middle" fill="#ffffff">7</text>
+<line x1="560" y1="673" x2="870" y2="673" stroke="#48566a" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#m48566a)"/>
+<text x="715.0" y="663" font-size="15.5" font-weight="normal" font-style="normal" text-anchor="middle" fill="#26323f">Memo AUDIT_IPS (async)</text>
+<circle cx="534" cy="673" r="13" fill="#48566a"/>
+<text x="534" y="678" font-size="15" font-weight="bold" font-style="normal" text-anchor="middle" fill="#ffffff">8</text>
+<line x1="870" y1="729" x2="560" y2="729" stroke="#48566a" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#m48566a)"/>
+<text x="715.0" y="719" font-size="15.5" font-weight="normal" font-style="normal" text-anchor="middle" fill="#26323f">firma</text>
+<circle cx="896" cy="729" r="13" fill="#48566a"/>
+<text x="896" y="734" font-size="15" font-weight="bold" font-style="normal" text-anchor="middle" fill="#ffffff">9</text>
+<line x1="560" y1="785" x2="715" y2="785" stroke="#48566a" stroke-width="2.2" marker-end="url(#m48566a)"/>
+<text x="637.5" y="775" font-size="15.5" font-weight="normal" font-style="normal" text-anchor="middle" fill="#26323f">estado Solana</text>
+<circle cx="534" cy="785" r="13" fill="#48566a"/>
+<text x="534" y="790" font-size="15" font-weight="bold" font-style="normal" text-anchor="middle" fill="#ffffff">10</text>
+<line x1="1180" y1="841" x2="560" y2="841" stroke="#c9772b" stroke-width="2.2" marker-end="url(#mc9772b)"/>
+<text x="870.0" y="831" font-size="15.5" font-weight="normal" font-style="normal" text-anchor="middle" fill="#26323f">GET /api/alerts (JWT)</text>
+<circle cx="1206" cy="841" r="13" fill="#c9772b"/>
+<text x="1206" y="846" font-size="15" font-weight="bold" font-style="normal" text-anchor="middle" fill="#ffffff">11</text>
+<line x1="560" y1="897" x2="1180" y2="897" stroke="#c9772b" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#mc9772b)"/>
+<text x="870.0" y="887" font-size="15.5" font-weight="normal" font-style="normal" text-anchor="middle" fill="#26323f">alertas en JSON</text>
+<circle cx="534" cy="897" r="13" fill="#c9772b"/>
+<text x="534" y="902" font-size="15" font-weight="bold" font-style="normal" text-anchor="middle" fill="#ffffff">12</text>
+</svg>

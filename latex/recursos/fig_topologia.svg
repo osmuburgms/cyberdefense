@@ -1,0 +1,142 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1170" height="1430" viewBox="0 0 1170 1430" font-family="Arial, 'Liberation Sans', Helvetica, sans-serif">
+<defs><marker id="m48566a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#48566a"/></marker><marker id="m48566as" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M10,0 L0,5 L10,10 z" fill="#48566a"/></marker><marker id="m2f8f5b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#2f8f5b"/></marker><marker id="m2f8f5bs" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M10,0 L0,5 L10,10 z" fill="#2f8f5b"/></marker><marker id="m2f6fb0" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#2f6fb0"/></marker><marker id="m2f6fb0s" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M10,0 L0,5 L10,10 z" fill="#2f6fb0"/></marker><marker id="mc9772b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#c9772b"/></marker><marker id="mc9772bs" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M10,0 L0,5 L10,10 z" fill="#c9772b"/></marker><marker id="mb04a4a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#b04a4a"/></marker><marker id="mb04a4as" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M10,0 L0,5 L10,10 z" fill="#b04a4a"/></marker><linearGradient id="g_blue" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e6effa"/><stop offset="1" stop-color="#c9dcf2"/></linearGradient><linearGradient id="g_green" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e7f5ec"/><stop offset="1" stop-color="#c6e6d2"/></linearGradient><linearGradient id="g_amber" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fdf3df"/><stop offset="1" stop-color="#f4dcaa"/></linearGradient><linearGradient id="g_gray" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eef1f5"/><stop offset="1" stop-color="#d5dbe4"/></linearGradient><linearGradient id="g_rose" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#faeaea"/><stop offset="1" stop-color="#efc9c9"/></linearGradient><linearGradient id="g_dark" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a4a5e"/><stop offset="1" stop-color="#26323f"/></linearGradient></defs>
+<rect width="1170" height="1430" fill="#ffffff"/>
+<rect x="33" y="24" width="180" height="112" rx="10" fill="#1b2533" opacity="0.10"/>
+<rect x="30" y="20" width="180" height="112" rx="10" fill="#ffffff" stroke="#48566a" stroke-width="1.4"/>
+<circle cx="120" cy="55" r="24" fill="#e8ecf1" stroke="#48566a" stroke-width="1.3"/>
+<g transform="translate(120,55) scale(1.0)"><circle cx="0" cy="-6" r="6" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M-12,13 C-12,2 12,2 12,13 Z" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text x="120" y="106" font-size="17" font-weight="bold" font-style="normal" text-anchor="middle" fill="#26323f">Operador</text>
+<text x="120" y="124" font-size="14" font-weight="normal" font-style="normal" text-anchor="middle" fill="#5b6b80">navegador</text>
+<rect x="23" y="176" width="1130" height="1140" rx="14" fill="#1b2533" opacity="0.10"/>
+<rect x="20" y="172" width="1130" height="1140" rx="14" fill="#ffffff" stroke="#48566a" stroke-width="2"/>
+<path d="M20,224 V186 Q20,172 34,172 H1136 Q1150,172 1150,186 V224 Z" fill="url(#g_dark)" stroke="#48566a" stroke-width="1.4"/>
+<text x="1130" y="206" font-size="18" font-weight="bold" font-style="normal" text-anchor="end" fill="#ffffff">Host de CyberDefense · Ubuntu · VNX + LXC + Open vSwitch</text>
+<circle cx="48" cy="198" r="18" fill="#e8ecf1" stroke="#48566a" stroke-width="1.3"/>
+<g transform="translate(48,198) scale(0.75)"><rect x="-13" y="-14" width="26" height="12" rx="2.5" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><rect x="-13" y="2" width="26" height="12" rx="2.5" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><circle cx="7" cy="-8" r="1.6" fill="#26323f"/><circle cx="7" cy="8" r="1.6" fill="#26323f"/><path d="M-9,-8 H-1 M-9,8 H-1" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></g>
+<rect x="40" y="244" width="1090" height="220" rx="12" fill="#f6f8fb" stroke="#48566a" stroke-width="1.3" stroke-dasharray="7 5"/>
+<text x="1110" y="272" font-size="14" font-weight="bold" font-style="normal" text-anchor="end" fill="#5b6b80">PLANO DE APLICACIÓN</text>
+<rect x="59" y="300" width="232" height="112" rx="9" fill="#1b2533" opacity="0.10"/>
+<rect x="56" y="296" width="232" height="112" rx="9" fill="#ffffff" stroke="#48566a" stroke-width="1.4"/>
+<circle cx="94" cy="352.0" r="22" fill="#e8ecf1" stroke="#48566a" stroke-width="1.3"/>
+<g transform="translate(94,352.0) scale(0.9166666666666666)"><rect x="-15" y="-12" width="30" height="21" rx="2.5" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M0,9 V14 M-7,14 H7" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><rect x="-9" y="-3" width="4" height="7" fill="#26323f"/><rect x="-2" y="-7" width="4" height="11" fill="#26323f"/><rect x="5" y="-5" width="4" height="9" fill="#26323f"/></g>
+<text x="130" y="348.0" font-size="17" font-weight="bold" font-style="normal" text-anchor="start" fill="#26323f">Dashboard</text>
+<text x="130" y="372.0" font-size="14" font-weight="normal" font-style="normal" text-anchor="start" fill="#5b6b80">React · Vite :5173</text>
+<rect x="327" y="300" width="232" height="112" rx="9" fill="#1b2533" opacity="0.10"/>
+<rect x="324" y="296" width="232" height="112" rx="9" fill="#ffffff" stroke="#48566a" stroke-width="1.4"/>
+<circle cx="362" cy="352.0" r="22" fill="#dce8f5" stroke="#48566a" stroke-width="1.3"/>
+<g transform="translate(362,352.0) scale(0.9166666666666666)"><text x="0" y="7" font-size="21" font-weight="bold" text-anchor="middle" fill="#26323f">{ }</text></g>
+<text x="398" y="348.0" font-size="17" font-weight="bold" font-style="normal" text-anchor="start" fill="#26323f">Backend</text>
+<text x="398" y="372.0" font-size="14" font-weight="normal" font-style="normal" text-anchor="start" fill="#5b6b80">FastAPI :8001 · JWT</text>
+<rect x="595" y="300" width="232" height="112" rx="9" fill="#1b2533" opacity="0.10"/>
+<rect x="592" y="296" width="232" height="112" rx="9" fill="#ffffff" stroke="#48566a" stroke-width="1.4"/>
+<circle cx="630" cy="352.0" r="22" fill="#dce8f5" stroke="#48566a" stroke-width="1.3"/>
+<g transform="translate(630,352.0) scale(0.9166666666666666)"><ellipse cx="0" cy="-10" rx="12" ry="4.5" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M-12,-10 V10 A12,4.5 0 0 0 12,10 V-10 M-12,0 A12,4.5 0 0 0 12,0" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text x="666" y="348.0" font-size="17" font-weight="bold" font-style="normal" text-anchor="start" fill="#26323f">MongoDB</text>
+<text x="666" y="372.0" font-size="14" font-weight="normal" font-style="normal" text-anchor="start" fill="#5b6b80">Docker :27017</text>
+<rect x="863" y="300" width="232" height="112" rx="9" fill="#1b2533" opacity="0.10"/>
+<rect x="860" y="296" width="232" height="112" rx="9" fill="#ffffff" stroke="#48566a" stroke-width="1.4"/>
+<circle cx="898" cy="352.0" r="22" fill="#dce8f5" stroke="#48566a" stroke-width="1.3"/>
+<g transform="translate(898,352.0) scale(0.9166666666666666)"><rect x="-17" y="-6" width="11" height="12" rx="2" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><rect x="-5.5" y="-6" width="11" height="12" rx="2" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><rect x="6" y="-6" width="11" height="12" rx="2" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M-6,0 H-5.5 M5.5,0 H6" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text x="934" y="348.0" font-size="17" font-weight="bold" font-style="normal" text-anchor="start" fill="#26323f">Solana</text>
+<text x="934" y="372.0" font-size="14" font-weight="normal" font-style="normal" text-anchor="start" fill="#5b6b80">validator :8899</text>
+<line x1="291" y1="352.0" x2="321" y2="352.0" stroke="#48566a" stroke-width="2.2" marker-end="url(#m48566a)" marker-start="url(#m48566as)"/>
+<line x1="559" y1="352.0" x2="589" y2="352.0" stroke="#48566a" stroke-width="2.2" marker-end="url(#m48566a)"/>
+<path d="M480.0,294 V278 H976.0 V292" fill="none" stroke="#48566a" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#m48566a)"/>
+<line x1="172.0" y1="134" x2="172.0" y2="293" stroke="#c9772b" stroke-width="2.4" marker-end="url(#mc9772b)"/>
+<rect x="137.0" y="138.0" width="70" height="28" rx="14.0" fill="#ffffff" stroke="#c9772b" stroke-width="1.2"/>
+<text x="172.0" y="156.0" font-size="14" font-weight="normal" font-style="normal" text-anchor="middle" fill="#c9772b">HTTP</text>
+<rect x="40" y="494" width="1090" height="196" rx="12" fill="#f6f8fb" stroke="#48566a" stroke-width="1.3" stroke-dasharray="7 5"/>
+<text x="1110" y="522" font-size="14" font-weight="bold" font-style="normal" text-anchor="end" fill="#5b6b80">PLANO DE SEGURIDAD</text>
+<rect x="59" y="544" width="450" height="112" rx="9" fill="#1b2533" opacity="0.10"/>
+<rect x="56" y="540" width="450" height="112" rx="9" fill="#ffffff" stroke="#48566a" stroke-width="1.4"/>
+<circle cx="94" cy="596.0" r="22" fill="#dff0e6" stroke="#48566a" stroke-width="1.3"/>
+<g transform="translate(94,596.0) scale(0.9166666666666666)"><rect x="-10" y="-10" width="20" height="20" rx="3" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M-5,-10 V-15 M0,-10 V-15 M5,-10 V-15 M-5,10 V15 M0,10 V15 M5,10 V15 M-10,-5 H-15 M-10,0 H-15 M-10,5 H-15 M10,-5 H15 M10,0 H15 M10,5 H15" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><text x="0" y="4" font-size="10" font-weight="bold" text-anchor="middle" fill="#26323f">IA</text></g>
+<text x="130" y="592.0" font-size="17" font-weight="bold" font-style="normal" text-anchor="start" fill="#26323f">Motor de IA</text>
+<text x="130" y="616.0" font-size="14" font-weight="normal" font-style="normal" text-anchor="start" fill="#5b6b80">Scapy + LightGBM · 78 características</text>
+<rect x="639" y="544" width="450" height="112" rx="9" fill="#1b2533" opacity="0.10"/>
+<rect x="636" y="540" width="450" height="112" rx="9" fill="#ffffff" stroke="#48566a" stroke-width="1.4"/>
+<circle cx="674" cy="596.0" r="22" fill="#dff0e6" stroke="#48566a" stroke-width="1.3"/>
+<g transform="translate(674,596.0) scale(0.9166666666666666)"><path d="M0,-15 L12,-10 V0 C12,8 6,13 0,16 C-6,13 -12,8 -12,0 V-10 Z" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M-5,0 L-1,4 L6,-4" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text x="710" y="592.0" font-size="17" font-weight="bold" font-style="normal" text-anchor="start" fill="#26323f">Controlador Ryu</text>
+<text x="710" y="616.0" font-size="14" font-weight="normal" font-style="normal" text-anchor="start" fill="#5b6b80">OpenFlow 1.3 :6653 · REST :8080</text>
+<line x1="509" y1="612" x2="633" y2="612" stroke="#2f8f5b" stroke-width="2.4" marker-end="url(#m2f8f5b)"/>
+<rect x="509.0" y="570.0" width="124" height="28" rx="14.0" fill="#ffffff" stroke="#2f8f5b" stroke-width="1.2"/>
+<text x="571" y="588.0" font-size="14" font-weight="normal" font-style="normal" text-anchor="middle" fill="#2f8f5b">POST /ips/block</text>
+<line x1="440" y1="540" x2="440" y2="411" stroke="#c9772b" stroke-width="2.4" marker-end="url(#mc9772b)"/>
+<rect x="372.0" y="463.0" width="136" height="28" rx="14.0" fill="#ffffff" stroke="#c9772b" stroke-width="1.2"/>
+<text x="440" y="481.0" font-size="14" font-weight="normal" font-style="normal" text-anchor="middle" fill="#c9772b">alertas · REST</text>
+<rect x="40" y="720" width="1090" height="570" rx="14" fill="#f3f7fc" stroke="#48566a" stroke-width="1.5" stroke-dasharray="9 6"/>
+<text x="60" y="748" font-size="14" font-weight="bold" font-style="normal" text-anchor="start" fill="#5b6b80">RED VIRTUAL VNX · PLANO DE DATOS</text>
+<rect x="59" y="814" width="380" height="240" rx="10" fill="#1b2533" opacity="0.10"/>
+<rect x="56" y="810" width="380" height="240" rx="10" fill="#ffffff" stroke="#48566a" stroke-width="1.4"/>
+<path d="M56,862 V820 Q56,810 66,810 H426 Q436,810 436,820 V862 Z" fill="url(#g_rose)" stroke="#48566a" stroke-width="1.4"/>
+<circle cx="90" cy="836" r="20" fill="#f6e0e0" stroke="#48566a" stroke-width="1.3"/>
+<g transform="translate(90,836) scale(0.8333333333333334)"><rect x="-16" y="-9" width="32" height="18" rx="3" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M-9,-3 H9 M5,-6.5 L9,-3 L5,0.5 M9,3 H-9 M-5,-0.5 L-9,3 L-5,6.5" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" transform="translate(0,0) scale(0.8)"/></g>
+<text x="124" y="844" font-size="19" font-weight="bold" font-style="normal" text-anchor="start" fill="#26323f">Open vSwitch</text>
+<text x="78" y="898" font-size="17" font-weight="bold" font-style="normal" text-anchor="start" fill="#26323f">puente SDN_Net</text>
+<text x="78" y="924" font-size="14" font-weight="normal" font-style="normal" text-anchor="start" fill="#5b6b80">OpenFlow 1.3 · fail-mode secure</text>
+<text x="78" y="946" font-size="14" font-weight="normal" font-style="normal" text-anchor="start" fill="#5b6b80">controlador tcp:127.0.0.1:6653</text>
+<rect x="80" y="998" width="40" height="26" rx="4" fill="#dce8f5" stroke="#48566a" stroke-width="1.2"/>
+<text x="100" y="1017" font-size="13.5" font-weight="normal" font-style="normal" text-anchor="middle" fill="#5b6b80">1</text>
+<rect x="136" y="998" width="40" height="26" rx="4" fill="#dce8f5" stroke="#48566a" stroke-width="1.2"/>
+<text x="156" y="1017" font-size="13.5" font-weight="normal" font-style="normal" text-anchor="middle" fill="#5b6b80">2</text>
+<rect x="192" y="998" width="40" height="26" rx="4" fill="#dce8f5" stroke="#48566a" stroke-width="1.2"/>
+<text x="212" y="1017" font-size="13.5" font-weight="normal" font-style="normal" text-anchor="middle" fill="#5b6b80">3</text>
+<rect x="248" y="998" width="40" height="26" rx="4" fill="#dce8f5" stroke="#48566a" stroke-width="1.2"/>
+<text x="268" y="1017" font-size="13.5" font-weight="normal" font-style="normal" text-anchor="middle" fill="#5b6b80">4</text>
+<rect x="304" y="998" width="40" height="26" rx="4" fill="#f3f6fa" stroke="#48566a" stroke-width="1.2"/>
+<text x="324" y="1017" font-size="13.5" font-weight="normal" font-style="normal" text-anchor="middle" fill="#5b6b80">5</text>
+<rect x="360" y="998" width="40" height="26" rx="4" fill="#f3f6fa" stroke="#48566a" stroke-width="1.2"/>
+<text x="380" y="1017" font-size="13.5" font-weight="normal" font-style="normal" text-anchor="middle" fill="#5b6b80">6</text>
+<text x="80" y="1040" font-size="13.5" font-weight="normal" font-style="normal" text-anchor="start" fill="#5b6b80">puertos del switch</text>
+<rect x="703" y="794" width="400" height="146" rx="10" fill="#1b2533" opacity="0.10"/>
+<rect x="700" y="790" width="400" height="146" rx="10" fill="#ffffff" stroke="#48566a" stroke-width="1.4"/>
+<path d="M700,838 V800 Q700,790 710,790 H1090 Q1100,790 1100,800 V838 Z" fill="url(#g_blue)" stroke="#48566a" stroke-width="1.4"/>
+<circle cx="732" cy="814" r="19" fill="#dce8f5" stroke="#48566a" stroke-width="1.3"/>
+<g transform="translate(732,814) scale(0.7916666666666666)"><rect x="-13" y="-14" width="26" height="12" rx="2.5" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><rect x="-13" y="2" width="26" height="12" rx="2.5" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><circle cx="7" cy="-8" r="1.6" fill="#26323f"/><circle cx="7" cy="8" r="1.6" fill="#26323f"/><path d="M-9,-8 H-1 M-9,8 H-1" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text x="764" y="821" font-size="18" font-weight="bold" font-style="normal" text-anchor="start" fill="#26323f">server1</text>
+<text x="720" y="866" font-size="17" font-weight="bold" font-style="normal" text-anchor="start" fill="#26323f">192.168.1.10/24</text>
+<text x="720" y="890" font-size="14" font-weight="normal" font-style="normal" text-anchor="start" fill="#5b6b80">servidor de aplicación (web)</text>
+<text x="720" y="914" font-size="13.5" font-weight="normal" font-style="normal" text-anchor="start" fill="#5b6b80">eth1 SDN_Net · eth2 virbr0 (NAT)</text>
+<path d="M436,930.0 C560,930.0 590,863.0 700,863.0" fill="none" stroke="#48566a" stroke-width="3.4"/>
+<rect x="703" y="966" width="400" height="146" rx="10" fill="#1b2533" opacity="0.10"/>
+<rect x="700" y="962" width="400" height="146" rx="10" fill="#ffffff" stroke="#48566a" stroke-width="1.4"/>
+<path d="M700,1010 V972 Q700,962 710,962 H1090 Q1100,962 1100,972 V1010 Z" fill="url(#g_blue)" stroke="#48566a" stroke-width="1.4"/>
+<circle cx="732" cy="986" r="19" fill="#dce8f5" stroke="#48566a" stroke-width="1.3"/>
+<g transform="translate(732,986) scale(0.7916666666666666)"><rect x="-13" y="-14" width="26" height="12" rx="2.5" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><rect x="-13" y="2" width="26" height="12" rx="2.5" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><circle cx="7" cy="-8" r="1.6" fill="#26323f"/><circle cx="7" cy="8" r="1.6" fill="#26323f"/><path d="M-9,-8 H-1 M-9,8 H-1" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text x="764" y="993" font-size="18" font-weight="bold" font-style="normal" text-anchor="start" fill="#26323f">server2</text>
+<text x="720" y="1038" font-size="17" font-weight="bold" font-style="normal" text-anchor="start" fill="#26323f">192.168.1.11/24</text>
+<text x="720" y="1062" font-size="14" font-weight="normal" font-style="normal" text-anchor="start" fill="#5b6b80">servidor de datos (BD)</text>
+<text x="720" y="1086" font-size="13.5" font-weight="normal" font-style="normal" text-anchor="start" fill="#5b6b80">eth1 SDN_Net · eth2 virbr0 (NAT)</text>
+<path d="M436,930.0 C560,930.0 590,1035.0 700,1035.0" fill="none" stroke="#48566a" stroke-width="3.4"/>
+<rect x="703" y="1138" width="400" height="146" rx="10" fill="#1b2533" opacity="0.10"/>
+<rect x="700" y="1134" width="400" height="146" rx="10" fill="#ffffff" stroke="#48566a" stroke-width="1.4"/>
+<path d="M700,1182 V1144 Q700,1134 710,1134 H1090 Q1100,1134 1100,1144 V1182 Z" fill="url(#g_amber)" stroke="#48566a" stroke-width="1.4"/>
+<circle cx="732" cy="1158" r="19" fill="#faecd2" stroke="#48566a" stroke-width="1.3"/>
+<g transform="translate(732,1158) scale(0.7916666666666666)"><rect x="-12" y="-11" width="24" height="16" rx="2.5" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M-16,9 H16 L13,5 H-13 Z" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><text x="0" y="1.5" font-size="13" font-weight="bold" text-anchor="middle" fill="#b04a4a">!</text></g>
+<text x="764" y="1165" font-size="18" font-weight="bold" font-style="normal" text-anchor="start" fill="#26323f">attacker</text>
+<text x="720" y="1210" font-size="17" font-weight="bold" font-style="normal" text-anchor="start" fill="#26323f">192.168.1.50/24</text>
+<text x="720" y="1234" font-size="14" font-weight="normal" font-style="normal" text-anchor="start" fill="#5b6b80">nmap · hydra · hping3 · slowhttptest</text>
+<text x="720" y="1258" font-size="13.5" font-weight="normal" font-style="normal" text-anchor="start" fill="#5b6b80">eth1 SDN_Net · eth2 virbr0 (NAT)</text>
+<path d="M436,930.0 C560,930.0 590,1207.0 700,1207.0" fill="none" stroke="#48566a" stroke-width="3.4"/>
+<rect x="494.0" y="886.0" width="160" height="28" rx="14.0" fill="#ffffff" stroke="#48566a" stroke-width="1.2"/>
+<text x="574" y="904.0" font-size="14" font-weight="normal" font-style="normal" text-anchor="middle" fill="#26323f">tráfico de datos</text>
+<path d="M861,652 V768 H330 V808" fill="none" stroke="#2f8f5b" stroke-width="2.8" marker-end="url(#m2f8f5b)" marker-start="url(#m2f8f5bs)"/>
+<rect x="489.0" y="754.0" width="214" height="28" rx="14.0" fill="#ffffff" stroke="#2f8f5b" stroke-width="1.2"/>
+<text x="596" y="772.0" font-size="14" font-weight="normal" font-style="normal" text-anchor="middle" fill="#2f8f5b">OpenFlow 1.3 · tcp:6653</text>
+<path d="M130,808 V654" fill="none" stroke="#2f6fb0" stroke-width="2.4" stroke-dasharray="7 5" marker-end="url(#m2f6fb0)"/>
+<rect x="151.0" y="677.0" width="118" height="46" rx="8" fill="#ffffff" stroke="#2f6fb0" stroke-width="1.2"/>
+<text x="210" y="696.0" font-size="14" font-weight="normal" font-style="normal" text-anchor="middle" fill="#2f6fb0">captura</text>
+<text x="210" y="714.0" font-size="14" font-weight="normal" font-style="normal" text-anchor="middle" fill="#2f6fb0">server1-e1</text>
+<rect x="23" y="1338" width="1130" height="78" rx="10" fill="#1b2533" opacity="0.10"/>
+<rect x="20" y="1334" width="1130" height="78" rx="10" fill="#ffffff" stroke="#48566a" stroke-width="1.4"/>
+<line x1="44" y1="1362" x2="88" y2="1362" stroke="#48566a" stroke-width="2.8"/>
+<text x="98" y="1368" font-size="15" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">Tráfico de datos</text>
+<line x1="260.4" y1="1362" x2="304.4" y2="1362" stroke="#2f8f5b" stroke-width="2.8"/>
+<text x="314.4" y="1368" font-size="15" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">Control OpenFlow</text>
+<line x1="476.79999999999995" y1="1362" x2="520.8" y2="1362" stroke="#2f6fb0" stroke-width="2.8" stroke-dasharray="7 5"/>
+<text x="530.8" y="1368" font-size="15" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">Captura de tráfico</text>
+<line x1="710.0" y1="1362" x2="754.0" y2="1362" stroke="#c9772b" stroke-width="2.8"/>
+<text x="764.0" y="1368" font-size="15" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">Alertas · REST · HTTP</text>
+<text x="44" y="1396" font-size="14" font-weight="normal" font-style="normal" text-anchor="start" fill="#5b6b80">Todos los nodos salen a Internet por eth2 (NAT virbr0), solo para instalar herramientas.</text>
+</svg>

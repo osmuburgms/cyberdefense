@@ -47,6 +47,9 @@ BoldItalicFont=arialbi.ttf,
 
 \usepackage{graphicx} % Gráficos y colores
 \usepackage{amsmath,amssymb,chngcntr}
+% Numeración continua de figuras y tablas en todo el documento (evita "Tabla 1" repetida en cada capítulo)
+\counterwithout{figure}{chapter}
+\counterwithout{table}{chapter}
 \usepackage{float}
 \usepackage{changepage}
 \usepackage{subcaption}

@@ -1,0 +1,140 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1230" height="1010" viewBox="0 0 1230 1010" font-family="Arial, 'Liberation Sans', Helvetica, sans-serif">
+<defs><marker id="m48566a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#48566a"/></marker><marker id="m48566as" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M10,0 L0,5 L10,10 z" fill="#48566a"/></marker><marker id="m2f8f5b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#2f8f5b"/></marker><marker id="m2f8f5bs" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M10,0 L0,5 L10,10 z" fill="#2f8f5b"/></marker><marker id="m2f6fb0" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#2f6fb0"/></marker><marker id="m2f6fb0s" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M10,0 L0,5 L10,10 z" fill="#2f6fb0"/></marker><marker id="mc9772b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#c9772b"/></marker><marker id="mc9772bs" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M10,0 L0,5 L10,10 z" fill="#c9772b"/></marker><marker id="mb04a4a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#b04a4a"/></marker><marker id="mb04a4as" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M10,0 L0,5 L10,10 z" fill="#b04a4a"/></marker><linearGradient id="g_blue" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e6effa"/><stop offset="1" stop-color="#c9dcf2"/></linearGradient><linearGradient id="g_green" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e7f5ec"/><stop offset="1" stop-color="#c6e6d2"/></linearGradient><linearGradient id="g_amber" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fdf3df"/><stop offset="1" stop-color="#f4dcaa"/></linearGradient><linearGradient id="g_gray" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eef1f5"/><stop offset="1" stop-color="#d5dbe4"/></linearGradient><linearGradient id="g_rose" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#faeaea"/><stop offset="1" stop-color="#efc9c9"/></linearGradient><linearGradient id="g_dark" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a4a5e"/><stop offset="1" stop-color="#26323f"/></linearGradient></defs>
+<rect width="1230" height="1010" fill="#ffffff"/>
+<text x="30" y="40" font-size="19" font-weight="bold" font-style="normal" text-anchor="start" fill="#5b6b80">Base de datos MongoDB · cyberdefense</text>
+<rect x="33" y="74" width="530" height="400" rx="10" fill="#1b2533" opacity="0.10"/>
+<rect x="30" y="70" width="530" height="400" rx="10" fill="#ffffff" stroke="#48566a" stroke-width="1.4"/>
+<path d="M30,118 V80 Q30,70 40,70 H550 Q560,70 560,80 V118 Z" fill="url(#g_blue)" stroke="#48566a" stroke-width="1.4"/>
+<circle cx="58" cy="94" r="16" fill="#dce8f5" stroke="#48566a" stroke-width="1.3"/>
+<g transform="translate(58,94) scale(0.6666666666666666)"><ellipse cx="0" cy="-10" rx="12" ry="4.5" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M-12,-10 V10 A12,4.5 0 0 0 12,10 V-10 M-12,0 A12,4.5 0 0 0 12,0" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text x="86" y="101" font-size="18" font-weight="bold" font-style="normal" text-anchor="start" fill="#26323f">alerts</text>
+<text x="46" y="140" font-size="16" font-weight="bold" font-style="normal" text-anchor="start" fill="#26323f">_id</text>
+<text x="546" y="140" font-size="14.5" font-weight="normal" font-style="normal" text-anchor="end" fill="#5b6b80">ObjectId</text>
+<rect x="442.8" y="124" width="32" height="20" rx="4" fill="#f6e0e0" stroke="#b04a4a" stroke-width="1"/>
+<text x="458.8" y="139" font-size="12.5" font-weight="bold" font-style="normal" text-anchor="middle" fill="#b04a4a">PK</text>
+<rect x="31" y="150" width="528" height="32" rx="0" fill="#f6f8fb" stroke="none" stroke-width="0"/>
+<text x="46" y="172" font-size="16" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">attack_type</text>
+<text x="546" y="172" font-size="14.5" font-weight="normal" font-style="normal" text-anchor="end" fill="#5b6b80">string</text>
+<text x="46" y="204" font-size="16" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">confidence</text>
+<text x="546" y="204" font-size="14.5" font-weight="normal" font-style="normal" text-anchor="end" fill="#5b6b80">float (0–100)</text>
+<rect x="31" y="214" width="528" height="32" rx="0" fill="#f6f8fb" stroke="none" stroke-width="0"/>
+<text x="46" y="236" font-size="16" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">attacker_ip</text>
+<text x="546" y="236" font-size="14.5" font-weight="normal" font-style="normal" text-anchor="end" fill="#5b6b80">string</text>
+<text x="46" y="268" font-size="16" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">victim_ip</text>
+<text x="546" y="268" font-size="14.5" font-weight="normal" font-style="normal" text-anchor="end" fill="#5b6b80">string</text>
+<rect x="31" y="278" width="528" height="32" rx="0" fill="#f6f8fb" stroke="none" stroke-width="0"/>
+<text x="46" y="300" font-size="16" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">victim_port</text>
+<text x="546" y="300" font-size="14.5" font-weight="normal" font-style="normal" text-anchor="end" fill="#5b6b80">int</text>
+<text x="46" y="332" font-size="16" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">action_taken</text>
+<text x="546" y="332" font-size="14.5" font-weight="normal" font-style="normal" text-anchor="end" fill="#5b6b80">string</text>
+<rect x="31" y="342" width="528" height="32" rx="0" fill="#f6f8fb" stroke="none" stroke-width="0"/>
+<text x="46" y="364" font-size="16" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">timestamp</text>
+<text x="546" y="364" font-size="14.5" font-weight="normal" font-style="normal" text-anchor="end" fill="#5b6b80">ISO-8601 UTC</text>
+<text x="46" y="396" font-size="16" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">email_notification</text>
+<text x="546" y="396" font-size="14.5" font-weight="normal" font-style="normal" text-anchor="end" fill="#5b6b80">objeto {status, …}</text>
+<rect x="31" y="406" width="528" height="32" rx="0" fill="#f6f8fb" stroke="none" stroke-width="0"/>
+<text x="46" y="428" font-size="16" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">blockchain_signature</text>
+<text x="546" y="428" font-size="14.5" font-weight="normal" font-style="normal" text-anchor="end" fill="#5b6b80">string</text>
+<text x="46" y="460" font-size="16" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">blockchain_status</text>
+<text x="546" y="460" font-size="14.5" font-weight="normal" font-style="normal" text-anchor="end" fill="#5b6b80">pending | confirmed | unconfirmed</text>
+<rect x="673" y="74" width="530" height="272" rx="10" fill="#1b2533" opacity="0.10"/>
+<rect x="670" y="70" width="530" height="272" rx="10" fill="#ffffff" stroke="#48566a" stroke-width="1.4"/>
+<path d="M670,118 V80 Q670,70 680,70 H1190 Q1200,70 1200,80 V118 Z" fill="url(#g_blue)" stroke="#48566a" stroke-width="1.4"/>
+<circle cx="698" cy="94" r="16" fill="#dce8f5" stroke="#48566a" stroke-width="1.3"/>
+<g transform="translate(698,94) scale(0.6666666666666666)"><ellipse cx="0" cy="-10" rx="12" ry="4.5" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M-12,-10 V10 A12,4.5 0 0 0 12,10 V-10 M-12,0 A12,4.5 0 0 0 12,0" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text x="726" y="101" font-size="18" font-weight="bold" font-style="normal" text-anchor="start" fill="#26323f">users</text>
+<text x="686" y="140" font-size="16" font-weight="bold" font-style="normal" text-anchor="start" fill="#26323f">_id (username)</text>
+<text x="1186" y="140" font-size="14.5" font-weight="normal" font-style="normal" text-anchor="end" fill="#5b6b80">string</text>
+<rect x="1097.6" y="124" width="32" height="20" rx="4" fill="#f6e0e0" stroke="#b04a4a" stroke-width="1"/>
+<text x="1113.6" y="139" font-size="12.5" font-weight="bold" font-style="normal" text-anchor="middle" fill="#b04a4a">PK</text>
+<rect x="671" y="150" width="528" height="32" rx="0" fill="#f6f8fb" stroke="none" stroke-width="0"/>
+<text x="686" y="172" font-size="16" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">password_hash</text>
+<text x="1186" y="172" font-size="14.5" font-weight="normal" font-style="normal" text-anchor="end" fill="#5b6b80">bcrypt</text>
+<text x="686" y="204" font-size="16" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">role</text>
+<text x="1186" y="204" font-size="14.5" font-weight="normal" font-style="normal" text-anchor="end" fill="#5b6b80">operator | admin</text>
+<rect x="671" y="214" width="528" height="32" rx="0" fill="#f6f8fb" stroke="none" stroke-width="0"/>
+<text x="686" y="236" font-size="16" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">active</text>
+<text x="1186" y="236" font-size="14.5" font-weight="normal" font-style="normal" text-anchor="end" fill="#5b6b80">bool</text>
+<text x="686" y="268" font-size="16" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">email</text>
+<text x="1186" y="268" font-size="14.5" font-weight="normal" font-style="normal" text-anchor="end" fill="#5b6b80">string</text>
+<rect x="671" y="278" width="528" height="32" rx="0" fill="#f6f8fb" stroke="none" stroke-width="0"/>
+<text x="686" y="300" font-size="16" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">created_at</text>
+<text x="1186" y="300" font-size="14.5" font-weight="normal" font-style="normal" text-anchor="end" fill="#5b6b80">ISO-8601</text>
+<text x="686" y="332" font-size="16" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">created_by</text>
+<text x="1186" y="332" font-size="14.5" font-weight="normal" font-style="normal" text-anchor="end" fill="#5b6b80">string</text>
+<rect x="673" y="384" width="530" height="112" rx="10" fill="#1b2533" opacity="0.10"/>
+<rect x="670" y="380" width="530" height="112" rx="10" fill="#ffffff" stroke="#48566a" stroke-width="1.4"/>
+<path d="M670,428 V390 Q670,380 680,380 H1190 Q1200,380 1200,390 V428 Z" fill="url(#g_amber)" stroke="#48566a" stroke-width="1.4"/>
+<circle cx="698" cy="404" r="16" fill="#faecd2" stroke="#48566a" stroke-width="1.3"/>
+<g transform="translate(698,404) scale(0.6666666666666666)"><ellipse cx="0" cy="-10" rx="12" ry="4.5" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M-12,-10 V10 A12,4.5 0 0 0 12,10 V-10 M-12,0 A12,4.5 0 0 0 12,0" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text x="726" y="411" font-size="18" font-weight="bold" font-style="normal" text-anchor="start" fill="#26323f">email_notification_dedup</text>
+<text x="686" y="450" font-size="16" font-weight="bold" font-style="normal" text-anchor="start" fill="#26323f">_id</text>
+<text x="1186" y="450" font-size="14.5" font-weight="normal" font-style="normal" text-anchor="end" fill="#5b6b80">SHA-256(huella|ventana)</text>
+<rect x="971.8" y="434" width="32" height="20" rx="4" fill="#f6e0e0" stroke="#b04a4a" stroke-width="1"/>
+<text x="987.8" y="449" font-size="12.5" font-weight="bold" font-style="normal" text-anchor="middle" fill="#b04a4a">PK</text>
+<rect x="671" y="460" width="528" height="32" rx="0" fill="#f6f8fb" stroke="none" stroke-width="0"/>
+<text x="686" y="482" font-size="16" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">expires_at</text>
+<text x="1186" y="482" font-size="14.5" font-weight="normal" font-style="normal" text-anchor="end" fill="#5b6b80">índice TTL</text>
+<rect x="673" y="534" width="530" height="176" rx="10" fill="#1b2533" opacity="0.10"/>
+<rect x="670" y="530" width="530" height="176" rx="10" fill="#ffffff" stroke="#48566a" stroke-width="1.4"/>
+<path d="M670,578 V540 Q670,530 680,530 H1190 Q1200,530 1200,540 V578 Z" fill="url(#g_rose)" stroke="#48566a" stroke-width="1.4"/>
+<circle cx="698" cy="554" r="16" fill="#f6e0e0" stroke="#48566a" stroke-width="1.3"/>
+<g transform="translate(698,554) scale(0.6666666666666666)"><ellipse cx="0" cy="-10" rx="12" ry="4.5" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M-12,-10 V10 A12,4.5 0 0 0 12,10 V-10 M-12,0 A12,4.5 0 0 0 12,0" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text x="726" y="561" font-size="18" font-weight="bold" font-style="normal" text-anchor="start" fill="#26323f">system_status</text>
+<text x="686" y="600" font-size="16" font-weight="bold" font-style="normal" text-anchor="start" fill="#26323f">_id</text>
+<text x="1186" y="600" font-size="14.5" font-weight="normal" font-style="normal" text-anchor="end" fill="#5b6b80">"network"</text>
+<rect x="1075.4" y="584" width="32" height="20" rx="4" fill="#f6e0e0" stroke="#b04a4a" stroke-width="1"/>
+<text x="1091.4" y="599" font-size="12.5" font-weight="bold" font-style="normal" text-anchor="middle" fill="#b04a4a">PK</text>
+<rect x="671" y="610" width="528" height="32" rx="0" fill="#f6f8fb" stroke="none" stroke-width="0"/>
+<text x="686" y="632" font-size="16" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">blocked</text>
+<text x="1186" y="632" font-size="14.5" font-weight="normal" font-style="normal" text-anchor="end" fill="#5b6b80">bool</text>
+<text x="686" y="664" font-size="16" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">updated_at</text>
+<text x="1186" y="664" font-size="14.5" font-weight="normal" font-style="normal" text-anchor="end" fill="#5b6b80">ISO-8601</text>
+<rect x="671" y="674" width="528" height="32" rx="0" fill="#f6f8fb" stroke="none" stroke-width="0"/>
+<text x="686" y="696" font-size="16" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">reason</text>
+<text x="1186" y="696" font-size="14.5" font-weight="normal" font-style="normal" text-anchor="end" fill="#5b6b80">string</text>
+<rect x="673" y="748" width="530" height="240" rx="10" fill="#1b2533" opacity="0.10"/>
+<rect x="670" y="744" width="530" height="240" rx="10" fill="#ffffff" stroke="#48566a" stroke-width="1.4"/>
+<path d="M670,792 V754 Q670,744 680,744 H1190 Q1200,744 1200,754 V792 Z" fill="url(#g_gray)" stroke="#48566a" stroke-width="1.4"/>
+<circle cx="698" cy="768" r="16" fill="#e8ecf1" stroke="#48566a" stroke-width="1.3"/>
+<g transform="translate(698,768) scale(0.6666666666666666)"><ellipse cx="0" cy="-10" rx="12" ry="4.5" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M-12,-10 V10 A12,4.5 0 0 0 12,10 V-10 M-12,0 A12,4.5 0 0 0 12,0" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text x="726" y="775" font-size="18" font-weight="bold" font-style="normal" text-anchor="start" fill="#26323f">system_config</text>
+<text x="686" y="814" font-size="16" font-weight="bold" font-style="normal" text-anchor="start" fill="#26323f">_id</text>
+<text x="1186" y="814" font-size="14.5" font-weight="normal" font-style="normal" text-anchor="end" fill="#5b6b80">"global"</text>
+<rect x="1082.8" y="798" width="32" height="20" rx="4" fill="#f6e0e0" stroke="#b04a4a" stroke-width="1"/>
+<text x="1098.8" y="813" font-size="12.5" font-weight="bold" font-style="normal" text-anchor="middle" fill="#b04a4a">PK</text>
+<rect x="671" y="824" width="528" height="32" rx="0" fill="#f6f8fb" stroke="none" stroke-width="0"/>
+<text x="686" y="846" font-size="16" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">pollInterval</text>
+<text x="1186" y="846" font-size="14.5" font-weight="normal" font-style="normal" text-anchor="end" fill="#5b6b80">int (ms)</text>
+<text x="686" y="878" font-size="16" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">attackWindow</text>
+<text x="1186" y="878" font-size="14.5" font-weight="normal" font-style="normal" text-anchor="end" fill="#5b6b80">int</text>
+<rect x="671" y="888" width="528" height="32" rx="0" fill="#f6f8fb" stroke="none" stroke-width="0"/>
+<text x="686" y="910" font-size="16" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">timelineSize</text>
+<text x="1186" y="910" font-size="14.5" font-weight="normal" font-style="normal" text-anchor="end" fill="#5b6b80">int</text>
+<text x="686" y="942" font-size="16" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">logSize</text>
+<text x="1186" y="942" font-size="14.5" font-weight="normal" font-style="normal" text-anchor="end" fill="#5b6b80">int</text>
+<rect x="671" y="952" width="528" height="32" rx="0" fill="#f6f8fb" stroke="none" stroke-width="0"/>
+<text x="686" y="974" font-size="16" font-weight="normal" font-style="normal" text-anchor="start" fill="#26323f">widgets</text>
+<text x="1186" y="974" font-size="14.5" font-weight="normal" font-style="normal" text-anchor="end" fill="#5b6b80">objeto {bool}</text>
+<rect x="33" y="564" width="530" height="150" rx="10" fill="#1b2533" opacity="0.10"/>
+<rect x="30" y="560" width="530" height="150" rx="10" fill="#ffffff" stroke="#48566a" stroke-width="1.4"/>
+<path d="M30,608 V570 Q30,560 40,560 H550 Q560,560 560,570 V608 Z" fill="url(#g_green)" stroke="#48566a" stroke-width="1.4"/>
+<circle cx="58" cy="584" r="16" fill="#dff0e6" stroke="#48566a" stroke-width="1.3"/>
+<g transform="translate(58,584) scale(0.6666666666666666)"><rect x="-17" y="-6" width="11" height="12" rx="2" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><rect x="-5.5" y="-6" width="11" height="12" rx="2" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><rect x="6" y="-6" width="11" height="12" rx="2" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M-6,0 H-5.5 M5.5,0 H6" fill="none" stroke="#26323f" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text x="86" y="591" font-size="18" font-weight="bold" font-style="normal" text-anchor="start" fill="#26323f">Solana (libro mayor externo)</text>
+<text x="295" y="645" font-size="15.5" font-weight="normal" font-style="normal" text-anchor="middle" fill="#5b6b80">Transacción Memo «AUDIT_IPS |</text>
+<text x="295" y="667" font-size="15.5" font-weight="normal" font-style="normal" text-anchor="middle" fill="#5b6b80">tipo | atacante | víctima | confianza |</text>
+<text x="295" y="689" font-size="15.5" font-weight="normal" font-style="normal" text-anchor="middle" fill="#5b6b80">acción | fecha»</text>
+<line x1="560" y1="140" x2="670" y2="140" stroke="#c9772b" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#mc9772b)"/>
+<rect x="569.0" y="98.0" width="92" height="28" rx="14.0" fill="#ffffff" stroke="#c9772b" stroke-width="1.2"/>
+<text x="615" y="116.0" font-size="14" font-weight="normal" font-style="normal" text-anchor="middle" fill="#c9772b">notifica</text>
+<line x1="560" y1="440" x2="670" y2="436" stroke="#c9772b" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#mc9772b)"/>
+<rect x="565.0" y="394.0" width="100" height="28" rx="14.0" fill="#ffffff" stroke="#c9772b" stroke-width="1.2"/>
+<text x="615" y="412.0" font-size="14" font-weight="normal" font-style="normal" text-anchor="middle" fill="#c9772b">deduplica</text>
+<line x1="560" y1="455" x2="670" y2="612" stroke="#c9772b" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#mc9772b)"/>
+<rect x="571.0" y="534.0" width="88" height="28" rx="14.0" fill="#ffffff" stroke="#c9772b" stroke-width="1.2"/>
+<text x="615" y="552.0" font-size="14" font-weight="normal" font-style="normal" text-anchor="middle" fill="#c9772b">bloquea</text>
+<line x1="295" y1="468" x2="295" y2="560" stroke="#c9772b" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#mc9772b)"/>
+<rect x="253.0" y="500.0" width="84" height="28" rx="14.0" fill="#ffffff" stroke="#c9772b" stroke-width="1.2"/>
+<text x="295" y="518.0" font-size="14" font-weight="normal" font-style="normal" text-anchor="middle" fill="#c9772b">audita</text>
+</svg>

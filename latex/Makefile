@@ -18,11 +18,17 @@ MAIN    := ReportePI.tex
 PDF     := ReportePI.pdf
 SVG     := recursos/CyberDefense_despues_diagrama.svg
 FIGPDF  := recursos/Ciberdefense_despues_diagrama.pdf
+FIGS    := recursos/fig_flujo_alerta.pdf recursos/fig_modelo_bd.pdf \
+           recursos/fig_pipeline_ia.pdf recursos/fig_topologia.pdf
 LATEXMK := latexmk -xelatex -interaction=nonstopmode -file-line-error
 
 .PHONY: all fig clean distclean view bib
 
 all: $(PDF)
+
+# Figuras del Capitulo 2 (se generan con recursos/gen_diagramas.py): SVG -> PDF
+recursos/fig_%.pdf: recursos/fig_%.svg
+	rsvg-convert -f pdf -o $@ $<
 
 # Regenera el diagrama PDF cuando el SVG cambio y compila el reporte
 $(FIGPDF): $(SVG)
@@ -31,7 +37,7 @@ $(FIGPDF): $(SVG)
 
 $(PDF): $(MAIN) cap01.tex cap02.tex cap03.tex cap04.tex cap05.tex resumen.tex \
         abreviaturas.tex simbologia.tex adicionales.tex apendices.tex title.tex referencias.bib \
-        $(FIGPDF)
+        $(FIGPDF) $(FIGS)
 	$(LATEXMK) $(MAIN)
 	@echo ""
 	@echo "==> PDF generado: $(PDF)"
