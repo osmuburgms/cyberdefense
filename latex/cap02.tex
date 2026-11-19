@@ -9,7 +9,7 @@
 %  Figuras: recursos/fig_*.svg (se generan con recursos/gen_diagramas.py y
 %  "make" las convierte a PDF). El diagrama de arquitectura es
 %  recursos/CyberDefense_despues_diagrama.svg.
-%  Figuras y tablas usan [H] (paquete float) para quedar fijas en su sitio.
+%  Figuras y tablas breves usan [H]; la matriz de riesgos se divide entre páginas.
 % =====================================================================
 
 El presente capítulo expone la metodología con la que se diseña y se evaluará la plataforma de ciberdefensa propuesta en el Capítulo~\ref{chapter:introduction}. El problema abordado es de carácter aplicado: dotar al Centro de Datos de la FIEC de una capacidad de detección y de respuesta automática sobre su red programable. Por esta razón, el trabajo se orienta al desarrollo tecnológico. Las decisiones de diseño parten de requisitos derivados de las necesidades operativas identificadas, se justifican frente a las alternativas disponibles y se verifican mediante un experimento controlado, cuyas variables y criterios de aceptación se establecen antes de su ejecución.
@@ -24,18 +24,14 @@ El capítulo se organiza de la siguiente manera. La Sección~\ref{sec:requisitos
 
 La definición de requisitos parte de los vacíos operativos descritos en el Capítulo~\ref{chapter:introduction}: la monitorización fragmentada de la red, los controles de mitigación manuales, la ausencia de análisis automatizado y de un registro auditable de los incidentes, la falta de un inventario estructurado de activos y de un módulo de reglas de tráfico, y la inexistencia de un canal de notificación al equipo de soporte. Cada vacío se tradujo en uno o más requisitos, de modo que el diseño y la evaluación posteriores resulten trazables a un problema concreto y no a características deseables en abstracto.
 
-Los requisitos funcionales, presentados en la Tabla~\ref{tbl:rf}, describen lo que la plataforma debe hacer. Los seis primeros (RF1 a RF6) conforman el ciclo central de detección y respuesta, desde la captura del tráfico hasta su visualización por el operador; RF7 y RF8 corresponden a la operación cotidiana, es decir, al acceso y a la notificación; y RF9 a RF12 a la gestión de activos y de políticas de seguridad.
-
 \begin{table}[H]
 \centering
 \footnotesize
-\renewcommand{\arraystretch}{1.2}
+\renewcommand{\arraystretch}{1.0}
 \caption{{\fontsize{11pt}{13}\selectfont Requisitos funcionales}}
 \label{tbl:rf}
-\begin{tabular}{@{}L{1.1cm}L{12.8cm}@{}}
-\toprule
+\begin{tabular}{@{}L{1.1cm}L{14.7cm}@{}}
 \textbf{ID} & \textbf{Requisito} \\
-\midrule
 RF1 & Capturar el tráfico del segmento de red y agruparlo en flujos para su análisis en tiempo real. \\
 RF2 & Clasificar cada flujo como benigno o como un tipo de ataque mediante un modelo de aprendizaje automático. \\
 RF3 & Mitigar automáticamente las amenazas confirmadas mediante reglas de flujo instaladas en el switch programable. \\
@@ -48,11 +44,11 @@ RF9 & Gestionar el inventario de activos (alta, edición, consulta, baja y búsq
 RF10 & Importar equipos de forma masiva desde archivos JSON, YAML, XML, XLSX y CSV, con plantilla y modo de verificación previa (simulación). \\
 RF11 & Gestionar reglas de tráfico por equipo, grupo o segmento, puerto, protocolo y destino, con acciones de permitir, bloquear, alertar o limitar, y con prioridad y vigencia. \\
 RF12 & Incluir recomendaciones de mitigación y prevención en el informe de incidentes y en la notificación, según el tipo de ataque y los servicios del equipo afectado. \\
-\bottomrule
 \end{tabular}
 \end{table}
 
-Los requisitos no funcionales, presentados en la Tabla~\ref{tbl:rnf}, establecen las condiciones de calidad y las restricciones que debe respetar la solución en materia de seguridad, desempeño, modularidad, reproducibilidad, licenciamiento, no intrusión y recursos de cómputo. Entre ellos destaca la no intrusión (RNF6): la plataforma opera sin alterar las políticas ya instaladas en la red del Centro de Datos, y solo aplica reglas sobre tráfico productivo con la autorización escrita del cliente.
+\newpage
+Los requisitos funcionales de la Tabla~\ref{tbl:rf} describen lo que la plataforma debe hacer. Los seis primeros (RF1 a RF6) conforman el ciclo central de detección y respuesta, desde la captura del tráfico hasta su visualización por el operador; RF7 y RF8 corresponden a la operación cotidiana, es decir, al acceso y a la notificación; y RF9 a RF12 a la gestión de activos y de políticas de seguridad.
 
 \begin{table}[H]
 \centering
@@ -61,9 +57,7 @@ Los requisitos no funcionales, presentados en la Tabla~\ref{tbl:rnf}, establecen
 \caption{{\fontsize{11pt}{13}\selectfont Requisitos no funcionales}}
 \label{tbl:rnf}
 \begin{tabular}{@{}L{1.3cm}L{3.2cm}L{9.4cm}@{}}
-\toprule
 \textbf{ID} & \textbf{Atributo} & \textbf{Requisito} \\
-\midrule
 RNF1 & Seguridad & Contraseñas almacenadas solo como hash, sesiones firmadas, secretos fuera del repositorio y permisos verificados en el backend, no solo ocultos en la interfaz. \\
 RNF2 & Desempeño & Detección y mitigación dentro de los tiempos de aceptación de la Sección~\ref{sec:variables}, sin degradar de forma apreciable el tráfico legítimo. \\
 RNF3 & Modularidad & Componentes desacoplados que se reinician de forma independiente y se comunican mediante interfaces documentadas. \\
@@ -71,9 +65,10 @@ RNF4 & Reproducibilidad & Instalación automatizada, versiones de dependencias f
 RNF5 & Licenciamiento & Uso exclusivo de software de código abierto o sin costo de licencia. \\
 RNF6 & No intrusión & No modificar las políticas ni las listas de control de acceso ya instaladas en el Centro de Datos; aplicar reglas sobre tráfico productivo solo con autorización escrita del cliente. \\
 RNF7 & Recursos & Ejecutarse en un servidor de 2 vCPU, 16~GB de RAM y 500~GB de almacenamiento. \\
-\bottomrule
 \end{tabular}
 \end{table}
+
+Los requisitos no funcionales de la Tabla~\ref{tbl:rnf} establecen las condiciones de calidad y las restricciones que debe respetar la solución en materia de seguridad, desempeño, modularidad, reproducibilidad, licenciamiento, no intrusión y recursos de cómputo. Entre ellos destaca la no intrusión (RNF6): la plataforma opera sin alterar las políticas ya instaladas en la red del Centro de Datos, y solo aplica reglas sobre tráfico productivo con la autorización escrita del cliente.
 
 % ---------------------------------------------------------------------------
 \section{Selección de tecnologías}
@@ -88,14 +83,11 @@ La plataforma se construye exclusivamente con software de código abierto. Para 
 \caption{{\fontsize{11pt}{13}\selectfont Alternativas tecnológicas evaluadas y decisión adoptada}}
 \label{tbl:alternativas}
 \begin{tabular}{@{}L{2.7cm}L{4.8cm}L{4.1cm}L{3.2cm}@{}}
-\toprule
 \textbf{Componente} & \textbf{Alternativas consideradas} & \textbf{Criterio determinante} & \textbf{Decisión} \\
-\midrule
 Sensor de tráfico & Scapy; Zeek; Suricata & Control total sobre las características de flujo que consume el modelo & Scapy \\
 Controlador SDN & Ryu; ONOS; OpenDaylight & Integración con Python y OpenFlow 1.3, y simplicidad de despliegue & Ryu \\
 Registro auditable & Encadenamiento de hashes local; cadena de bloques (Solana) & Evidencia verificable fuera de la base de datos operativa & Solana (programa Memo), junto con MongoDB \\
 Entorno de pruebas & VNX con LXC; Mininet & Hosts completos y escenario declarativo reproducible & VNX con LXC y Open vSwitch \\
-\bottomrule
 \end{tabular}
 \end{table}
 
@@ -191,7 +183,7 @@ La persistencia se resuelve con MongoDB, una base de datos orientada a documento
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\linewidth,height=0.80\textheight,keepaspectratio]{recursos/fig_modelo_bd.pdf}
+    \includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{recursos/fig_modelo_bd.pdf}
     \caption{Modelo de datos de la plataforma: colecciones, campos y relaciones lógicas.}
     \label{fig:modeloBD}
 \end{figure}
@@ -214,7 +206,7 @@ El módulo de inteligencia artificial se basa en un único modelo, LightGBM, ent
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\linewidth,height=0.80\textheight,keepaspectratio]{recursos/fig_pipeline_ia.pdf}
+    \includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{recursos/fig_pipeline_ia.pdf}
     \caption{Proceso de preparación de datos, entrenamiento y evaluación del modelo de detección.}
     \label{fig:pipelineIA}
 \end{figure}
@@ -248,9 +240,7 @@ El modelo se evaluó sobre el conjunto de prueba sin balancear. La exactitud glo
 \caption{{\fontsize{11pt}{13}\selectfont Métricas del modelo por clase sobre el conjunto de prueba (593\,238 flujos)}}
 \label{tbl:metricasClase}
 \begin{tabular}{@{}L{5.2cm}rrrr@{}}
-\toprule
 \textbf{Clase} & \textbf{Precisión} & \textbf{Exhaustividad} & \textbf{F1} & \textbf{Soporte} \\
-\midrule
 BENIGN & 1,00 & 1,00 & 1,00 & 454\,264 \\
 Bot & 0,99 & 1,00 & 0,99 & 14\,000 \\
 DDoS & 1,00 & 1,00 & 1,00 & 25\,605 \\
@@ -265,11 +255,10 @@ SQL Injection & 0,78 & 0,82 & 0,80 & 22 \\
 SSH-Patator & 1,00 & 1,00 & 1,00 & 1\,179 \\
 Web Attack Brute Force & 0,77 & 0,68 & 0,72 & 301 \\
 XSS & 0,53 & 0,64 & 0,58 & 176 \\
-\midrule
+\addlinespace[0.5ex]
 Exactitud global & & & 1,00 & 593\,238 \\
 Promedio macro & 0,93 & 0,94 & 0,93 & 593\,238 \\
 Promedio ponderado & 1,00 & 1,00 & 1,00 & 593\,238 \\
-\bottomrule
 \end{tabular}
 \end{table}
 
@@ -285,6 +274,7 @@ En operación, el motor de detección agrupa los paquetes capturados en flujos i
 
 Se identificaron los riesgos técnicos y operativos del proyecto y se estimó, para cada uno, su probabilidad de ocurrencia y su impacto en una escala cualitativa de tres niveles: baja, media y alta. La Tabla~\ref{tbl:riesgos} presenta la matriz resultante junto con las medidas de mitigación previstas. Los riesgos de mayor probabilidad --el desajuste entre los datos de entrenamiento y el tráfico real, y la baja confiabilidad en las clases con pocas muestras-- son inherentes al uso de conjuntos de datos públicos, y por ello la evaluación experimental se diseñó para contrastar el modelo con tráfico propio del laboratorio.
 
+\clearpage
 \begin{table}[H]
 \centering
 \footnotesize
@@ -292,10 +282,8 @@ Se identificaron los riesgos técnicos y operativos del proyecto y se estimó, p
 \setlength{\tabcolsep}{3.5pt}
 \caption{{\fontsize{11pt}{13}\selectfont Matriz de riesgos del proyecto}}
 \label{tbl:riesgos}
-\begin{tabular}{@{}L{0.9cm}L{4.4cm}L{1.3cm}L{1.3cm}L{7.2cm}@{}}
-\toprule
+\begin{tabular}{@{}L{0.9cm}L{4.4cm}L{1.3cm}L{1.45cm}L{7.05cm}@{}}
 \textbf{ID} & \textbf{Riesgo} & \textbf{Prob.} & \textbf{Impacto} & \textbf{Mitigación} \\
-\midrule
 R1 & Falsos positivos que bloquean tráfico legítimo & Media & Alto & Umbral de confianza ajustable, calibrado en laboratorio; limpieza del bloqueo desde el panel; pruebas solo en segmentos autorizados. \\
 R2 & Desajuste entre el conjunto de entrenamiento y el tráfico real (deriva) & Alta & Alto & Evaluación en el laboratorio con tráfico propio, informe separado de métricas \emph{offline} y en operación, y reentrenamiento como línea futura. \\
 R3 & Falla del controlador: con el switch en modo \texttt{secure} no se reenvían flujos nuevos sin él & Media & Alto & Servicios con reinicio independiente, supervisión del estado del controlador y alta disponibilidad como línea futura. \\
@@ -305,10 +293,21 @@ R6 & Tráfico cifrado, que reduce la visibilidad del contenido & Media & Medio &
 R7 & Sensor en Python con rendimiento limitado ante tráfico elevado & Media & Medio & Medición del consumo de recursos y de la pérdida de paquetes; límites de carga declarados. \\
 R8 & Exposición de credenciales o secretos & Baja & Alto & Hash bcrypt, tokens firmados, roles verificados en el backend, secretos fuera del repositorio con permisos restringidos. \\
 R9 & Uso indebido de la consola de hosts & Baja & Alto & Acceso solo con sesión válida, filtro de comandos y reglas de \texttt{sudo} acotadas. \\
+\end{tabular}
+\end{table}
+
+\clearpage
+\begin{table}[H]
+\centering
+\footnotesize
+\renewcommand{\arraystretch}{1.15}
+\setlength{\tabcolsep}{3.5pt}
+\caption*{{\fontsize{11pt}{13}\selectfont \tablename~\thetable{} (continuación): Matriz de riesgos del proyecto}}
+\begin{tabular}{@{}L{0.9cm}L{4.4cm}L{1.3cm}L{1.45cm}L{7.05cm}@{}}
+\textbf{ID} & \textbf{Riesgo} & \textbf{Prob.} & \textbf{Impacto} & \textbf{Mitigación} \\
 R10 & Registro en un validador local de pruebas, con inmutabilidad limitada frente a una red pública & Media & Bajo & Documentar la limitación; usar una red con múltiples validadores como línea futura. \\
 R11 & Saturación del equipo de soporte por notificaciones repetidas & Media & Bajo & Deduplicación por huella, severidad mínima configurable. \\
 R12 & Pruebas de ataque fuera del alcance autorizado & Baja & Alto & Escenario virtual aislado, autorización escrita y ventanas acordadas con el cliente. \\
-\bottomrule
 \end{tabular}
 \end{table}
 
@@ -329,15 +328,12 @@ Las variables independientes, resumidas en la Tabla~\ref{tbl:varIndep}, son los 
 \caption{{\fontsize{11pt}{13}\selectfont Variables independientes}}
 \label{tbl:varIndep}
 \begin{tabular}{@{}L{3.6cm}L{7.4cm}L{4.5cm}@{}}
-\toprule
 \textbf{Variable} & \textbf{Niveles} & \textbf{Propósito} \\
-\midrule
 Tipo de ataque & Reconocimiento (nmap), fuerza bruta SSH (hydra), DoS volumétrico (hping3) y DoS lento de aplicación (slowhttptest). & Cubrir las técnicas del alcance. \\
 Intensidad del ataque & Baja, media y alta (paquetes por segundo o conexiones simultáneas). & Observar la respuesta ante distintas cargas. \\
 Tráfico legítimo de fondo & Sin carga y con carga moderada (\emph{ping}, HTTP e iperf3). & Medir falsos positivos e impacto. \\
 Umbral de confianza & Tres valores: 0,50, 0,70 y 0,90. & Calibrar el compromiso entre detección y falsos positivos. \\
 Mitigación & Desactivada y activada. & Aislar el efecto de la respuesta automática. \\
-\bottomrule
 \end{tabular}
 \end{table}
 
@@ -352,16 +348,13 @@ Estas variables se calculan sobre el conjunto de prueba y caracterizan la capaci
 \caption{{\fontsize{11pt}{13}\selectfont Variables dependientes del modelo de IA y criterios de aceptación}}
 \label{tbl:varModelo}
 \begin{tabular}{@{}L{3.5cm}L{6.3cm}L{1.4cm}L{3.7cm}@{}}
-\toprule
 \textbf{Variable} & \textbf{Definición operacional} & \textbf{Unidad} & \textbf{Meta} \\
-\midrule
 Exactitud global & Flujos bien clasificados sobre el total de la prueba. & 0--1 & ≥ 0,99 \\
 Valor F1 macro & Promedio no ponderado del F1 de las 14 clases. & 0--1 & ≥ 0,90 \\
 F1 por clase & F1 de cada clase; se exige a las de soporte mayor a 1\,000 y se reporta en las demás. & 0--1 & ≥ 0,95 (soporte >1\,000); ≥ 0,50 (resto) \\
 Tasa de falsos positivos & Flujos BENIGN clasificados como ataque sobre el total de BENIGN. & \% & ≤ 1 \\
 Área bajo la curva ROC & Promedio uno contra todos entre clases. & 0--1 & ≥ 0,95 \\
 Tiempo de inferencia & Tiempo de clasificación de un flujo. & ms & ≤ 50 \\
-\bottomrule
 \end{tabular}
 \end{table}
 
@@ -377,9 +370,7 @@ Las variables del sistema se miden en el laboratorio sobre el prototipo completo
 \caption{{\fontsize{11pt}{13}\selectfont Variables dependientes del sistema y criterios de aceptación}}
 \label{tbl:varSistema}
 \begin{tabular}{@{}L{2.9cm}L{5.2cm}L{3.9cm}L{2.9cm}@{}}
-\toprule
 \textbf{Variable} & \textbf{Definición operacional} & \textbf{Instrumento} & \textbf{Meta} \\
-\midrule
 Tasa de detección & Ataques con al menos una alerta atribuida a la IP del atacante, sobre los ataques lanzados, por escenario. & Registro de corridas y colección \texttt{alerts}. & ≥ 80\,\% en cada escenario \\
 Tiempo de detección & Instante de la primera alerta menos el inicio del ataque. & Marca de tiempo del lanzador y campo \texttt{timestamp} de la alerta. & ≤ 30~s \\
 Tiempo de mitigación & Instante en que la regla DROP aparece en el switch menos el instante de la alerta. & \texttt{ovs-ofctl dump-flows} y marca de la alerta. & ≤ 2~s \\
@@ -389,7 +380,6 @@ Impacto en el tráfico legítimo & Variación porcentual de la latencia (RTT) y 
 Consumo de recursos & Uso medio y máximo de CPU y memoria del motor de IA, el backend y el controlador. & Monitoreo del sistema (psutil, top). & CPU ≤ 70\,\% y memoria ≤ 8~GB \\
 Notificación por correo & Tiempo entre la alerta y la recepción del correo, y correos duplicados por huella. & Marcas del backend y buzón de prueba. & ≤ 60~s en ≥ 95\,\% de las alertas elegibles; sin duplicados \\
 Registro auditable & Transacciones confirmadas sobre las enviadas y tiempo de confirmación. & Campo \texttt{blockchain\_status} y registros del validador. & ≥ 95\,\% y ≤ 10~s \\
-\bottomrule
 \end{tabular}
 \end{table}
 
@@ -404,13 +394,10 @@ La satisfacción de los usuarios se mide con la encuesta descrita en la Sección
 \caption{{\fontsize{11pt}{13}\selectfont Variables de satisfacción del usuario y criterios de aceptación}}
 \label{tbl:varSatisf}
 \begin{tabular}{@{}L{3.4cm}L{6.0cm}L{1.8cm}L{3.6cm}@{}}
-\toprule
 \textbf{Variable} & \textbf{Definición operacional} & \textbf{Unidad} & \textbf{Meta} \\
-\midrule
 Usabilidad global (SUS) & Puntaje de la escala SUS \parencite{brooke1996}. & 0--100 & ≥ 70 \\
 Valoración por dimensión & Media de los ítems del cuestionario complementario, por dimensión (Likert 1--5). & 1--5 & Media ≥ 4,0 \\
 Aceptación & Proporción de respuestas de 4 o 5 en los ítems complementarios. & \% & ≥ 70\,\% \\
-\bottomrule
 \end{tabular}
 \end{table}
 
@@ -425,13 +412,10 @@ Las metas de las tablas anteriores son criterios de aceptación establecidos por
 \caption{{\fontsize{11pt}{13}\selectfont Trazabilidad entre objetivos específicos y evidencia}}
 \label{tbl:trazabilidad}
 \begin{tabular}{@{}L{4.6cm}L{7.2cm}L{3.7cm}@{}}
-\toprule
 \textbf{Objetivo específico} & \textbf{Evidencia} & \textbf{Dónde se presenta} \\
-\midrule
 OE1. Diseñar la arquitectura & Requisitos, arquitectura, modelo de datos y diseño del módulo de IA. & Capítulo~2 \\
 OE2. Implementar el prototipo & Cumplimiento de los requisitos funcionales y no funcionales; consumo de recursos. & Capítulo~3 \\
 OE3. Evaluar el desempeño & Variables del modelo, del sistema y de satisfacción frente a sus metas. & Capítulo~3 \\
-\bottomrule
 \end{tabular}
 \end{table}
 
@@ -447,7 +431,7 @@ La validación se realiza en un laboratorio virtual que reproduce el segmento SD
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\linewidth,height=0.84\textheight,keepaspectratio]{recursos/fig_topologia.pdf}
+    \includegraphics[width=\linewidth,height=0.60\textheight,keepaspectratio]{recursos/fig_topologia.pdf}
     \caption{Topología del escenario de validación y relación entre los componentes de la plataforma.}
     \label{fig:topologia}
 \end{figure}
@@ -463,15 +447,12 @@ Se definen cinco escenarios (Tabla~\ref{tbl:escenarios}): uno de línea base, si
 \caption{{\fontsize{11pt}{13}\selectfont Escenarios experimentales}}
 \label{tbl:escenarios}
 \begin{tabular}{@{}L{1.0cm}L{3.6cm}L{6.4cm}L{4.2cm}@{}}
-\toprule
 \textbf{ID} & \textbf{Escenario} & \textbf{Descripción} & \textbf{Repeticiones} \\
-\midrule
 E0 & Línea base & Tráfico legítimo (ping, HTTP, iperf3) entre los hosts, sin ataques. & 3 corridas de 30 min por umbral \\
 E1 & Reconocimiento & Escaneo de puertos con nmap desde el atacante hacia los servidores. & 10 por combinación \\
 E2 & Fuerza bruta & Ataque de diccionario contra SSH con hydra. & 10 por combinación \\
 E3 & DoS volumétrico & Inundación de paquetes SYN con hping3. & 10 por combinación \\
 E4 & DoS de aplicación & Conexiones HTTP lentas con slowhttptest. & 10 por combinación \\
-\bottomrule
 \end{tabular}
 \end{table}
 
