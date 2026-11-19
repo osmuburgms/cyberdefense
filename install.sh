@@ -2,7 +2,7 @@
 
 set -e
 
-PROJECT_DIR="$HOME/cyberdefense"
+PROJECT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 
 # =========================
 # VALIDACIÓN DEL PROYECTO
@@ -39,6 +39,27 @@ install_if_missing() {
         sudo apt install -y "$1"
     else
         echo "$1 ya está instalado"
+    fi
+}
+
+venv_is_usable() {
+    local venv_dir="$1"
+    local import_check="$2"
+    local actual_path
+    [ -x "$venv_dir/bin/python" ] || return 1
+    [ -f "$venv_dir/bin/activate" ] || return 1
+    actual_path="$(cd "$venv_dir" 2>/dev/null && pwd -P)" || return 1
+    grep -Fq "$actual_path" "$venv_dir/bin/activate" || return 1
+    "$venv_dir/bin/python" -c "$import_check" >/dev/null 2>&1
+}
+
+archive_unusable_venv() {
+    local venv_dir="$1"
+    local import_check="$2"
+    if [ -d "$venv_dir" ] && ! venv_is_usable "$venv_dir" "$import_check"; then
+        local backup_path="${venv_dir}.old-home-$(date +%Y%m%d%H%M%S)"
+        echo "El entorno $venv_dir no es usable en esta ruta; se conserva en $backup_path"
+        mv "$venv_dir" "$backup_path"
     fi
 }
 
@@ -269,18 +290,27 @@ done
 # RYU
 # =========================
 echo "========== RYU =========="
-cd $PROJECT_DIR/controller
+cd "$PROJECT_DIR/controller"
+
+export PYENV_ROOT="$HOME/.pyenv"
+export PATH="$PYENV_ROOT/bin:$PATH"
+PYTHON310_LIB="$PYENV_ROOT/versions/3.10.14/lib"
+if [ -d "$PYTHON310_LIB" ]; then
+    export LD_LIBRARY_PATH="$PYTHON310_LIB${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+fi
+
+archive_unusable_venv "$PROJECT_DIR/controller/venv" 'import ryu'
 
 if [ ! -d "venv" ]; then
     pyenv local 3.10.14
     python -m venv venv
     source venv/bin/activate
 
-    pip install pip==24.0 setuptools==65.5.0 wheel==0.41.2
-    pip install ryu --no-build-isolation
+    python -m pip install pip==24.0 setuptools==65.5.0 wheel==0.41.2
+    python -m pip install ryu --no-build-isolation
 
-    pip uninstall eventlet dnspython -y
-    pip install eventlet==0.33.3 dnspython==2.2.1
+    python -m pip uninstall eventlet dnspython -y
+    python -m pip install eventlet==0.33.3 dnspython==2.2.1
 
     echo "Aplicando parche a Ryu..."
 
@@ -309,14 +339,16 @@ fi
 # BACKEND
 # =========================
 echo "========== BACKEND =========="
-cd $PROJECT_DIR/backend
+cd "$PROJECT_DIR/backend"
+
+archive_unusable_venv "$PROJECT_DIR/backend/venv" 'import fastapi, motor, solana, solders, uvicorn'
 
 if [ ! -d "venv" ]; then
-    python3 -m venv venv
+    /usr/bin/python3 -m venv venv
     source venv/bin/activate
 
-    pip install --upgrade pip
-    pip install fastapi uvicorn[standard] motor solana solders pydantic python-multipart websockets scapy
+    python -m pip install --upgrade pip
+    python -m pip install -r requirements.txt
 
     deactivate
 else
@@ -327,13 +359,15 @@ fi
 # AI
 # =========================
 echo "========== AI =========="
-cd $PROJECT_DIR/ai
+cd "$PROJECT_DIR/ai"
+
+archive_unusable_venv "$PROJECT_DIR/ai/iaenv" 'import lightgbm, pandas, scapy'
 
 if [ ! -d "iaenv" ]; then
-    python3 -m venv iaenv
+    /usr/bin/python3 -m venv iaenv
     source iaenv/bin/activate
 
-    pip install pandas scikit-learn numpy matplotlib lightgbm
+    python -m pip install -r requirements.txt
 
     deactivate
 else

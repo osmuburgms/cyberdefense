@@ -21,6 +21,7 @@ import json
 import jwt as pyjwt
 import os
 import pty
+import pwd
 import re
 import secrets
 import signal
@@ -829,17 +830,32 @@ async def _run_in_lxc(host: str, cwd: str, command: str):
         return 1, f"[backend] Error al ejecutar en {host}: {e}"
 
 
+def _sudo_nopasswd_hint() -> str:
+    user = pwd.getpwuid(os.getuid()).pw_name
+    return (
+        "[ayuda] El backend usa sudo -n y no puede solicitar la contraseña desde la consola web.\n"
+        "En el anfitrión revisa /etc/sudoers.d/cyberdefense con visudo; si la regla todavía menciona "
+        "el usuario anterior, reemplázalo por el usuario actual.\n"
+        "Regla necesaria para la consola y las comprobaciones de hosts:\n"
+        f"  {user} ALL=(root) NOPASSWD: /usr/bin/lxc-attach, /usr/bin/timeout, /usr/bin/lxc-info"
+    )
+
+
+def _is_sudo_auth_error(output: str) -> bool:
+    low = output.lower()
+    return any(marker in low for marker in (
+        "a password is required",
+        "interactive authentication is required",
+        "se requiere una contrase",
+        "no tty present",
+        "sudo: -n",
+    ))
+
+
 def _sudo_hint(output: str) -> str:
     low = output.lower()
-    if "a password is required" in low or "se requiere una contrase" in low or "no tty present" in low or "sudo: -n" in low:
-        return (
-            "\n[ayuda] El backend no tiene permiso sudo sin contraseña para lxc-attach.\n"
-            "En la máquina anfitriona (tu distro) ejecuta una vez:\n"
-            "  sudo visudo -f /etc/sudoers.d/cyberdefense\n"
-            "y añade (cambia jose por tu usuario):\n"
-            "  jose ALL=NOPASSWD: /usr/bin/lxc-attach, /usr/bin/timeout, /usr/bin/vnx\n"
-            "Luego: ./ips_manager.sh restart-backend"
-        )
+    if _is_sudo_auth_error(output):
+        return "\n" + _sudo_nopasswd_hint() + "\nLuego, reconecta la consola web."
     if "container" in low and ("not running" in low or "not exist" in low or "no existe" in low or "stopped" in low):
         return "\n[ayuda] El contenedor no está corriendo. Levanta la red con ./ips_manager.sh start"
     return ""
@@ -1204,7 +1220,7 @@ async def clear_switch_status(_auth=Depends(engine_or_user)):
 # Secuencia del script: parar Ryu, borrar flujos OVS, reiniciar Ryu y limpiar
 # el flag en Mongo. Sin parámetros del usuario (comandos fijos) para que sea
 # seguro exponerlo. Requiere en el anfitrión (una sola vez):
-#   jose ALL=NOPASSWD: /usr/bin/pkill -f ryu-manager, /usr/bin/ovs-ofctl -O OpenFlow13 del-flows SDN_Net
+#   usuario actual ALL=NOPASSWD: /usr/bin/pkill -f ryu-manager, /usr/bin/ovs-ofctl -O OpenFlow13 del-flows SDN_Net
 # El controlador se relanza como el propio usuario (igual que el script).
 async def _run_step(*argv: str, timeout: float = 20.0):
     """Ejecuta un comando y devuelve (returncode, salida recortada)."""
@@ -1255,7 +1271,7 @@ async def clean_switch(_user: dict = Depends(get_current_user)):
         detail += (
             "\n[ayuda] Si dice 'a password is required', falta la regla NOPASSWD. "
             "Añade con 'sudo visudo -f /etc/sudoers.d/cyberdefense':\n"
-            "  jose ALL=NOPASSWD: /usr/bin/pkill -f ryu-manager, "
+            f"  {pwd.getpwuid(os.getuid()).pw_name} ALL=(root) NOPASSWD: /usr/bin/pkill -f ryu-manager, "
             "/usr/bin/ovs-ofctl -O OpenFlow13 del-flows SDN_Net"
         )
     steps.append({"name": "Borrar flujos del switch", "ok": rc == 0, "detail": detail})
@@ -1483,6 +1499,8 @@ async def ws_terminal(ws: WebSocket, host: str):
     _pty_set_winsize(master_fd, 24, 80)
 
     finished = False
+    sudo_auth_tail = b""
+    sudo_auth_hint_sent = False
 
     def _cleanup() -> None:
         nonlocal finished
@@ -1530,6 +1548,7 @@ async def ws_terminal(ws: WebSocket, host: str):
         _cleanup()
 
     def _on_pty_output() -> None:
+        nonlocal sudo_auth_tail, sudo_auth_hint_sent
         try:
             data = os.read(master_fd, 65536)
         except (BlockingIOError, InterruptedError):
@@ -1539,6 +1558,12 @@ async def ws_terminal(ws: WebSocket, host: str):
             loop.create_task(_finish())
             return
         if data:
+            combined = (sudo_auth_tail + data).lower()
+            if not sudo_auth_hint_sent and _is_sudo_auth_error(combined.decode("utf-8", errors="ignore")):
+                hint = _sudo_nopasswd_hint().replace("\n", "\r\n")
+                data += ("\r\n" + hint + "\r\n").encode("utf-8")
+                sudo_auth_hint_sent = True
+            sudo_auth_tail = combined[-128:]
             loop.create_task(ws.send_bytes(data))
         else:
             loop.create_task(_finish())

@@ -82,15 +82,7 @@ cat "docs/software manual installation guide - cyberdefense.txt"
 
 ### Entornos Python (importante)
 
-Cada componente tiene su propio venv. Si actualizaste el sistema operativo y el Python cambió de versión, los venvs antiguos quedan inservibles (error `ModuleNotFoundError: No module named 'uvicorn'`). Recréalos con los archivos de requisitos versionados:
-
-```bash
-cd backend && rm -rf venv && python3 -m venv venv
-./venv/bin/pip install -r requirements.txt
-
-cd ../ai && rm -rf iaenv && python3 -m venv iaenv
-./iaenv/bin/pip install -r requirements.txt
-```
+Cada componente tiene su propio venv. Si actualizaste Python, renombraste tu usuario Linux o moviste la carpeta del proyecto, los venvs antiguos pueden conservar rutas absolutas inválidas (por ejemplo, `No such file or directory` al ejecutar `uvicorn`). El instalador detecta esos entornos, los guarda como respaldo y los recrea con las dependencias declaradas; también reconstruye el entorno especial de Ryu con Python 3.10.
 
 ---
 
@@ -312,8 +304,9 @@ cyberdefense/
 | Síntoma | Causa | Solución |
 |---------|-------|----------|
 | `ModuleNotFoundError: No module named 'uvicorn'` (o `pandas`) | Se actualizó el SO y cambió la versión de Python; el venv quedó obsoleto | Recrear los venvs con `requirements.txt` (ver *Instalación*) |
+| `snapshot dir account paths mismatching` | Un enlace del snapshot de Solana conserva el HOME anterior | `ips_manager.sh start` actualiza el enlace si el directorio de cuentas sigue presente; conserva `test-ledger` |
 | `Failed to load config for attacker` / la consola no conecta | LXC 6 eliminó `/usr/share/lxc/config/ubuntu.common.conf` que los rootfs de VNX aún referencian | `ips_manager.sh` crea un puente a `common.conf` automáticamente; si falla, `sudo tee /usr/share/lxc/config/ubuntu.common.conf` con la línea `lxc.include = /usr/share/lxc/config/common.conf` |
-| `sudo: a password is required` al usar el backend | Falta NOPASSWD para los comandos del sistema | Añadir las reglas a `/etc/sudoers.d/cyberdefense` (revisar el bloque de sudoers en la documentación de instalación) |
+| `sudo: interactive authentication is required` en la consola web | El backend usa `sudo -n`; puede faltar NOPASSWD para el usuario actual o la regla conservar el nombre anterior | En el anfitrión, edita `/etc/sudoers.d/cyberdefense` con `sudo visudo -f`, actualiza el usuario y valida con `sudo visudo -c` |
 | "Sin conexión con el backend" en el login | El backend no está levantado o el MongoDB no corre | `./ips_manager.sh restart-backend` y `sudo docker start mongodb-cyberdefense` |
 | `lxc-info: attacker doesn't exist` | Las VMs fueron destruidas con `stop` | `./ips_manager.sh start` las recrea |
 | El motor IA no registra alertas | Falta la clave compartida o el backend está caído | Verificar `~/cyberdefense/.engine_key` y `./ips_manager.sh logs-ia` |

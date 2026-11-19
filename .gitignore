@@ -19,6 +19,7 @@ ai/models/lightgbm_1_2M_final.txt
 ai/iaenv/
 # Respaldo de venvs antiguos (pre Python 3.14), se pueden borrar
 *.old-py312/
+*.old-home-*/
 # Secretos locales (nunca al repo): clave motor IA y secreto JWT
 .engine_key
 backend/.jwt_secret
