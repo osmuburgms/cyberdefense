@@ -1,8 +1,7 @@
 from ryu.base import app_manager
-from ryu.controller import ofp_event, dpset
-from ryu.controller.handler import MAIN_DISPATCHER, set_ev_cls
+from ryu.controller import dpset
+from ryu.controller.handler import set_ev_cls
 from ryu.ofproto import ofproto_v1_3
-from ryu.lib.packet import packet, ethernet
 from ryu.app.wsgi import ControllerBase, WSGIApplication, route
 from webob import Response
 import json
@@ -27,6 +26,7 @@ class IPSController(ControllerBase):
             return Response(status=500, body=json.dumps({"error": str(e)}))
 
 class IPSSDNController(app_manager.RyuApp):
+    """Controlador IPS; OVS_NORMAL aplica el aprendizaje y las VLAN de acceso."""
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
     _CONTEXTS = {
         'wsgi': WSGIApplication,
@@ -38,7 +38,6 @@ class IPSSDNController(app_manager.RyuApp):
         self.wsgi = kwargs['wsgi']
         self.dpset = kwargs['dpset']
         self.wsgi.register(IPSController, {'my_app': self})
-        self.mac_to_port = {}
 
     @set_ev_cls(dpset.EventDP, dpset.DPSET_EV_DISPATCHER)
     def _event_dp_handler(self, ev):
@@ -53,7 +52,9 @@ class IPSSDNController(app_manager.RyuApp):
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
         match = parser.OFPMatch()
-        actions = [parser.OFPActionOutput(ofproto.OFPP_CONTROLLER, ofproto.OFPCML_NO_BUFFER)]
+        # El pipeline NORMAL de OVS respeta los tags de acceso y aprende por
+        # VLAN. El aprendizaje manual/FLOOD del controlador podría mezclar L2.
+        actions = [parser.OFPActionOutput(ofproto.OFPP_NORMAL)]
         self.add_flow(datapath, 0, match, actions)
 
     def add_flow(self, datapath, priority, match, actions, buffer_id=None):
@@ -82,37 +83,3 @@ class IPSSDNController(app_manager.RyuApp):
             self.add_flow(datapath, 100, match, actions)
             print(f"🛑 [IPS] Regla DROP aplicada para IP {ip_atacante} en DPID {dpid}")
 
-    @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
-    def _packet_in_handler(self, ev):
-        msg = ev.msg
-        datapath = msg.datapath
-        ofproto = datapath.ofproto
-        parser = datapath.ofproto_parser
-        in_port = msg.match['in_port']
-
-        pkt = packet.Packet(msg.data)
-        eth = pkt.get_protocols(ethernet.ethernet)[0]
-        if eth.ethertype == 0x88cc: return
-
-        dpid = datapath.id
-        self.mac_to_port.setdefault(dpid, {})
-        self.mac_to_port[dpid][eth.src] = in_port
-
-        if eth.dst in self.mac_to_port[dpid]:
-            out_port = self.mac_to_port[dpid][eth.dst]
-        else:
-            out_port = ofproto.OFPP_FLOOD
-
-        actions = [parser.OFPActionOutput(out_port)]
-        if out_port != ofproto.OFPP_FLOOD:
-            match = parser.OFPMatch(in_port=in_port, eth_dst=eth.dst, eth_src=eth.src)
-            if msg.buffer_id != ofproto.OFP_NO_BUFFER:
-                self.add_flow(datapath, 1, match, actions, msg.buffer_id)
-                return
-            else:
-                self.add_flow(datapath, 1, match, actions)
-        
-        data = msg.data if msg.buffer_id == ofproto.OFP_NO_BUFFER else None
-        out = parser.OFPPacketOut(datapath=datapath, buffer_id=msg.buffer_id,
-                                  in_port=in_port, actions=actions, data=data)
-        datapath.send_msg(out)

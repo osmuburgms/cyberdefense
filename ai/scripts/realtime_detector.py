@@ -7,7 +7,7 @@ IPS_ENCODER, hoy experimental (ver NOTA_MODELO_1_2M).
 
 Capas de decisión por flujo (además del modelo):
   L2/L3 por reglas : ARP Spoofing (reply con MAC cambiada) e IP Spoofing
-                     (origen fuera de 192.168.1.0/24). Respuesta inmediata.
+                     (origen fuera de las subredes autorizadas). Respuesta inmediata.
   Heurística lenta : conexión lenta a puerto HTTP (80/443/8080) de >5 s con
                      <30 paquetes -> etiqueta Slowloris del modelo en uso.
   Modelo (1.2M)    : checkpoints en 2 / 15 / 30 / 60 paquetes. A los 2 solo se
@@ -49,6 +49,7 @@ import joblib
 import requests
 import lightgbm as lgb
 import os
+import ipaddress
 from scapy.all import sniff, IP, TCP, UDP, ICMP, ARP
 import warnings
 from pathlib import Path
@@ -121,8 +122,20 @@ def _engine_key():
 ENGINE_KEY = _engine_key()
 
 # --- Topología real de la SDN levantada por VNX (datacenter_sdn.xml) ---
-ATTACKER_IPS = {"192.168.1.50"}
-SERVER_IPS = {"192.168.1.10", "192.168.1.11"}
+ATTACKER_IPS = {"192.168.1.50", "192.168.20.50", "192.168.30.50"}
+SERVER_IPS = {
+    "192.168.1.10", "192.168.1.11", "192.168.1.12", "192.168.1.13", "192.168.1.14",
+    "192.168.20.11", "192.168.20.12", "192.168.30.11", "192.168.30.12",
+}
+REDES_AUTORIZADAS = tuple(ipaddress.ip_network(net) for net in (
+    "192.168.1.0/24", "192.168.20.0/24", "192.168.30.0/24",
+))
+INTERFAZ_A_IP_ATACANTE = {
+    "attacker-e1": "192.168.1.50",
+    "attacker-e2": "192.168.20.50",
+    "attacker-e3": "192.168.30.50",
+}
+INTERFACES_MONITOREADAS = tuple(INTERFAZ_A_IP_ATACANTE)
 
 _columnas_avisadas = set()
 
@@ -526,8 +539,12 @@ def procesar_paquete(pkt):
         ip, mac = pkt[ARP].psrc, pkt[ARP].hwsrc
         if ip in tabla_arp and tabla_arp[ip] != mac:
             print(f"🚨 [ALERTA CRÍTICA L2] ¡ARP Spoofing! IP {ip} cambió de MAC")
-            notificar_ryu_bloqueo(ip)
-            notificar_backend("ARP_Spoofing", 99.9, ip, "N/A", 0)
+            atacante = INTERFAZ_A_IP_ATACANTE.get(getattr(pkt, "sniffed_on", ""))
+            if atacante:
+                notificar_ryu_bloqueo(atacante)
+                notificar_backend("ARP_Spoofing", 99.9, atacante, ip, 0)
+            else:
+                notificar_backend("ARP_Spoofing", 99.9, "N/A", ip, 0)
         else:
             tabla_arp[ip] = mac
         return
@@ -541,10 +558,15 @@ def procesar_paquete(pkt):
     if ip_src.startswith("127.") or ip_dst.startswith("224.") or ip_dst == "255.255.255.255":
         return
 
-    if not ip_src.startswith("192.168.1."):
+    try:
+        ip_origen = ipaddress.ip_address(ip_src)
+    except ValueError:
+        return
+    if not any(ip_origen in red for red in REDES_AUTORIZADAS):
         print(f"🚨 [ALERTA CRÍTICA L3] ¡IP Spoofing detectado! IP externa/falsa: {ip_src}")
-        notificar_ryu_bloqueo(ip_src)
-        notificar_backend("IP_Spoofing", 99.9, ip_src, ip_dst, 0)
+        atacante = INTERFAZ_A_IP_ATACANTE.get(getattr(pkt, "sniffed_on", ""), ip_src)
+        notificar_ryu_bloqueo(atacante)
+        notificar_backend("IP_Spoofing", 99.9, atacante, ip_dst, 0)
         return
 
     size, ts = len(pkt[IP]), float(pkt.time)
@@ -602,4 +624,4 @@ def procesar_paquete(pkt):
 
 if __name__ == "__main__":
     print("🛡️ IPS SDN Activo Iniciado... Monitoreando, bloqueando y registrando.")
-    sniff(iface="server1-e1", prn=procesar_paquete, store=False)
+    sniff(iface=list(INTERFACES_MONITOREADAS), prn=procesar_paquete, store=False)

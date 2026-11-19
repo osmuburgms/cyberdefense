@@ -8,6 +8,11 @@ cd ~/cyberdefense/
 ./ips_manager.sh restart-backend
 ./ips_manager.sh stop
 
+# Desde la consola VNX de attacker (ips_manager.sh start prepara los servicios)
+/root/lab_attacks.sh arp servers
+/root/lab_attacks.sh dos lab1
+/root/lab_attacks.sh bruteforce all
+
 cd ~/cyberdefense/frontend
 npm run dev
 

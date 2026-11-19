@@ -7,6 +7,7 @@ export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
 
 LOG_DIR="$HOME/cyberdefense/logs"
 mkdir -p $LOG_DIR
+SCRIPTS_DIR="$HOME/cyberdefense/scripts"
 
 # Rutas correctas a los entornos y ejecutables
 RYU_VENV="$HOME/cyberdefense/controller/venv"
@@ -52,13 +53,56 @@ ensure_lxc_compat() {
     fi
 }
 
+# Lee el script local como root y lo transmite por stdin al contenedor. Así el
+# aprovisionamiento no depende de que el archivo tenga permisos de lectura para
+# el usuario que lanzó este gestor.
+run_lxc_script() {
+    local host="$1"
+    local script_path="$2"
+    sudo bash -o pipefail -c \
+        'cat "$1" | lxc-attach -n "$2" -- bash -s' \
+        _ "$script_path" "$host"
+}
+
+install_attacker_helper() {
+    local script_path="$1"
+    sudo bash -o pipefail -c \
+        'cat "$1" | lxc-attach -n attacker -- bash -c "cat > /root/lab_attacks.sh && chmod 700 /root/lab_attacks.sh"' \
+        _ "$script_path"
+}
+
+prepare_setup_log() {
+    local log_path="$1"
+    sudo install -m 600 -o "$(id -un)" -g "$(id -gn)" /dev/null "$log_path"
+}
+
+# La topología usa el bridge NAT de libvirt como salida de attacker. Puede
+# mostrar NO-CARRIER mientras VNX está detenido; el flag UP indica que está
+# administrativamente habilitado y VNX conectará las NIC al crear el escenario.
+ensure_vnx_internet_bridge() {
+    if command -v virsh >/dev/null 2>&1; then
+        sudo virsh net-start default >/dev/null 2>&1 || true
+    fi
+    if ! ip link show dev virbr0 >/dev/null 2>&1; then
+        echo "No existe virbr0 en el host; VNX no podrá dar salida a Internet a attacker." >&2
+        return 1
+    fi
+    if ! ip -o link show dev virbr0 | awk -F'[<>]' '{n=split($2, flags, ","); for (i=1; i<=n; i++) if (flags[i] == "UP") found=1} END {exit !found}'; then
+        sudo ip link set dev virbr0 up || return 1
+    fi
+    local bridge_addr
+    bridge_addr="$(ip -4 -o addr show dev virbr0 | awk 'NR == 1 {print $4}')"
+    echo "virbr0 listo (${bridge_addr:-sin IPv4}; NO-CARRIER hasta conectar los contenedores)."
+}
+
 case "$1" in
     start)
         echo "🚀 Iniciando Arquitectura de Ciberdefensa SDN..."
+        SDN_SETUP_FAILED=0
         
         # Asegurar directorio y permisos de logs antes de levantar servicios
         mkdir -p ~/cyberdefense/logs
-        sudo chown -R $USER:$USER ~/cyberdefense/logs
+        sudo chown -R "$(id -un):$(id -gn)" "$LOG_DIR"
 
         # Clave compartida backend <-> motor IA (se genera una vez)
         ensure_engine_key
@@ -107,11 +151,41 @@ case "$1" in
         
         echo "   [3/6] Levantando Red SDN (VNX y Open vSwitch)..."
         ensure_lxc_compat
+        if ! ensure_vnx_internet_bridge; then
+            echo "        ⚠️ No se pudo habilitar virbr0; attacker no tendrá Internet para instalar paquetes."
+            SDN_SETUP_FAILED=1
+        fi
         sudo vnx -f ~/cyberdefense/scenarios/datacenter_sdn.xml -v -t > $LOG_DIR/vnx.log 2>&1
-        echo "   [3.1] Configurando herramientas en el nodo atacante (esto puede tardar unos segundos)..."
-        sleep 20 
-        
-        sudo vnx -f ~/cyberdefense/scenarios/datacenter_sdn.xml -M attacker --exe-cli "echo 'nameserver 8.8.8.8' > /etc/resolv.conf && sleep 5 && apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y hydra hping3 nmap slowhttptest && echo -e 'admin\n12345\npassword\nroot\nqwerty' > /root/passwords.txt" > /dev/null 2>&1 &
+        sudo chown -R "$(id -un):$(id -gn)" "$LOG_DIR" 2>/dev/null || true
+        echo "   [3.1] Configurando herramientas y script manual en attacker..."
+        prepare_setup_log "$LOG_DIR/attacker-setup.log"
+        if ! run_lxc_script attacker "$SCRIPTS_DIR/configure_attacker.sh" \
+            > "$LOG_DIR/attacker-setup.log" 2>&1; then
+            echo "        ⚠️ Falló la preparación de attacker; revisa logs/attacker-setup.log"
+            sudo tail -n 25 "$LOG_DIR/attacker-setup.log" 2>/dev/null | sed 's/^/          /'
+            SDN_SETUP_FAILED=1
+        fi
+        prepare_setup_log "$LOG_DIR/attacker-helper.log"
+        if ! install_attacker_helper "$SCRIPTS_DIR/attacks_from_attacker.sh" \
+            > "$LOG_DIR/attacker-helper.log" 2>&1; then
+            echo "        ⚠️ No se pudo copiar /root/lab_attacks.sh; revisa logs/attacker-helper.log"
+            sudo tail -n 25 "$LOG_DIR/attacker-helper.log" 2>/dev/null | sed 's/^/          /'
+            SDN_SETUP_FAILED=1
+        fi
+
+        echo "   [3.2] Preparando SSH/HTTP en servidores y PCs de laboratorio..."
+        VNX_TARGETS=(server1 server2 server3 server4 server5 lab1pc1 lab1pc2 lab2pc1 lab2pc2)
+        for host in "${VNX_TARGETS[@]}"; do
+            prepare_setup_log "$LOG_DIR/${host}-setup.log"
+            if run_lxc_script "$host" "$SCRIPTS_DIR/configure_target.sh" \
+                > "$LOG_DIR/${host}-setup.log" 2>&1; then
+                echo "        $host listo; eth2 temporal apagada y eth1 SDN activa."
+            else
+                echo "        ⚠️ Falló $host; revisa logs/${host}-setup.log"
+                sudo tail -n 25 "$LOG_DIR/${host}-setup.log" 2>/dev/null | sed 's/^/          /'
+                SDN_SETUP_FAILED=1
+            fi
+        done
 
         sudo ovs-vsctl set bridge SDN_Net protocols=OpenFlow13
         sudo ovs-vsctl set-controller SDN_Net tcp:127.0.0.1:6653
@@ -129,16 +203,31 @@ case "$1" in
         
         echo "   [6/6] Levantando Motor de IA IPS..."
         sudo nohup $IA_VENV/bin/python -u ~/cyberdefense/ai/scripts/realtime_detector.py > $LOG_DIR/ai.log 2>&1 &
+
+        # Espera a que el sniffer esté activo y genera tráfico ARP legítimo en
+        # las tres VLAN para inicializar su tabla antes de probar spoofing.
+        for i in $(seq 1 30); do
+            grep -q "IPS SDN Activo Iniciado" "$LOG_DIR/ai.log" && break
+            sleep 1
+        done
+        sleep 1
+        sudo vnx -f ~/cyberdefense/scenarios/datacenter_sdn.xml -M attacker --exe-cli "for ip in 192.168.1.10 192.168.1.11 192.168.1.12 192.168.1.13 192.168.1.14 192.168.20.11 192.168.20.12 192.168.30.11 192.168.30.12; do ping -c 1 -W 1 \$ip >/dev/null 2>&1 || true; done" > /dev/null 2>&1
         
+        if [ "$SDN_SETUP_FAILED" -ne 0 ]; then
+            echo "⚠️ Servicios base iniciados, pero el aprovisionamiento SDN quedó incompleto. Revisa logs/*-setup.log."
+            exit 1
+        fi
         echo "✅ ¡Todo el sistema está en línea y operando en segundo plano!"
         ;;
         
     stop)
         echo "🛑 Iniciando apagado seguro del entorno..."
-        sudo pkill -f realtime_detector.py
-        sudo pkill -f uvicorn
-        sudo pkill -f ryu-manager
-        pkill -f solana-test-validator
+        # Detén solo los procesos de este proyecto; evita coincidir con otros
+        # servidores uvicorn/ryu que puedan estar usando el equipo.
+        sudo pkill -u root -f -- "$IA_VENV/bin/python.*$HOME/cyberdefense/ai/scripts/realtime_detector.py" 2>/dev/null || true
+        pkill -u "$(id -u)" -f -- 'uvicorn main:app.*--port 8001' 2>/dev/null || true
+        pkill -u "$(id -u)" -f -- "$RYU_BIN.*$HOME/cyberdefense/controller/ryu_ips_controller.py" 2>/dev/null || true
+        pkill -u "$(id -u)" -f -- "solana-test-validator.*--ledger $HOME/cyberdefense/test-ledger" 2>/dev/null || true
         sudo docker stop mongodb-cyberdefense > /dev/null
         sudo vnx -f ~/cyberdefense/scenarios/datacenter_sdn.xml -v --destroy > /dev/null 2>&1
         echo "✅ Entorno apagado correctamente."
@@ -146,7 +235,7 @@ case "$1" in
         
     clean-switch)
         echo "🧹 Limpiando bloqueos del switch y reiniciando Controlador..."
-        sudo pkill -f ryu-manager
+        pkill -u "$(id -u)" -f -- "$RYU_BIN.*$HOME/cyberdefense/controller/ryu_ips_controller.py" 2>/dev/null || true
         sudo ovs-ofctl -O OpenFlow13 del-flows SDN_Net
         nohup $RYU_BIN ~/cyberdefense/controller/ryu_ips_controller.py > $LOG_DIR/ryu.log 2>&1 &
         curl_auth_args; curl -s "${CURL_AUTH[@]}" -X POST http://localhost:8001/api/switch-status/clear > /dev/null || true
@@ -155,14 +244,14 @@ case "$1" in
         
     restart-ia)
         echo "🧠 Reiniciando Motor de IA..."
-        sudo pkill -f realtime_detector.py
+        sudo pkill -u root -f -- "$IA_VENV/bin/python.*$HOME/cyberdefense/ai/scripts/realtime_detector.py" 2>/dev/null || true
         sudo nohup $IA_VENV/bin/python -u ~/cyberdefense/ai/scripts/realtime_detector.py > $LOG_DIR/ai.log 2>&1 &
         echo "✅ IA reiniciada."
         ;;
         
     restart-backend)
         echo "💾 Reiniciando Backend..."
-        sudo pkill -f uvicorn
+        pkill -u "$(id -u)" -f -- 'uvicorn main:app.*--port 8001' 2>/dev/null || true
         ( cd $HOME/cyberdefense/backend && source $BACKEND_VENV/bin/activate && nohup uvicorn main:app --host 0.0.0.0 --port 8001 > $LOG_DIR/backend.log 2>&1 & )
         echo "✅ Backend reiniciado."
         ;;

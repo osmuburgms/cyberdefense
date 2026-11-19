@@ -1,21 +1,62 @@
-sudo lxc-attach -n attacker
+Preparación de attacker en VNX
+==============================
 
-# --- PEGA ESTO DENTRO DEL ATACANTE ---
-# 1. Configurar salida a internet con Google DNS
-echo "nameserver 8.8.8.8" > /etc/resolv.conf
+`ips_manager.sh start` conecta attacker a `virbr0`, espera a que obtenga una
+ruta por defecto y DNS, e instala las herramientas automáticamente. En la
+topología, `virbr0` es la interfaz de salida; las otras tres interfaces se usan
+para las VLAN del laboratorio.
 
-# 2. Actualizar repositorios e instalar la suite de ataques
-apt-get update
-apt-get install -y hydra hping3 nmap slowhttptest
+Comprobación manual en el host VNX
+---------------------------------
 
-# 3. Crear el diccionario de contraseñas para la prueba SSH
-echo -e "admin\n12345\npassword\nroot\nqwerty" > passwords.txt
+Antes de entrar en el contenedor, comprueba que el bridge externo existe:
 
-# (Opcional) Verificar que las herramientas estén instaladas
-hydra -h | head -n 1 && hping3 -v && nmap -V | head -n 1 && slowhttptest -h | head -n 1
-# -------------------------------------
+    ip -o link show virbr0
+    ip -brief address show virbr0
+    virsh net-info default
 
+Si `default` está inactivo, el gestor intenta iniciarlo. Si la bandera del
+enlace `virbr0` no incluye `UP`, el gestor intenta subirlo antes de iniciar
+VNX. `ip -brief` puede mostrar `DOWN` cuando todavía no hay una NIC de
+contenedor conectada (NO-CARRIER); eso por sí solo no indica que libvirt esté
+apagado. La red de libvirt debe tener DHCP y salida NAT hacia el host.
 
-sudo lxc-attach -n server1
-python3 -m http.server 80 &
-exit
+Dentro de attacker, revisa DHCP, ruta y DNS:
+
+    sudo lxc-attach -n attacker
+    ip -brief -4 address
+    ip -4 route
+    cat /etc/resolv.conf
+    getent ahostsv4 archive.ubuntu.com
+
+La NIC `eth4` corresponde a `<if id="4">` y debe tener DHCP. En el bridge
+libvirt `default` de este host, el gateway NAT es `192.168.122.1`; VNX asigna
+la dirección DHCP, pero el gestor añade la ruta por defecto. También reemplaza
+el enlace de `/etc/resolv.conf` al stub `127.0.0.53`, que no resuelve desde
+este contenedor, por DNS directo. Para hacerlo manualmente:
+
+    ip route replace default via 192.168.122.1 dev eth4 metric 100
+    if [ -L /etc/resolv.conf ]; then unlink /etc/resolv.conf; fi
+    printf 'nameserver 192.168.122.1\nnameserver 8.8.8.8\nnameserver 1.1.1.1\n' > /etc/resolv.conf
+    getent ahostsv4 archive.ubuntu.com
+    apt-get update
+
+Instalación manual de respaldo
+------------------------------
+
+Si necesitas completar la instalación manualmente dentro de attacker:
+
+    DEBIAN_FRONTEND=noninteractive apt-get install -y hydra hping3 nmap slowhttptest dsniff curl iproute2 iputils-ping
+    printf 'admin\n12345\npassword\nroot\nqwerty\n' > /root/passwords.txt
+    chmod 600 /root/passwords.txt
+
+El gestor copia `/root/lab_attacks.sh` automáticamente cuando el aprovisionamiento
+termina. Los ataques son manuales y limitados a los objetivos de este escenario.
+
+Preparación de los servicios de objetivos
+------------------------------------------
+
+El gestor también configura SSH y HTTP en los cinco servidores y las cuatro
+PCs de laboratorio. En los objetivos, `eth1` es la interfaz SDN y debe quedar
+activa; `eth2` es la interfaz DHCP temporal de `virbr0` y se apaga al terminar.
+Attacker conserva `eth4` para tener salida a Internet.

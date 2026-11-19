@@ -14,16 +14,20 @@ import { apiFetch, wsTerminalUrl } from '../api';
 const HOSTS = {
   attacker: {
     ip: '192.168.1.50',
+    label: 'Attacker',
     quick: [
       'ip -brief addr',
       'ping -c 3 192.168.1.10',
-      'cat /root/passwords.txt',
+      'ping -c 3 192.168.20.11',
+      'ping -c 3 192.168.30.11',
       'nmap -F 192.168.1.10',
-      'hydra -l root -P /root/passwords.txt ssh://192.168.1.10 -t 4',
+      'nmap -F 192.168.20.11',
+      'nmap -F 192.168.30.11',
     ],
   },
   server1: {
     ip: '192.168.1.10',
+    label: 'server1',
     quick: [
       'ip -brief addr',
       'ss -tlnp',
@@ -34,6 +38,7 @@ const HOSTS = {
   },
   server2: {
     ip: '192.168.1.11',
+    label: 'server2',
     quick: [
       'ip -brief addr',
       'ss -tlnp',
@@ -41,6 +46,41 @@ const HOSTS = {
       'ls -la /root',
       'cat /etc/os-release',
     ],
+  },
+  server3: {
+    ip: '192.168.1.12',
+    label: 'server3',
+    quick: ['ip -brief addr', 'ss -tlnp', 'ps aux | head -20', 'cat /etc/os-release'],
+  },
+  server4: {
+    ip: '192.168.1.13',
+    label: 'server4',
+    quick: ['ip -brief addr', 'ss -tlnp', 'ps aux | head -20', 'cat /etc/os-release'],
+  },
+  server5: {
+    ip: '192.168.1.14',
+    label: 'server5',
+    quick: ['ip -brief addr', 'ss -tlnp', 'ps aux | head -20', 'cat /etc/os-release'],
+  },
+  lab1pc1: {
+    ip: '192.168.20.11',
+    label: 'Lab 1 · PC 1',
+    quick: ['ip -brief addr', 'ping -c 2 192.168.20.12', 'ss -tlnp', 'cat /etc/os-release'],
+  },
+  lab1pc2: {
+    ip: '192.168.20.12',
+    label: 'Lab 1 · PC 2',
+    quick: ['ip -brief addr', 'ping -c 2 192.168.20.11', 'ss -tlnp', 'cat /etc/os-release'],
+  },
+  lab2pc1: {
+    ip: '192.168.30.11',
+    label: 'Lab 2 · PC 1',
+    quick: ['ip -brief addr', 'ping -c 2 192.168.30.12', 'ss -tlnp', 'cat /etc/os-release'],
+  },
+  lab2pc2: {
+    ip: '192.168.30.12',
+    label: 'Lab 2 · PC 2',
+    quick: ['ip -brief addr', 'ping -c 2 192.168.30.11', 'ss -tlnp', 'cat /etc/os-release'],
   },
 };
 
@@ -445,7 +485,7 @@ export default function HostTerminal({ initialHost = 'attacker', backendUrl, onC
         <Move size={13} className="text-gray-600 shrink-0" />
         <TerminalIcon size={15} className="text-green-400 shrink-0" />
         <span className="text-xs font-semibold text-gray-200 mr-1 hidden sm:inline">Consola SDN</span>
-        <div className="flex items-center gap-1 flex-1 min-w-0">
+        <div className="flex items-center gap-1 flex-1 min-w-0 overflow-x-auto">
           {HOST_IDS.map((h) => {
             const st = status[h];
             const dot = st === undefined ? 'bg-gray-600' : st.running ? 'bg-green-500' : 'bg-red-500';
@@ -454,11 +494,11 @@ export default function HostTerminal({ initialHost = 'attacker', backendUrl, onC
               <button
                 key={h}
                 onClick={() => setActiveHost(h)}
-                className={`flex items-center gap-1.5 text-[11px] font-mono px-2 py-1 rounded border transition-colors truncate ${activeHost === h ? 'bg-gray-700 border-gray-500 text-gray-100' : 'border-transparent text-gray-400 hover:text-gray-200 hover:bg-gray-800'}`}
+                className={`flex-none flex items-center gap-1.5 text-[11px] font-mono px-2 py-1 rounded border transition-colors truncate ${activeHost === h ? 'bg-gray-700 border-gray-500 text-gray-100' : 'border-transparent text-gray-400 hover:text-gray-200 hover:bg-gray-800'}`}
                 title={`${h} (${HOSTS[h].ip}) — ${cs === 'open' ? 'sesión abierta' : cs === 'connecting' ? 'conectando…' : 'sesión cerrada'}`}
               >
                 <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${dot}`} />
-                {h}
+                {HOSTS[h].label}
               </button>
             );
           })}

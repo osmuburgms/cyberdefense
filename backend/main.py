@@ -648,28 +648,100 @@ def _to_object_id(value) -> ObjectId | None:
 # MINICONSOLA SDN: ejecución de comandos dentro de los contenedores VNX/LXC
 # ---------------------------------------------------------------------------
 # Equivalente backend de lo que el usuario haría a mano en su distro:
-#   sudo lxc-attach -n attacker   (o server1 / server2)
+#   sudo lxc-attach -n attacker   (o cualquier server/labpc)
 #   sudo vnx -f ~/cyberdefense/scenarios/datacenter_sdn.xml -M attacker --exe-cli "<cmd>"
 # El frontend envía cada línea de la miniconsola a POST /api/hosts/exec y el
 # backend la ejecuta dentro del contenedor con lxc-attach, devolviendo stdout.
 ALLOWED_HOSTS = {
     "attacker": {
         "ip": "192.168.1.50",
+        "ips": ["192.168.1.50", "192.168.20.50", "192.168.30.50"],
         "label": "Attacker",
-        "desc": "Nodo atacante (hydra, hping3, nmap, slowhttptest)",
+        "desc": "Nodo atacante multisegmento (VLAN 10, 20 y 30)",
+        "segment": "Multisegmento",
+        "vlans": [10, 20, 30],
         "vnx": "attacker",
     },
     "server1": {
         "ip": "192.168.1.10",
         "label": "server1",
-        "desc": "Servidor víctima 1 (SDN_Net)",
+        "desc": "Servidor 1 (VLAN 10)",
+        "segment": "Servidores",
+        "vlan": 10,
+        "subnet": "192.168.1.0/24",
         "vnx": "server1",
     },
     "server2": {
         "ip": "192.168.1.11",
         "label": "server2",
-        "desc": "Servidor víctima 2 (SDN_Net)",
+        "desc": "Servidor 2 (VLAN 10)",
+        "segment": "Servidores",
+        "vlan": 10,
+        "subnet": "192.168.1.0/24",
         "vnx": "server2",
+    },
+    "server3": {
+        "ip": "192.168.1.12",
+        "label": "server3",
+        "desc": "Servidor 3 (VLAN 10)",
+        "segment": "Servidores",
+        "vlan": 10,
+        "subnet": "192.168.1.0/24",
+        "vnx": "server3",
+    },
+    "server4": {
+        "ip": "192.168.1.13",
+        "label": "server4",
+        "desc": "Servidor 4 (VLAN 10)",
+        "segment": "Servidores",
+        "vlan": 10,
+        "subnet": "192.168.1.0/24",
+        "vnx": "server4",
+    },
+    "server5": {
+        "ip": "192.168.1.14",
+        "label": "server5",
+        "desc": "Servidor 5 (VLAN 10)",
+        "segment": "Servidores",
+        "vlan": 10,
+        "subnet": "192.168.1.0/24",
+        "vnx": "server5",
+    },
+    "lab1pc1": {
+        "ip": "192.168.20.11",
+        "label": "Lab 1 · PC 1",
+        "desc": "PC 1 del laboratorio 1 (VLAN 20)",
+        "segment": "Laboratorio 1",
+        "vlan": 20,
+        "subnet": "192.168.20.0/24",
+        "vnx": "lab1pc1",
+    },
+    "lab1pc2": {
+        "ip": "192.168.20.12",
+        "label": "Lab 1 · PC 2",
+        "desc": "PC 2 del laboratorio 1 (VLAN 20)",
+        "segment": "Laboratorio 1",
+        "vlan": 20,
+        "subnet": "192.168.20.0/24",
+        "vnx": "lab1pc2",
+    },
+    "lab2pc1": {
+        "ip": "192.168.30.11",
+        "label": "Lab 2 · PC 1",
+        "desc": "PC 1 del laboratorio 2 (VLAN 30)",
+        "segment": "Laboratorio 2",
+        "vlan": 30,
+        "subnet": "192.168.30.0/24",
+        "vnx": "lab2pc1",
+    },
+    "lab2pc2": {
+        "ip": "192.168.30.12",
+        "label": "Lab 2 · PC 2",
+        "desc": "PC 2 del laboratorio 2 (VLAN 30)",
+        "segment": "Laboratorio 2",
+        "vlan": 30,
+        "subnet": "192.168.30.0/24",
+        "vnx": "lab2pc2",
     },
 }
 
@@ -1235,7 +1307,17 @@ async def clean_switch(_user: dict = Depends(get_current_user)):
 async def list_hosts(_user: dict = Depends(get_current_user)):
     """Hosts disponibles para la miniconsola del frontend (topología VNX)."""
     return [
-        {"id": hid, "ip": info["ip"], "label": info["label"], "desc": info["desc"]}
+        {
+            "id": hid,
+            "ip": info["ip"],
+            "ips": info.get("ips", [info["ip"]]),
+            "label": info["label"],
+            "desc": info["desc"],
+            "segment": info.get("segment"),
+            "vlan": info.get("vlan"),
+            "vlans": info.get("vlans", [info["vlan"]] if info.get("vlan") else []),
+            "subnet": info.get("subnet"),
+        }
         for hid, info in ALLOWED_HOSTS.items()
     ]
 

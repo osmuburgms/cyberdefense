@@ -129,6 +129,28 @@ Abre `http://localhost:5173` e inicia sesión.
 | `./ips_manager.sh logs-ia` | Muestra el log del motor IA |
 | `./ips_manager.sh logs-ryu` | Muestra el log de Ryu |
 
+### Topología SDN de VNX
+
+`scenarios/datacenter_sdn.xml` levanta un switch Open vSwitch con tres VLAN de acceso:
+
+| Segmento | VLAN | Subred | Equipos |
+|----------|------|--------|---------|
+| Servidores | 10 | `192.168.1.0/24` | `server1`–`server5` (`.10`–`.14`) |
+| Laboratorio 1 | 20 | `192.168.20.0/24` | `lab1pc1` (`.11`), `lab1pc2` (`.12`) |
+| Laboratorio 2 | 30 | `192.168.30.0/24` | `lab2pc1` (`.11`), `lab2pc2` (`.12`) |
+
+El atacante tiene una interfaz en cada VLAN (`192.168.1.50`, `192.168.20.50` y `192.168.30.50`) y una interfaz DHCP externa en `eth4`. El gestor configura su ruta por defecto mediante el gateway NAT de libvirt (`192.168.122.1`) y un `resolv.conf` directo para que pueda instalar las herramientas. Durante `ips_manager.sh start`, los objetivos reciben temporalmente una interfaz `virbr0` en `eth2` para instalar SSH y preparar HTTP; `scripts/configure_target.sh` apaga `eth2` al terminar y conserva activa `eth1`, su puerto SDN. La consola del frontend se conecta a esos mismos contenedores LXC.
+
+Los scripts de aprovisionamiento están en `scripts/`. El arranque configura `attacker` y los nueve objetivos, pero no ejecuta ataques. Desde la consola de `attacker`, las pruebas manuales se lanzan así:
+
+```bash
+/root/lab_attacks.sh arp servers
+/root/lab_attacks.sh dos lab1
+/root/lab_attacks.sh bruteforce all
+```
+
+El helper acepta `servers`, `lab1`, `lab2` o `all` como grupo.
+
 ---
 
 ## Autenticación y roles
@@ -276,6 +298,7 @@ cyberdefense/
 ├── contracts/             # Documentación contractual (carta de compromiso)
 ├── docker/                # docker-compose.yml de MongoDB
 ├── docs/                  # Guías y manuales (instalación, pasos IPS, VNX host)
+├── scripts/               # Aprovisionamiento de attacker/objetivos y helper de laboratorio
 ├── ips_manager.sh         # Orquestador del sistema
 ├── install.sh             # Instalador automático
 ├── all_versions.sh        # Verificación de versiones

@@ -5,7 +5,7 @@ import Login from './pages/Login.jsx';
 import { AuthProvider, useAuth } from './auth.jsx';
 import { apiFetch, ApiError } from './api.js';
 import {
-  ShieldAlert, Server, Database, Activity, Lock, Unlock, CheckCircle2,
+  ShieldAlert, Server, Monitor, Database, Activity, Lock, Unlock, CheckCircle2,
   Bell, BellOff, ZoomIn, ZoomOut, Network as NetworkIcon, Loader2,
   Trash2, CheckCheck, X, RotateCcw, LayoutGrid,
   Sun, Moon, Search, ExternalLink, Copy, Check, RefreshCw, ChevronDown, ChevronUp,
@@ -78,21 +78,40 @@ const EXTRA_WIDGETS = [
   { key: 'ports', label: 'Puertos más atacados', desc: 'Puertos de destino más frecuentes en las alertas.' },
 ];
 
-// IPs reales de la SDN levantada por VNX (datacenter_sdn.xml). Se muestran fijas
-// en la topología para que no cambien con cada ataque; en un IP_Spoofing el
-// atacante falsea su IP (p. ej. 8.8.8.8) y esa IP falsa aparece en el detalle
-// del evento, pero el nodo del mapa sigue representando al host físico real.
+// IPs reales de la SDN VNX. El atacante tiene una interfaz en cada VLAN; los
+// cinco servidores y los dos laboratorios aparecen como segmentos separados.
 const TOPOLOGY = {
-  attacker: { ip: '192.168.1.50' },
-  server1: { ip: '192.168.1.10' },
-  server2: { ip: '192.168.1.11' },
+  attacker: { ip: '192.168.1.50', ips: ['192.168.1.50', '192.168.20.50', '192.168.30.50'], label: 'Attacker', role: 'attacker', segment: 'Atacante' },
+  server1: { ip: '192.168.1.10', label: 'server1', role: 'server', segment: 'Servidores', vlan: 10 },
+  server2: { ip: '192.168.1.11', label: 'server2', role: 'server', segment: 'Servidores', vlan: 10 },
+  server3: { ip: '192.168.1.12', label: 'server3', role: 'server', segment: 'Servidores', vlan: 10 },
+  server4: { ip: '192.168.1.13', label: 'server4', role: 'server', segment: 'Servidores', vlan: 10 },
+  server5: { ip: '192.168.1.14', label: 'server5', role: 'server', segment: 'Servidores', vlan: 10 },
+  lab1pc1: { ip: '192.168.20.11', label: 'Lab 1 · PC 1', role: 'pc', segment: 'Laboratorio 1', vlan: 20 },
+  lab1pc2: { ip: '192.168.20.12', label: 'Lab 1 · PC 2', role: 'pc', segment: 'Laboratorio 1', vlan: 20 },
+  lab2pc1: { ip: '192.168.30.11', label: 'Lab 2 · PC 1', role: 'pc', segment: 'Laboratorio 2', vlan: 30 },
+  lab2pc2: { ip: '192.168.30.12', label: 'Lab 2 · PC 2', role: 'pc', segment: 'Laboratorio 2', vlan: 30 },
 };
+const TOPOLOGY_HOST_BY_IP = Object.fromEntries(Object.entries(TOPOLOGY).map(([id, host]) => [host.ip, id]));
+
+const TOPOLOGY_SEGMENTS = [
+  { id: 'servers', label: 'SERVIDORES', subnet: '192.168.1.0/24', vlan: 10, hosts: ['server1', 'server2', 'server3', 'server4', 'server5'], anchor: { x: 51, y: 21 } },
+  { id: 'lab1', label: 'LABORATORIO 1', subnet: '192.168.20.0/24', vlan: 20, hosts: ['lab1pc1', 'lab1pc2'], anchor: { x: 51, y: 53 } },
+  { id: 'lab2', label: 'LABORATORIO 2', subnet: '192.168.30.0/24', vlan: 30, hosts: ['lab2pc1', 'lab2pc2'], anchor: { x: 51, y: 82 } },
+];
 
 const DEFAULT_NODE_POSITIONS = {
-  attacker: { x: 12, y: 64 },
-  switchNode: { x: 47, y: 40 },
-  server1: { x: 86, y: 22 },
-  server2: { x: 86, y: 70 },
+  attacker: { x: 10, y: 52 },
+  switchNode: { x: 35, y: 52 },
+  server1: { x: 61, y: 14 },
+  server2: { x: 78, y: 14 },
+  server3: { x: 93, y: 14 },
+  server4: { x: 68, y: 31 },
+  server5: { x: 86, y: 31 },
+  lab1pc1: { x: 68, y: 54 },
+  lab1pc2: { x: 87, y: 54 },
+  lab2pc1: { x: 68, y: 82 },
+  lab2pc2: { x: 87, y: 82 },
 };
 
 const EMPTY_FILTERS = {
@@ -656,10 +675,9 @@ function NetworkMap({ latestAlert, isActive, blocked, targetLabel, zoom, positio
   const [draggingId, setDraggingId] = useState(null);
 
   const P = positions;
-  const server1Active = isActive && targetLabel === 'server1';
-  const server2Active = isActive && targetLabel === 'server2';
   const idleLink = isLight ? '#b8cbe2' : '#3f5070';
   const idleBranch = isLight ? '#d6e2f0' : '#26344f';
+  const activeSegment = TOPOLOGY_SEGMENTS.find((segment) => segment.hosts.includes(targetLabel));
 
   // Convierte la posición del puntero a % del contenedor. getBoundingClientRect ya
   // incluye el scale() del zoom, así que el cálculo es correcto a cualquier nivel de zoom.
@@ -700,7 +718,7 @@ function NetworkMap({ latestAlert, isActive, blocked, targetLabel, zoom, positio
   const handlePointerUp = (id) => (e) => {
     const d = dragRef.current;
     if (d && !d.moved) {
-      if (onHostClick && (id === 'attacker' || id === 'server1' || id === 'server2')) {
+      if (onHostClick && TOPOLOGY[id]) {
         // Click sin arrastre sobre un host: abrir la miniconsola de ese host
         onHostClick(id);
       } else if (id === 'switchNode' && onSwitchClick) {
@@ -717,7 +735,7 @@ function NetworkMap({ latestAlert, isActive, blocked, targetLabel, zoom, positio
   };
 
   const nodeProps = (id) => {
-    const clickable = id === 'attacker' || id === 'server1' || id === 'server2';
+    const clickable = !!TOPOLOGY[id];
     const isSwitch = id === 'switchNode';
     const title = clickable
       ? 'Click para abrir consola · Arrastra para mover'
@@ -745,6 +763,32 @@ function NetworkMap({ latestAlert, isActive, blocked, targetLabel, zoom, positio
   // Etiqueta posicionada bajo el icono: así el centro del nodo coincide con el icono
   // y las líneas de enlace llegan exactamente a él.
   const labelClass = 'absolute left-1/2 top-full mt-1.5 -translate-x-1/2 flex flex-col items-center whitespace-nowrap pointer-events-none';
+  const renderHost = (id) => {
+    const host = TOPOLOGY[id];
+    const isTarget = isActive && targetLabel === id;
+    const isBlockedAttacker = id === 'attacker' && blocked;
+    const HostIcon = host.role === 'server' ? Server : host.role === 'pc' ? Monitor : ShieldAlert;
+    const iconSize = host.role === 'attacker' ? 23 : 18;
+    const iconBox = host.role === 'attacker' ? 'w-14 h-14' : host.role === 'server' ? 'w-11 h-11' : 'w-10 h-10';
+    const baseColor = host.role === 'pc' ? 'border-cyan-700 text-cyan-300' : 'border-green-700 text-green-400';
+    return (
+      <div key={id} {...nodeProps(id)}>
+        <div className={`cd-map-node relative rounded-lg bg-gray-800 ${dragRing(id)}`}>
+          <div className={`cd-map-node-icon ${iconBox} rounded-lg flex items-center justify-center border-2 transition-colors ${isTarget || isBlockedAttacker ? 'bg-red-900/40 border-red-500' : `bg-gray-800 ${baseColor.split(' ')[0]}`}`}>
+            <HostIcon size={iconSize} className={isTarget || isBlockedAttacker ? 'text-red-400' : baseColor.split(' ')[1]} />
+          </div>
+          <div className="absolute -bottom-2 -right-2 w-5 h-5 rounded-full bg-gray-900 border border-gray-600 flex items-center justify-center" title="Abrir consola">
+            <Terminal size={10} className="text-green-400" />
+          </div>
+        </div>
+        <div className={labelClass}>
+          <span className="text-[10px] text-gray-300 font-mono">{host.label}</span>
+          <span className="text-[9px] text-gray-500 font-mono">{host.ip}</span>
+          {host.role === 'attacker' && <span className="text-[8px] text-gray-500 font-mono">también VLAN 20/30</span>}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div
@@ -752,6 +796,17 @@ function NetworkMap({ latestAlert, isActive, blocked, targetLabel, zoom, positio
       className="relative w-full h-full transition-transform duration-150"
       style={{ transform: `scale(${zoom})`, transformOrigin: 'center center' }}
     >
+      {TOPOLOGY_SEGMENTS.map((segment, index) => (
+        <div
+          key={segment.id}
+          className={`absolute left-[49%] right-[1%] rounded-lg border pointer-events-none ${isLight ? 'bg-white/55 border-slate-300' : 'bg-gray-900/35 border-gray-700/80'}`}
+          style={{ top: `${index === 0 ? 2 : index === 1 ? 39 : 68}%`, height: `${index === 0 ? 36 : 25}%` }}
+        >
+          <div className="absolute left-2 top-1 text-[9px] font-mono tracking-wide text-gray-400">
+            {segment.label} · VLAN {segment.vlan} · {segment.subnet}
+          </div>
+        </div>
+      ))}
       <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 w-full h-full pointer-events-none">
         <line
           x1={P.attacker.x} y1={P.attacker.y}
@@ -759,35 +814,32 @@ function NetworkMap({ latestAlert, isActive, blocked, targetLabel, zoom, positio
           stroke={blocked ? '#ef4444' : isActive ? '#22c55e' : idleLink} strokeWidth="0.6"
           className={isActive ? 'flow-line-active' : ''}
         />
-        <line
-          x1={P.switchNode.x} y1={P.switchNode.y}
-          x2={P.server1.x} y2={P.server1.y}
-          stroke={server1Active ? '#ef4444' : idleBranch} strokeWidth="0.5"
-          className={server1Active ? 'flow-line-active' : ''}
-        />
-        <line
-          x1={P.switchNode.x} y1={P.switchNode.y}
-          x2={P.server2.x} y2={P.server2.y}
-          stroke={server2Active ? '#ef4444' : idleBranch} strokeWidth="0.5"
-          className={server2Active ? 'flow-line-active' : ''}
-        />
+        {TOPOLOGY_SEGMENTS.map((segment) => {
+          const segmentActive = isActive && activeSegment?.id === segment.id;
+          return (
+            <g key={segment.id}>
+              <line
+                x1={P.switchNode.x} y1={P.switchNode.y}
+                x2={segment.anchor.x} y2={segment.anchor.y}
+                stroke={segmentActive ? '#ef4444' : idleBranch} strokeWidth="0.55"
+                className={segmentActive ? 'flow-line-active' : ''}
+              />
+              {segment.hosts.map((id) => (
+                <line
+                  key={id}
+                  x1={segment.anchor.x} y1={segment.anchor.y}
+                  x2={P[id].x} y2={P[id].y}
+                  stroke={isActive && targetLabel === id ? '#ef4444' : idleBranch}
+                  strokeWidth="0.4"
+                  className={isActive && targetLabel === id ? 'flow-line-active' : ''}
+                />
+              ))}
+            </g>
+          );
+        })}
       </svg>
 
-      {/* Attacker */}
-      <div {...nodeProps('attacker')}>
-        <div className={`cd-map-node relative rounded-lg bg-gray-800 ${dragRing('attacker')}`}>
-          <div className={`cd-map-node-icon w-14 h-14 rounded-lg flex items-center justify-center border-2 transition-colors hover:border-green-400 ${blocked ? 'bg-red-900/60 border-red-500' : 'bg-green-900/30 border-green-700'}`}>
-            <ShieldAlert size={24} className={blocked ? 'text-red-400' : 'text-green-400'} />
-          </div>
-          <div className="absolute -bottom-2 -right-2 w-6 h-6 rounded-full bg-gray-900 border border-gray-600 flex items-center justify-center" title="Abrir consola">
-            <Terminal size={11} className="text-green-400" />
-          </div>
-        </div>
-        <div className={labelClass}>
-          <span className="text-xs text-gray-300 font-mono">Attacker</span>
-          <span className="text-[10px] text-gray-500 font-mono">{TOPOLOGY.attacker.ip}</span>
-        </div>
-      </div>
+      {renderHost('attacker')}
 
       {/* Switch / OVS */}
       <div {...nodeProps('switchNode')}>
@@ -806,41 +858,11 @@ function NetworkMap({ latestAlert, isActive, blocked, targetLabel, zoom, positio
           )}
         </div>
         <div className={labelClass}>
-          <span className="text-xs text-gray-300 font-mono text-center leading-tight">SDN_Net<br />(Open vSwitch)</span>
+          <span className="text-xs text-gray-300 font-mono text-center leading-tight">SDN_Net<br />(OVS · VLAN 10/20/30)</span>
         </div>
       </div>
 
-      {/* server1 */}
-      <div {...nodeProps('server1')}>
-        <div className={`cd-map-node relative rounded-lg bg-gray-800 ${dragRing('server1')}`}>
-          <div className={`cd-map-node-icon w-12 h-12 rounded-lg flex items-center justify-center border-2 transition-colors hover:border-green-400 ${server1Active ? 'bg-red-900/40 border-red-500' : 'bg-gray-800 border-green-700'}`}>
-            <Server size={19} className={server1Active ? 'text-red-400' : 'text-green-400'} />
-          </div>
-          <div className="absolute -bottom-2 -right-2 w-6 h-6 rounded-full bg-gray-900 border border-gray-600 flex items-center justify-center" title="Abrir consola">
-            <Terminal size={11} className="text-green-400" />
-          </div>
-        </div>
-        <div className={labelClass}>
-          <span className="text-xs text-gray-300 font-mono">server1</span>
-          <span className="text-[10px] text-gray-500 font-mono">{TOPOLOGY.server1.ip}</span>
-        </div>
-      </div>
-
-      {/* server2 */}
-      <div {...nodeProps('server2')}>
-        <div className={`cd-map-node relative rounded-lg bg-gray-800 ${dragRing('server2')}`}>
-          <div className={`cd-map-node-icon w-12 h-12 rounded-lg flex items-center justify-center border-2 transition-colors hover:border-green-400 ${server2Active ? 'bg-red-900/40 border-red-500' : 'bg-gray-800 border-green-700'}`}>
-            <Server size={19} className={server2Active ? 'text-red-400' : 'text-green-400'} />
-          </div>
-          <div className="absolute -bottom-2 -right-2 w-6 h-6 rounded-full bg-gray-900 border border-gray-600 flex items-center justify-center" title="Abrir consola">
-            <Terminal size={11} className="text-green-400" />
-          </div>
-        </div>
-        <div className={labelClass}>
-          <span className="text-xs text-gray-300 font-mono">server2</span>
-          <span className="text-[10px] text-gray-500 font-mono">{TOPOLOGY.server2.ip}</span>
-        </div>
-      </div>
+      {TOPOLOGY_SEGMENTS.flatMap((segment) => segment.hosts.map(renderHost))}
 
       {/* Tooltip de flujo activo: sigue el punto medio del enlace attacker ↔ switch */}
       {isActive && latestAlert && (
@@ -1601,10 +1623,10 @@ function SearchModal({ api, filters, setFilters, onClose, onSelect, fallbackAler
           <input type="time" className={inputClass} value={filters.timeTo} onChange={set('timeTo')} />
         </FilterField>
         <FilterField label="IP atacante">
-          <input className={inputClass} value={filters.attacker} onChange={set('attacker')} placeholder="192.168.1." />
+          <input className={inputClass} value={filters.attacker} onChange={set('attacker')} placeholder="192.168." />
         </FilterField>
         <FilterField label="IP víctima">
-          <input className={inputClass} value={filters.victim} onChange={set('victim')} placeholder="192.168.1." />
+          <input className={inputClass} value={filters.victim} onChange={set('victim')} placeholder="192.168." />
         </FilterField>
         <FilterField label="Puerto destino">
           <input type="number" min="0" className={inputClass} value={filters.port} onChange={set('port')} placeholder="80" />
@@ -2407,7 +2429,7 @@ export function MainApp() {
     if (alert && alert._id) setPinnedId(alert._id);
   }, []);
 
-  // Miniconsola SDN: qué host está abierto (attacker | server1 | server2) o null = cerrada
+  // Miniconsola SDN: id del host abierto o null = cerrada
   const [terminalHost, setTerminalHost] = useState(null);
   const terminalOpen = terminalHost !== null;
   const openTerminal = useCallback((host) => setTerminalHost(host), []);
@@ -2798,14 +2820,10 @@ export function MainApp() {
     ? switchStatus.blocked
     : isActive && latest && isBlockAction(latest.action_taken);
 
-  // Qué servidor está bajo ataque se decide por la IP real de la víctima frente
-  // a las IPs fijas de la topología (VNX). Si la víctima no coincide con ninguna
-  // (p. ej. un IP_Spoofing con victim_ip "N/A"), se marca server1 por defecto.
+  // Resalta el host cuya IP de víctima aparece en la alerta.
   const targetLabel = useMemo(() => {
     if (!latest) return null;
-    if (latest.victim_ip === TOPOLOGY.server2.ip) return 'server2';
-    if (latest.victim_ip === TOPOLOGY.server1.ip) return 'server1';
-    return 'server1';
+    return TOPOLOGY_HOST_BY_IP[latest.victim_ip] || null;
   }, [latest]);
 
   // Mezcla viva por tipo de ataque (todos los tipos, sin recorte a 6):
@@ -3089,7 +3107,7 @@ export function MainApp() {
                         onClick={() => openTerminal('attacker')}
                         className={`w-7 h-7 rounded bg-gray-900 border flex items-center justify-center hover:text-gray-200 hover:border-gray-500 ${terminalOpen ? 'border-green-600 text-green-400' : 'border-gray-700 text-gray-400'}`}
                         aria-label="Abrir consola SDN"
-                        title="Abrir consola SDN (attacker / server1 / server2)"
+                        title="Abrir consola SDN del atacante"
                       >
                         <Terminal size={13} />
                       </button>
@@ -3459,7 +3477,7 @@ export function MainApp() {
         />
       )}
 
-      {/* Miniconsola SDN: click en attacker / server1 / server2 de la topología */}
+      {/* Miniconsola SDN: click en cualquier host de la topología */}
       {terminalOpen && (
         <HostTerminal
           initialHost={terminalHost}

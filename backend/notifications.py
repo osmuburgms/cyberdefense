@@ -124,8 +124,17 @@ def _local_timestamp(value) -> str:
 def _asset_label(ip: str) -> str:
     assets = {
         "192.168.1.50": "attacker (nodo de pruebas)",
+        "192.168.20.50": "attacker (interfaz VLAN 20)",
+        "192.168.30.50": "attacker (interfaz VLAN 30)",
         "192.168.1.10": "server1 (servidor de pruebas)",
         "192.168.1.11": "server2 (servidor de pruebas)",
+        "192.168.1.12": "server3 (servidor de pruebas)",
+        "192.168.1.13": "server4 (servidor de pruebas)",
+        "192.168.1.14": "server5 (servidor de pruebas)",
+        "192.168.20.11": "lab1pc1 (Laboratorio 1)",
+        "192.168.20.12": "lab1pc2 (Laboratorio 1)",
+        "192.168.30.11": "lab2pc1 (Laboratorio 2)",
+        "192.168.30.12": "lab2pc2 (Laboratorio 2)",
     }
     return assets.get(ip, "equipo sin nombre registrado")
 
