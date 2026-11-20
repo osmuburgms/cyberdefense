@@ -434,7 +434,7 @@ html.light .cd-header { background: rgba(245, 248, 252, 0.9); border-color: var(
 .cd-local-clock time { color: var(--cd-ink); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 15px; font-weight: 600; letter-spacing: 0.04em; }
 
 .cd-dashboard { gap: 16px; }
-.cd-dashboard-grid { gap: 18px; }
+.cd-dashboard-grid { gap: 18px; grid-auto-rows: 520px; }
 .cd-card {
   background: var(--cd-panel);
   border-color: var(--cd-line);
@@ -443,9 +443,9 @@ html.light .cd-header { background: rgba(245, 248, 252, 0.9); border-color: var(
 }
 .cd-main .cd-card { transition: border-color 160ms ease, box-shadow 160ms ease; }
 .cd-main .cd-card:hover { border-color: var(--cd-line-strong); }
-.cd-topology-column, .cd-event-log-column { min-height: 520px; }
+.cd-topology-column, .cd-event-log-column { min-width: 0; min-height: 0; }
 .cd-topology-panel {
-  min-height: 500px;
+  min-height: 0;
   padding: 18px;
   background-image: radial-gradient(ellipse at 80% -5%, rgba(56, 189, 248, 0.07), transparent 38%);
 }
@@ -501,8 +501,18 @@ html.light .cd-topology-canvas {
 }
 html.light .cd-map-status { background: rgba(255, 255, 255, 0.9); color: #52667c; }
 
-.cd-event-log-card { padding: 18px; }
+.cd-event-log-card { min-height: 0; padding: 18px; }
 .cd-event-log-card > div:first-child { min-height: 34px; margin-bottom: 10px; }
+.cd-event-log-card > .overflow-y-auto {
+  min-height: 0;
+  overscroll-behavior-y: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #3f5070 transparent;
+}
+.cd-event-log-card > .overflow-y-auto::-webkit-scrollbar { width: 8px; }
+.cd-event-log-card > .overflow-y-auto::-webkit-scrollbar-track { background: transparent; }
+.cd-event-log-card > .overflow-y-auto::-webkit-scrollbar-thumb { background: #3f5070; border-radius: 4px; }
+.cd-event-log-card > .overflow-y-auto::-webkit-scrollbar-thumb:hover { background: #5d6f8b; }
 .cd-event-log-card .cd-event-row {
   padding: 10px 11px;
   border-top: 1px solid var(--cd-line);
@@ -611,8 +621,17 @@ html.light .cd-event-log-card .cd-event-row:hover { background: #eff8fa; }
 .cd-login-content-footer svg { color: #548a87; }
 
 @media (min-width: 1280px) {
+  .cd-dashboard-grid {
+    height: clamp(520px, calc(100vh - 340px), 760px);
+    flex: 0 0 auto;
+    grid-template-rows: minmax(0, 1fr);
+  }
   .cd-dashboard-grid .cd-topology-column { grid-column: span 7 / span 7; }
   .cd-dashboard-grid .cd-event-log-column { grid-column: span 5 / span 5; }
+  .cd-dashboard-grid .cd-topology-column,
+  .cd-dashboard-grid .cd-event-log-column { height: 100%; }
+  .cd-dashboard-grid .cd-topology-panel,
+  .cd-dashboard-grid .cd-event-log-card { height: 100%; }
 }
 
 @media (max-width: 900px) {
